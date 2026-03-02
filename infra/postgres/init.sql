@@ -1,0 +1,1 @@
+-- Placeholder init. Go migrations will own schema.

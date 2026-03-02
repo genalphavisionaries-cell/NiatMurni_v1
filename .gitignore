@@ -1,0 +1,57 @@
+# Dependencies
+node_modules/
+vendor/
+.pnp
+.pnp.js
+
+# Env and secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+!.env.example.*
+
+# Build and runtime
+.next/
+out/
+dist/
+build/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Go
+services/core-go/bin/
+services/core-go/vendor/
+
+# Laravel
+apps/admin-laravel/bootstrap/cache/*
+!apps/admin-laravel/bootstrap/cache/.gitkeep
+apps/admin-laravel/storage/*.key
+apps/admin-laravel/.phpunit.result.cache
+
+# IDE and OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Logs and temp
+*.log
+npm-debug.log*
+tmp/
+temp/
+
+# Testing
+coverage/
+.nyc_output/
+*.test
+
+# Docker
+.docker/
+
+# n8n (optional: uncomment if exporting workflows with secrets)
+# services/n8n/workflows/*.json

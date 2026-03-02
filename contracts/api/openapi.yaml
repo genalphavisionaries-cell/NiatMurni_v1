@@ -1,0 +1,31 @@
+openapi: 3.0.3
+info:
+  title: Niat Murni Core API
+  version: 0.1.0
+servers:
+  - url: http://localhost:8080
+paths:
+  /public/classes/upcoming:
+    get:
+      summary: List upcoming classes for public schedule widget (next 6 available + up to 4 recent sold-out)
+      responses:
+        '200':
+          description: OK
+  /bookings:
+    post:
+      summary: Create booking or reservation (pay-later)
+      responses:
+        '200':
+          description: OK
+  /payments/stripe/checkout:
+    post:
+      summary: Create Stripe Checkout Session
+      responses:
+        '200':
+          description: OK
+  /webhooks/stripe:
+    post:
+      summary: Stripe webhook endpoint (idempotent)
+      responses:
+        '200':
+          description: OK
