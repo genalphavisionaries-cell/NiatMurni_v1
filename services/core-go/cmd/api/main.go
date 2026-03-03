@@ -30,6 +30,6 @@ func main() {
 	}
 	defer rdb.Close()
 
-	srv := server.New(":8080")
+	srv := server.New(":8080", pool)
 	log.Fatal(srv.Start())
 }

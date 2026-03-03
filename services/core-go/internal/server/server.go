@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/niatmurni/core-go/internal/handlers"
 )
 
 // Server wraps the HTTP server and router.
@@ -17,9 +19,18 @@ type Server struct {
 }
 
 // New builds a new Server with routes registered. Listen address is addr (e.g. ":8080").
-func New(addr string) *Server {
+// pool is used for class and booking endpoints.
+func New(addr string, pool *pgxpool.Pool) *Server {
 	r := mux.NewRouter()
 	r.HandleFunc("/healthz", handleHealthz).Methods(http.MethodGet)
+
+	classes := &handlers.ClassesHandler{Pool: pool}
+	bookings := &handlers.BookingsHandler{Pool: pool}
+
+	r.HandleFunc("/public/classes/upcoming", classes.ListUpcoming).Methods(http.MethodGet)
+	r.HandleFunc("/classes/{id}", classes.GetByID).Methods(http.MethodGet)
+	r.HandleFunc("/bookings", bookings.Create).Methods(http.MethodPost)
+	r.HandleFunc("/bookings/{id}", bookings.GetStatus).Methods(http.MethodGet)
 
 	s := &Server{
 		addr:   addr,

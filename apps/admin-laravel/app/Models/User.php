@@ -1,6 +1,6 @@
 <?php
 
-namespace App;
+namespace App\Models;
 
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -12,6 +12,11 @@ class User extends Authenticatable implements FilamentUser
         'name',
         'email',
         'password',
+        'role',
+        'employer_id',
+        'phone',
+        'is_active',
+        'last_login_at',
     ];
 
     protected $hidden = [
@@ -24,11 +29,28 @@ class User extends Authenticatable implements FilamentUser
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
+            'last_login_at' => 'datetime',
         ];
     }
 
     public function canAccessPanel(Panel $panel): bool
     {
         return $panel->getId() === 'admin';
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    public function isTrainer(): bool
+    {
+        return $this->role === 'trainer';
+    }
+
+    public function employer(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Employer::class);
     }
 }

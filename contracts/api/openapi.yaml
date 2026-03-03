@@ -8,15 +8,118 @@ paths:
   /public/classes/upcoming:
     get:
       summary: List upcoming classes for public schedule widget (next 6 available + up to 4 recent sold-out)
+      parameters:
+        - name: from_date
+          in: query
+          description: Filter classes from this date (ISO date)
+          schema:
+            type: string
+        - name: to_date
+          in: query
+          description: Filter classes until this date (ISO date)
+          schema:
+            type: string
+        - name: mode
+          in: query
+          description: Filter by mode (online | physical)
+          schema:
+            type: string
+            enum: [online, physical]
+        - name: language
+          in: query
+          description: Filter by language
+          schema:
+            type: string
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  classes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ClassSession'
+  /classes/{id}:
+    get:
+      summary: Get class session by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClassSession'
+        '404':
+          description: Class not found
   /bookings:
     post:
-      summary: Create booking or reservation (pay-later)
+      summary: Create booking or reservation (pending)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [participant_id, class_session_id]
+              properties:
+                participant_id:
+                  type: integer
+                  format: int64
+                class_session_id:
+                  type: integer
+                  format: int64
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    format: int64
+                  booking:
+                    $ref: '#/components/schemas/Booking'
+        '400':
+          description: Invalid input or participant/class not found
+        '409':
+          description: Duplicate booking (participant already booked for this class)
+  /bookings/{id}:
+    get:
+      summary: Get booking status and details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [pending, reserved, paid, verified, completed, certified, cancelled, transferred]
+                  booking:
+                    $ref: '#/components/schemas/Booking'
+        '404':
+          description: Booking not found
   /payments/stripe/checkout:
     post:
       summary: Create Stripe Checkout Session
@@ -29,3 +132,35 @@ paths:
       responses:
         '200':
           description: OK
+components:
+  schemas:
+    ClassSession:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        program_id: { type: integer, format: int64 }
+        program_name: { type: string }
+        trainer_id: { type: integer, format: int64, nullable: true }
+        trainer_name: { type: string }
+        starts_at: { type: string, format: date-time }
+        ends_at: { type: string, format: date-time }
+        mode: { type: string, enum: [online, physical] }
+        language: { type: string }
+        venue: { type: string, nullable: true }
+        capacity: { type: integer }
+        min_threshold: { type: integer }
+        status: { type: string }
+        zoom_join_url: { type: string, nullable: true }
+    Booking:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        participant_id: { type: integer, format: int64 }
+        class_session_id: { type: integer, format: int64 }
+        status: { type: string }
+        paid_at: { type: string, format: date-time, nullable: true }
+        verified_at: { type: string, format: date-time, nullable: true }
+        completed_at: { type: string, format: date-time, nullable: true }
+        certified_at: { type: string, format: date-time, nullable: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
