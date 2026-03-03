@@ -13,7 +13,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
-    && docker-php-ext-install -j$(nproc) opcache pdo zip exif pcntl bcmath mbstring \
+    libicu-dev \
+    && docker-php-ext-install -j$(nproc) opcache pdo zip exif pcntl bcmath mbstring intl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Composer
