@@ -1,20 +1,35 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"log"
-	"net/http"
+
+	"github.com/niatmurni/core-go/internal/cache"
+	"github.com/niatmurni/core-go/internal/config"
+	"github.com/niatmurni/core-go/internal/db"
+	"github.com/niatmurni/core-go/internal/server"
 )
 
 func main() {
-	mux := http.NewServeMux()
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatalf("config: %v", err)
+	}
 
-	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("ok"))
-	})
+	ctx := context.Background()
 
-	addr := ":8080"
-	fmt.Println("core-go api listening on", addr)
-	log.Fatal(http.ListenAndServe(addr, mux))
+	pool, err := db.NewPool(ctx, cfg.DBDSN)
+	if err != nil {
+		log.Fatalf("postgres: %v", err)
+	}
+	defer pool.Close()
+
+	rdb, err := cache.NewClient(ctx, cfg.RedisURL)
+	if err != nil {
+		log.Fatalf("redis: %v", err)
+	}
+	defer rdb.Close()
+
+	srv := server.New(":8080")
+	log.Fatal(srv.Start())
 }
