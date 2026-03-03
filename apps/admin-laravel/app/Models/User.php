@@ -2,9 +2,11 @@
 
 namespace App;
 
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     protected $fillable = [
         'name',
@@ -23,5 +25,10 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $panel->getId() === 'admin';
     }
 }
