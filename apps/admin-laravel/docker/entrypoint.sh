@@ -8,4 +8,6 @@ sed -i "s/listen \[::\]:8080/listen [::]:${PORT}/g" /etc/nginx/sites-available/d
 php artisan config:cache 2>/dev/null || true
 php artisan route:cache 2>/dev/null || true
 php artisan view:cache 2>/dev/null || true
+# Run migrations (do not fail container if none or error)
+php artisan migrate --force || true
 exec "$@"
