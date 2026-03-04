@@ -45,22 +45,22 @@ type PromoGridProps = {
 
 export default function PromoGrid({ promos = demoPromos }: PromoGridProps) {
   return (
-    <section className="bg-white py-16 sm:py-20" aria-label="Promotions">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section className="bg-white py-12 sm:py-14" aria-label="Promotions">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-            Offers & updates
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+            Promosi Niat Murni
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-slate-600">
+          <p className="mx-auto mt-2 max-w-xl text-sm text-slate-600">
             Stay ahead with flexible options and special rates.
           </p>
         </div>
-        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {promos.map((promo) => (
             <Link
               key={promo.id}
               href={promo.linkUrl}
-              className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card transition hover:shadow-card-hover"
+              className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card transition hover:shadow-card-hover"
             >
               <div className="relative aspect-[16/10] bg-slate-100">
                 {promo.imageUrl ? (
@@ -71,15 +71,15 @@ export default function PromoGrid({ promos = demoPromos }: PromoGridProps) {
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary-50 to-slate-100">
-                    <span className="text-5xl opacity-30">✨</span>
+                    <span className="text-4xl opacity-30">✨</span>
                   </div>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-transparent to-transparent opacity-0 transition group-hover:opacity-100" />
               </div>
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-slate-900">{promo.title}</h3>
+              <div className="p-5">
+                <h3 className="text-base font-semibold text-slate-900">{promo.title}</h3>
                 <p className="mt-1 text-sm text-slate-600">{promo.subtitle}</p>
-                <span className="mt-4 inline-flex items-center text-sm font-semibold text-primary-600 group-hover:text-primary-700">
+                <span className="mt-3 inline-flex items-center text-sm font-semibold text-primary-600 group-hover:text-primary-700">
                   {promo.ctaText}
                   <svg className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

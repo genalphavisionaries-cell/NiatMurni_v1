@@ -24,22 +24,22 @@ export default function QuantitySelector({
   };
 
   return (
-    <div className="flex items-center overflow-hidden rounded-md border border-[#E2E8F0]">
+    <div className="flex items-center overflow-hidden rounded-lg border border-[#E2E8F0] bg-white shadow-sm">
       <button
         type="button"
         aria-label="Decrease"
-        className="flex h-6 w-6 items-center justify-center bg-[#F1F5F9] text-[12px] font-medium text-[#0F172A] transition-colors duration-150 hover:bg-[#E2E8F0] focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-1 active:bg-[#CBD5E1]"
+        className="flex h-8 w-8 items-center justify-center bg-[#F8FAFC] text-sm font-medium text-[#0F172A] transition-colors duration-150 hover:bg-[#E2E8F0] focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-1 active:bg-[#CBD5E1]"
         onClick={() => update(value - 1)}
       >
         <span>−</span>
       </button>
-      <span className="min-w-[1.5rem] px-1 text-center text-[12px] font-medium text-[#0F172A]">
+      <span className="min-w-[2rem] px-1 text-center text-sm font-semibold text-[#0F172A]">
         {value}
       </span>
       <button
         type="button"
         aria-label="Increase"
-        className="flex h-6 w-6 items-center justify-center bg-[#F1F5F9] text-[12px] font-medium text-[#0F172A] transition-colors duration-150 hover:bg-[#E2E8F0] focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-1 active:bg-[#CBD5E1]"
+        className="flex h-8 w-8 items-center justify-center bg-[#F8FAFC] text-sm font-medium text-[#0F172A] transition-colors duration-150 hover:bg-[#E2E8F0] focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-1 active:bg-[#CBD5E1]"
         onClick={() => update(value + 1)}
       >
         <span>+</span>

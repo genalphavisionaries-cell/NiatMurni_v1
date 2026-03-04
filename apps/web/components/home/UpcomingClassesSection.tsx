@@ -63,25 +63,25 @@ export default function UpcomingClassesSection() {
     : displayList[0]?.id;
 
   return (
-    <section id="classes" className="scroll-mt-20 bg-white py-20 sm:py-24">
-      <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+    <section id="classes" className="scroll-mt-20 bg-gradient-to-b from-[#F8FAFC] to-white py-16 sm:py-20">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <h2 className="text-3xl font-bold tracking-tight text-[#0F172A] sm:text-4xl">
             Upcoming classes
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-[#64748B]">
+          <p className="mx-auto mt-3 max-w-2xl text-[#64748B]">
             Book your seat for the next available sessions. Online and physical options available.
           </p>
         </div>
 
-        <div className="mt-10">
+        <div className="mt-8">
           {loading ? (
             <div className="flex justify-center py-16">
               <div className="h-10 w-10 animate-spin rounded-full border-2 border-[#2563EB] border-t-transparent" />
             </div>
           ) : (
             <>
-              <ul className="flex flex-col gap-3">
+              <ul className="flex flex-col gap-4">
                 {displayList.map((c) => {
                   const isNext = firstRecommendedId === c.id;
                   return (

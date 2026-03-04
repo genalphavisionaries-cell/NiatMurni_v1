@@ -36,6 +36,19 @@ function GoogleGIcon({ className = "h-4 w-4" }: { className?: string }) {
   );
 }
 
+/** Single Google "G" mark for rating bar — avoids overlapping "Google" text */
+function GoogleGMark({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center justify-center rounded-full bg-white text-lg font-semibold ${className}`}
+      style={{ color: "#4285F4" }}
+      aria-hidden
+    >
+      G
+    </span>
+  );
+}
+
 export default function SocialProofSection({ data }: SocialProofSectionProps) {
   const {
     title,
@@ -108,12 +121,12 @@ export default function SocialProofSection({ data }: SocialProofSectionProps) {
 
         {/* Google Rating header — horizontal bar like reference */}
         <div className="mt-10 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#E5E7EB] bg-[#FAFAFA] px-6 py-5">
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-2">
-              <GoogleGIcon className="h-5 w-5" />
+          <div className="flex flex-wrap items-center gap-6">
+            <div className="flex items-center gap-3">
+              <GoogleGMark className="h-8 w-8" />
               <span className="text-base font-semibold text-[#0F172A]">Google Rating</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <span className="text-2xl font-bold text-[#0F172A]">
                 {google_rating.toFixed(1)}
               </span>

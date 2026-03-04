@@ -11,58 +11,62 @@ type ClassCardProps = {
 
 export default function ClassCard({ item, isNextAvailable = false }: ClassCardProps) {
   const { date, day, time, slots, mode, language } = item;
+  const isLowStock = slots <= 10;
+
   return (
     <div
-      className="class-card flex flex-col rounded-lg border border-[#E2E8F0] bg-white transition-all duration-200 ease-out hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)]"
-      style={{ padding: "10px 12px", gap: 6 }}
+      className="group relative flex flex-col overflow-hidden rounded-xl border border-[#E2E8F0] bg-white shadow-sm transition-all duration-200 hover:border-[#2563EB]/30 hover:shadow-md sm:flex-row sm:items-center sm:justify-between sm:gap-6"
+      style={{ paddingLeft: 14 }}
     >
-      {/* Top row: date + time | seats */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0">
-          <span className="text-[12px] font-semibold text-[#0F172A]">{date} ({day})</span>
-          <span className="text-[11px] text-[#64748B]">{time.replace(/\s/g, "")}</span>
-        </div>
-        <span className="shrink-0 text-[11px] font-semibold text-[#DC2626]">
-          🔥 {slots <= 10 ? "Hampir penuh" : `${slots} seats left`}
-        </span>
-      </div>
+      {/* Left accent bar */}
+      <div
+        className="absolute left-0 top-0 h-full w-1 shrink-0 rounded-l-xl"
+        style={{ background: "linear-gradient(180deg, #2563EB 0%, #1D4ED8 100%)" }}
+        aria-hidden
+      />
 
-      {/* Tags row */}
-      <div className="class-tags flex flex-wrap items-center gap-1">
-        {isNextAvailable && (
-          <span
-            className="rounded px-1.5 py-0.5 font-semibold"
-            style={{ background: "#DBEAFE", color: "#1D4ED8", fontSize: 10 }}
-          >
-            Next
+      <div className="flex min-w-0 flex-1 flex-col gap-2 py-4 pr-4 sm:flex-row sm:items-center sm:gap-6 sm:py-4 sm:pr-0">
+        {/* Date & time */}
+        <div className="flex flex-col gap-0.5">
+          <span className="text-sm font-semibold text-[#0F172A]">
+            {date} <span className="font-normal text-[#64748B]">({day})</span>
           </span>
-        )}
-        <span
-          className="rounded px-1.5 py-0.5 text-[#2563EB]"
-          style={{ fontSize: 10, background: "#EFF6FF" }}
-        >
-          {mode}
-        </span>
-        <span
-          className="rounded px-1.5 py-0.5 text-[#2563EB]"
-          style={{ fontSize: 10, background: "#EFF6FF" }}
-        >
-          {language}
-        </span>
+          <span className="text-xs text-[#64748B]">{time.replace(/\s/g, " ")}</span>
+        </div>
+
+        {/* Tags */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          {isNextAvailable && (
+            <span className="rounded-full bg-[#DBEAFE] px-2.5 py-0.5 text-xs font-semibold text-[#1D4ED8]">
+              Next
+            </span>
+          )}
+          <span className="rounded-full bg-[#F1F5F9] px-2.5 py-0.5 text-xs font-medium text-[#475569]">
+            {mode}
+          </span>
+          <span className="rounded-full bg-[#F1F5F9] px-2.5 py-0.5 text-xs font-medium text-[#475569]">
+            {language}
+          </span>
+        </div>
       </div>
 
-      {/* Action row: quantity + Daftar */}
-      <div className="class-actions flex items-center" style={{ justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ width: 84 }}>
-          <QuantitySelector min={1} max={10} defaultValue={1} />
-        </div>
-        <Link
-          href={`/booking/${item.id}`}
-          className="inline-flex shrink-0 items-center justify-center rounded-md bg-[#2563EB] font-semibold text-white transition-colors hover:bg-[#1D4ED8] focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-1"
-          style={{ height: 32, padding: "0 12px", fontSize: 12 }}
+      {/* Right: seats + quantity + CTA */}
+      <div className="flex flex-wrap items-center gap-3 border-t border-[#E2E8F0] bg-[#FAFAFA]/80 px-4 py-3 sm:border-t-0 sm:border-l sm:bg-transparent sm:pl-0 sm:pr-4 sm:py-4">
+        <span
+          className={`inline-flex items-center gap-1 text-xs font-semibold ${isLowStock ? "text-[#DC2626]" : "text-[#0F172A]"}`}
         >
-          Daftar
-        </Link>
+          <span aria-hidden>🔥</span>
+          {isLowStock ? "Hampir penuh" : `${slots} seats left`}
+        </span>
+        <div className="flex items-center gap-3">
+          <QuantitySelector min={1} max={10} defaultValue={1} />
+          <Link
+            href={`/booking/${item.id}`}
+            className="inline-flex shrink-0 items-center justify-center rounded-lg bg-[#2563EB] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#1D4ED8] hover:shadow focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-2"
+          >
+            Daftar
+          </Link>
+        </div>
       </div>
     </div>
   );
