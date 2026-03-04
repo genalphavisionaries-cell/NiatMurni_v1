@@ -9,7 +9,7 @@ import {
   type LanguageFilter,
 } from "./hero-classes";
 
-const DISPLAY_LIMIT = 3;
+const DISPLAY_LIMIT = 5;
 
 type QuickClassListProps = {
   selectedLanguage: LanguageFilter;

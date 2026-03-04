@@ -57,12 +57,20 @@ function UserIcon({ className = "h-5 w-5" }: { className?: string }) {
   );
 }
 
+function ChevronLeftIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+    </svg>
+  );
+}
+
 export default function BookingBannerPanel() {
   const [collapsed, setCollapsed] = useState(false);
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<LanguageFilter>("");
   const [tooltipLabel, setTooltipLabel] = useState<string | null>(null);
-  getRecommendedClasses(MOCK_HERO_CLASSES, activeTab, 3);
+  getRecommendedClasses(MOCK_HERO_CLASSES, activeTab, 5);
 
   // Sidebar items built with current handlers (easy to add more: schedule, support, etc.)
   const SIDEBAR_ITEMS: SidebarItem[] = [
@@ -188,9 +196,9 @@ export default function BookingBannerPanel() {
 
       {/* ——— Expanded booking panel ——— */}
       <div
-        className="absolute left-[60px] top-1/2 z-20 flex max-h-[calc(100vh-80px)] w-[420px] max-w-[90vw] -translate-y-1/2 flex-col overflow-hidden rounded-[18px] bg-white/95 p-[26px] shadow-[0_25px_60px_rgba(0,0,0,0.18)] backdrop-blur-[12px] transition-[width,opacity] duration-[0.25s] ease-out max-lg:relative max-lg:left-0 max-lg:top-auto max-lg:mx-auto max-lg:max-h-none max-lg:translate-y-0 max-lg:mt-0"
+        className="booking-panel absolute left-[60px] top-1/2 z-20 flex max-h-[80vh] w-[360px] max-w-[90vw] -translate-y-1/2 flex-col overflow-hidden rounded-[18px] bg-white/95 p-[26px] shadow-[0_25px_60px_rgba(0,0,0,0.18)] backdrop-blur-[12px] transition-[width,opacity] duration-[0.25s] ease-out max-lg:relative max-lg:left-0 max-lg:top-auto max-lg:mx-auto max-lg:max-h-none max-lg:translate-y-0 max-lg:mt-0"
         style={{
-          width: collapsed ? 0 : 420,
+          width: collapsed ? 0 : 360,
           minHeight: collapsed ? 0 : "auto",
           padding: collapsed ? 0 : 26,
           borderRadius: 18,
@@ -208,7 +216,7 @@ export default function BookingBannerPanel() {
               className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-lg text-[#64748B] transition-colors hover:bg-[#F1F5F9] hover:text-[#0F172A] focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-1"
               onClick={() => setCollapsed(true)}
             >
-              <span className="text-sm font-bold" aria-hidden>▾</span>
+              <ChevronLeftIcon className="h-5 w-5" aria-hidden />
             </button>
 
             <p className="text-[13px] font-semibold uppercase tracking-wider text-[#2563EB]">
@@ -249,7 +257,7 @@ export default function BookingBannerPanel() {
               ))}
             </div>
 
-            <div className="mt-4 flex-1 min-h-0">
+            <div className="mt-4 flex min-h-0 flex-1 flex-col overflow-y-auto" style={{ scrollbarWidth: "thin" }}>
               <QuickClassList selectedLanguage={activeTab} />
             </div>
           </>

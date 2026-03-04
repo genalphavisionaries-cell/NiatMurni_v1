@@ -7,24 +7,17 @@ type FooterProps = {
   settings: Pick<HomepageSettings, "footerColumns" | "footerBottom" | "siteName">;
 };
 
-const FOOTER_NAV = {
-  kursus: [
-    { label: "Kursus Pengendalian Makanan", href: "/#programs" },
-    { label: "Jadual Kelas", href: "/#classes" },
-    { label: "Daftar Kursus", href: "/#classes" },
-  ],
-  maklumat: [
-    { label: "Tentang Kami", href: "/#about" },
-    { label: "Cara Kursus Berjalan", href: "/#faq" },
-    { label: "Soalan Lazim", href: "/#faq" },
-    { label: "Hubungi Kami", href: "/#contact" },
-  ],
-  sokongan: [
-    { label: "WhatsApp Support", href: "https://wa.me/60123456789", external: true },
-    { label: "Email Support", href: "mailto:support@niatmurniacademy.com" },
-    { label: "Login Peserta", href: "/login" },
-  ],
-} as const;
+const QUICK_LINKS = [
+  { label: "Kursus", href: "/#programs" },
+  { label: "Jadual Kelas", href: "/#classes" },
+  { label: "FAQ", href: "/#faq" },
+  { label: "Contact", href: "/#contact" },
+] as const;
+
+const SUPPORT_LINKS = [
+  { label: "WhatsApp", href: "https://wa.me/60123456789", external: true },
+  { label: "Email", href: "mailto:support@niatmurniacademy.com" },
+] as const;
 
 const PAYMENT_METHODS = [
   { name: "Visa", id: "visa" },
@@ -52,211 +45,104 @@ export default function Footer({ settings }: FooterProps) {
   return (
     <footer
       className="text-[#E5E7EB]"
-      style={{ background: "#0F172A", paddingTop: 60, paddingBottom: 40 }}
+      style={{ background: "#0F172A", paddingTop: 40, paddingBottom: 40 }}
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* ——— Trust Section ——— */}
-        <section className="border-b border-[#334155] pb-10">
-          <h2 className="text-xl font-bold text-white sm:text-2xl">
-            Pembayaran Selamat & Terjamin
-          </h2>
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#E5E7EB]/90">
-            Semua pembayaran diproses dengan selamat menggunakan Stripe dan dilindungi dengan
-            standard keselamatan antarabangsa.
-          </p>
-
-          <div className="mt-6 flex flex-col gap-6 sm:flex-row sm:flex-wrap sm:items-start lg:gap-8">
-            {/* Stripe security badge */}
-            <div
-              className="flex flex-shrink-0 items-center gap-4 rounded-xl bg-[#F9FAFB] px-4 py-4 text-[#374151]"
-              style={{ borderRadius: 12, padding: 16 }}
-            >
-              <div className="flex h-10 w-24 items-center justify-center rounded bg-white/80 px-2">
-                {/* Placeholder for Stripe logo — admin can replace via img src or next/image */}
-                <span className="text-xs font-semibold text-[#635BFF]">Stripe</span>
-              </div>
-              <div>
-                <p className="font-semibold text-[#111827]">Secured by Stripe</p>
-                <p className="mt-0.5 max-w-[220px] text-xs text-[#6B7280]">
-                  Pembayaran diproses melalui Stripe dengan perlindungan PCI-DSS dan enkripsi SSL.
-                </p>
-              </div>
-            </div>
-
-            {/* Accepted payment methods */}
-            <div className="flex-1 min-w-0">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">
-                Accepted Payment Methods
-              </p>
-              <div className="flex flex-wrap items-center gap-3">
-                {PAYMENT_METHODS.map(({ name, id }) => (
-                  <div
-                    key={id}
-                    className="flex h-9 min-w-[72px] items-center justify-center rounded-lg bg-[#1E293B] px-3 text-[11px] font-medium text-[#94A3B8] grayscale"
-                    title={name}
-                  >
-                    {name}
-                  </div>
-                ))}
-              </div>
+        {/* ——— Trust: one row ——— */}
+        <section className="flex flex-wrap items-center justify-between gap-4 border-b border-[#334155] pb-6">
+          <div className="flex flex-shrink-0 items-center gap-3 rounded-xl bg-[#F9FAFB] px-3 py-2.5 text-[#374151]" style={{ borderRadius: 12 }}>
+            <span className="text-xs font-semibold text-[#635BFF]">Stripe</span>
+            <div>
+              <p className="text-xs font-semibold text-[#111827]">Secured by Stripe</p>
+              <p className="text-[10px] text-[#6B7280]">PCI-DSS & SSL</p>
             </div>
           </div>
-
-          {/* Certification / Compliance */}
-          <div className="mt-8 flex flex-wrap items-center gap-6 border-t border-[#334155] pt-8">
-            <p className="text-sm font-medium text-white">
-              Diiktiraf oleh Kementerian Kesihatan Malaysia
-            </p>
-            <p className="text-sm text-[#E5E7EB]/90">
-              Sijil sah untuk semua pengendali makanan di Malaysia
-            </p>
-            <div className="flex items-center gap-4">
-              {/* KKM logo placeholder — admin upload */}
-              <div
-                className="flex h-12 w-24 flex-shrink-0 items-center justify-center rounded-lg bg-[#1E293B] text-[10px] text-[#64748B]"
-                aria-hidden
+          <div className="flex flex-wrap items-center gap-2">
+            {PAYMENT_METHODS.map(({ name, id }) => (
+              <span
+                key={id}
+                className="rounded bg-[#1E293B] px-2 py-1 text-[10px] font-medium text-[#94A3B8] grayscale"
               >
-                KKM Logo
-              </div>
-              <div
-                className="flex h-12 w-24 flex-shrink-0 items-center justify-center rounded-lg bg-[#1E293B] text-[10px] text-[#64748B]"
-                aria-hidden
-              >
-                Provider
-              </div>
-            </div>
+                {name}
+              </span>
+            ))}
+          </div>
+          <div className="flex items-center gap-2 text-[12px] text-[#E5E7EB]/90">
+            <span className="font-medium text-white">Diiktiraf KKM</span>
+            <span>·</span>
+            <span>Sijil sah Malaysia</span>
           </div>
         </section>
 
-        {/* ——— Footer Content: Credibility + Nav + Contact ——— */}
-        <div className="mt-10 grid gap-10 lg:grid-cols-12 lg:gap-8">
-          {/* Business credibility */}
-          <div className="lg:col-span-4">
-            <p className="text-lg font-semibold text-white">{siteName}</p>
-            <p className="mt-2 text-sm leading-relaxed text-[#E5E7EB]/90">
-              Penyedia latihan kursus pengendalian makanan untuk pengusaha makanan di seluruh
-              Malaysia.
+        {/* ——— 3 columns ——— */}
+        <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: 30 }}>
+          <div>
+            <p className="text-base font-semibold text-white">{siteName}</p>
+            <p className="mt-1.5 text-[14px] leading-relaxed text-[#E5E7EB]/90">
+              Penyedia latihan kursus pengendalian makanan untuk pengusaha makanan di seluruh Malaysia.
             </p>
-            <p className="mt-2 text-xs text-[#94A3B8]">Berdaftar di Malaysia</p>
+            <p className="mt-1 text-[12px] text-[#94A3B8]">Berdaftar di Malaysia</p>
           </div>
-
-          {/* Nav columns */}
-          <div className="grid gap-8 sm:grid-cols-3 lg:col-span-5">
-            <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-white">
-                Kursus
-              </h3>
-              <ul className="mt-4 space-y-2">
-                {FOOTER_NAV.kursus.map((link) => (
-                  <li key={link.href + link.label}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-[#E5E7EB] transition hover:text-[#2563EB]"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-white">
-                Maklumat
-              </h3>
-              <ul className="mt-4 space-y-2">
-                {FOOTER_NAV.maklumat.map((link) => (
-                  <li key={link.href + link.label}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-[#E5E7EB] transition hover:text-[#2563EB]"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-white">
-                Sokongan
-              </h3>
-              <ul className="mt-4 space-y-2">
-                {FOOTER_NAV.sokongan.map((link) => (
-                  <li key={link.href + link.label}>
-                    {"external" in link && link.external ? (
-                      <a
-                        href={link.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-[#E5E7EB] transition hover:text-[#2563EB]"
-                      >
-                        {link.label}
-                      </a>
-                    ) : (
-                      <Link
-                        href={link.href}
-                        className="text-sm text-[#E5E7EB] transition hover:text-[#2563EB]"
-                      >
-                        {link.label}
-                      </Link>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
+          <div>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-white">Quick Links</h3>
+            <ul className="mt-3 space-y-1.5">
+              {QUICK_LINKS.map((link) => (
+                <li key={link.href + link.label}>
+                  <Link
+                    href={link.href}
+                    className="text-[14px] text-[#E5E7EB] transition hover:text-[#2563EB]"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
-
-          {/* Contact */}
-          <div className="lg:col-span-3">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-white">
-              Hubungi Kami
-            </h3>
-            <div className="mt-4 space-y-2 text-sm">
-              <a
-                href={CONTACT.whatsAppHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-lg bg-[#25D366] px-3 py-2 font-medium text-white transition opacity-90 hover:opacity-100"
-              >
-                <WhatsAppIcon className="h-5 w-5" />
-                WhatsApp: {CONTACT.whatsApp}
-              </a>
-              <p className="text-[#E5E7EB]/90">
-                Email:{" "}
+          <div>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-white">Support</h3>
+            <ul className="mt-3 space-y-1.5">
+              <li>
+                <a
+                  href="https://wa.me/60123456789"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded bg-[#25D366] px-2.5 py-1.5 text-[13px] font-medium text-white hover:opacity-90"
+                >
+                  <WhatsAppIcon className="h-4 w-4" />
+                  WhatsApp
+                </a>
+              </li>
+              <li>
                 <a
                   href={`mailto:${CONTACT.email}`}
-                  className="text-[#E5E7EB] transition hover:text-[#2563EB]"
+                  className="text-[14px] text-[#E5E7EB] transition hover:text-[#2563EB]"
                 >
-                  {CONTACT.email}
+                  Email
                 </a>
-              </p>
-            </div>
+              </li>
+            </ul>
           </div>
         </div>
 
-        {/* ——— Legal & Policy ——— */}
-        <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-[#334155] pt-8">
+        {/* ——— Legal ——— */}
+        <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-[#334155] pt-6">
           {LEGAL_LINKS.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="text-sm text-[#E5E7EB] transition hover:text-[#2563EB]"
+              className="text-[14px] text-[#E5E7EB] transition hover:text-[#2563EB]"
             >
               {link.label}
             </Link>
           ))}
         </div>
 
-        {/* ——— Bottom Bar ——— */}
-        <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-[#334155] pt-8 text-center sm:flex-row">
-          <p className="text-sm text-[#94A3B8]">
-            © 2026 {siteName}
-            <br className="sm:hidden" />
-            <span className="sm:ml-1">All Rights Reserved.</span>
+        {/* ——— Bottom ——— */}
+        <div className="mt-4 flex flex-col items-center justify-between gap-2 text-center sm:flex-row">
+          <p className="text-[13px] text-[#94A3B8]">
+            © 2026 {siteName} · All Rights Reserved
           </p>
-          <p className="text-xs text-[#64748B]">
-            Website secured with SSL encryption.
-          </p>
+          <p className="text-[11px] text-[#64748B]">Website secured with SSL encryption.</p>
         </div>
       </div>
     </footer>

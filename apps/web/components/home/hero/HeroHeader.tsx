@@ -5,6 +5,7 @@ import Link from "next/link";
 
 type HeroHeaderProps = {
   siteName?: string;
+  logoUrl?: string | null;
 };
 
 const LANG_OPTIONS = [
@@ -13,7 +14,7 @@ const LANG_OPTIONS = [
   { id: "zh", label: "中文", flag: "🇨🇳" },
 ];
 
-export default function HeroHeader({ siteName = "Niat Murni Academy" }: HeroHeaderProps) {
+export default function HeroHeader({ siteName = "Niat Murni Academy", logoUrl = null }: HeroHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const [lang, setLang] = useState(LANG_OPTIONS[0]);
@@ -30,14 +31,25 @@ export default function HeroHeader({ siteName = "Niat Murni Academy" }: HeroHead
   }, []);
 
   return (
-    <header className="top-nav flex items-center justify-between px-6 py-6 sm:px-8 sm:py-8">
-      <Link
-        href="/"
-        className="text-lg font-semibold text-white drop-shadow-md transition-opacity duration-200 hover:opacity-90 focus:outline focus:outline-2 focus:outline-white focus:outline-offset-2"
-      >
-        {siteName}
-      </Link>
-      <div className="flex items-center gap-3">
+    <header className="site-header top-nav relative z-[50] flex items-center justify-between px-6 py-6 sm:px-8 sm:py-8">
+      <div className="logo-container flex flex-shrink-0 items-center">
+        <Link href="/" className="focus:outline focus:outline-2 focus:outline-white focus:outline-offset-2">
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt={`${siteName} Logo`}
+              className="h-9 w-auto object-contain"
+              style={{ height: 36, width: "auto", objectFit: "contain" }}
+            />
+          ) : (
+            <span className="text-lg font-semibold text-white drop-shadow-md transition-opacity hover:opacity-90">
+              {siteName}
+            </span>
+          )}
+        </Link>
+      </div>
+
+      <div className="header-right flex flex-1 items-center justify-end gap-3">
         <div className="relative" ref={langRef}>
           <button
             type="button"

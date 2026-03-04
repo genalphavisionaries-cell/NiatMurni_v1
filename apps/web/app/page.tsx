@@ -19,7 +19,7 @@ export default function HomePage() {
   return (
     <>
       <main>
-        <HeroLayout siteName={settings.siteName} />
+        <HeroLayout siteName={settings.siteName} logoUrl={settings.logoUrl} />
         <WhyChooseSection data={settings.whyChoose} />
         <PromoStrip />
         <FeaturedSection />

@@ -54,6 +54,15 @@ body {
 
 .hero-container {
   padding-left: 80px;
+  background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 60%, #e8edf3 100%);
+}
+
+.hero-bg-image {
+  position: absolute;
+  inset: 0;
+  opacity: 0.08;
+  filter: blur(2px);
+  pointer-events: none;
 }
 
 @media (max-width: 1024px) {

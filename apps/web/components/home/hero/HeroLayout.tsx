@@ -6,18 +6,30 @@ import BookingBannerPanel from "./BookingBannerPanel";
 
 type HeroLayoutProps = {
   siteName?: string;
+  logoUrl?: string | null;
 };
 
-export default function HeroLayout({ siteName }: HeroLayoutProps) {
+export default function HeroLayout({ siteName, logoUrl }: HeroLayoutProps) {
   return (
     <section
       className="hero-container relative flex min-h-screen w-full flex-col overflow-hidden max-lg:pl-0"
       aria-label="Hero"
     >
-      <HeroHeader siteName={siteName} />
+      <HeroHeader siteName={siteName} logoUrl={logoUrl} />
+
+      {/* Subtle blurred food image behind hero */}
+      <div
+        className="hero-bg-image z-0"
+        style={{
+          backgroundImage: "url(/images/food-handling-hero.jpg)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+        aria-hidden
+      />
 
       {/* Slider: full width background; on mobile flex-1 so panel can stack below */}
-      <div className="relative min-h-[50vh] flex-1">
+      <div className="relative z-[1] min-h-[50vh] flex-1">
         <HeroSlider />
       </div>
 
