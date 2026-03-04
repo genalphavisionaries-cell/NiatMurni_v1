@@ -16,9 +16,9 @@ Ops Admin + Finance/Compliance Admin UI. Thin client to Go Core.
    php artisan db:seed --class=AdminUserSeeder
    ```
    Then log in at `/admin` with:
-   - **Email:** `admin@niatmurni.my`
-   - **Password:** `NiatMurniAdmin!`
-   (Change this password in production.)
+   - **Official:** `admin@niatmurniacademy.com` / `NiatMurniAdmin!`
+   - **Legacy:** `admin@niatmurni.my` / `NiatMurniAdmin!`
+   (Change passwords in production.)
 4. **Install Filament panel** (first time only):
    ```bash
    php artisan filament:install --panels
