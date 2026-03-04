@@ -26,6 +26,32 @@ export type WhyChooseSettings = {
   benefits: WhyChooseBenefit[];
 };
 
+/** CMS: homepage_social_proof — brand logo item */
+export type SocialProofBrandLogo = {
+  logo: string | null;
+  company_name: string;
+  order: number;
+};
+
+/** CMS: homepage_social_proof — testimonial item */
+export type SocialProofTestimonial = {
+  name: string;
+  rating: number;
+  review: string;
+  avatar: string | null;
+  order: number;
+};
+
+/** CMS: homepage_social_proof — section editable in admin */
+export type SocialProofSettings = {
+  title: string;
+  subtitle: string;
+  google_rating: number;
+  review_count: number;
+  brand_logos: SocialProofBrandLogo[];
+  testimonials: SocialProofTestimonial[];
+};
+
 export type HomepageSettings = {
   siteName: string;
   logoUrl: string | null;
@@ -55,6 +81,8 @@ export type HomepageSettings = {
   }[];
   /** CMS: why_choose — title, subtitle, image, benefits[] */
   whyChoose: WhyChooseSettings;
+  /** CMS: homepage_social_proof — title, subtitle, google_rating, review_count, brand_logos[], testimonials[] */
+  socialProof: SocialProofSettings;
 };
 
 const defaultNav: NavLink[] = [
@@ -135,6 +163,38 @@ export const defaultHomepageSettings: HomepageSettings = {
       { icon: "clock", title: "Hanya 3 Jam Kursus", description: "Latihan ringkas tetapi lengkap.", order: 2 },
       { icon: "award", title: "Sijil Sah KKM", description: "Digunakan untuk lesen perniagaan makanan.", order: 3 },
       { icon: "shield", title: "Sah Seumur Hidup", description: "Tidak perlu memperbaharui sijil.", order: 4 },
+    ],
+  },
+  socialProof: {
+    title: "Antara Syarikat Yang Pernah Menghadiri Kursus Kami",
+    subtitle: "Dipercayai oleh pengusaha makanan dan organisasi di seluruh Malaysia.",
+    google_rating: 5,
+    review_count: 1300,
+    brand_logos: [
+      { logo: null, company_name: "KFC", order: 1 },
+      { logo: null, company_name: "Subway", order: 2 },
+      { logo: null, company_name: "DailyFresh", order: 3 },
+      { logo: null, company_name: "PERKESO", order: 4 },
+      { logo: null, company_name: "GIATMARA", order: 5 },
+      { logo: null, company_name: "Richiamo Coffee", order: 6 },
+      { logo: null, company_name: "Sushi+", order: 7 },
+      { logo: null, company_name: "Golden Mah", order: 8 },
+    ],
+    testimonials: [
+      {
+        name: "Ika Azlan",
+        rating: 5,
+        review: "Terbaik dan sangat mudah faham. Kursus online sangat jelas dan cikgu sangat membantu.",
+        avatar: null,
+        order: 1,
+      },
+      {
+        name: "Nona AB",
+        rating: 5,
+        review: "Alhamdulillah kelas sangat berbaloi. Tak mengantuk walaupun online.",
+        avatar: null,
+        order: 2,
+      },
     ],
   },
 };
