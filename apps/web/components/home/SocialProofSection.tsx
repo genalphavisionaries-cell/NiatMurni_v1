@@ -11,10 +11,12 @@ const BRAND_LOGO_BOX_SIZE = 120;
 const AUTO_SLIDE_THRESHOLD = 6;
 const AUTO_SLIDE_INTERVAL_MS = 3000;
 
-function StarRating({ rating }: { rating: number }) {
+function StarRating({ rating, size = "md" }: { rating: number; size?: "md" | "lg" }) {
+  const stars = Math.min(5, Math.max(0, Math.round(rating)));
+  const sizeClass = size === "lg" ? "text-2xl sm:text-3xl" : "text-base";
   return (
-    <span className="inline-flex text-[#EAB308]" aria-hidden>
-      {"★".repeat(Math.min(5, Math.max(0, rating)))}
+    <span className={`inline-flex gap-0.5 text-[#EAB308] ${sizeClass}`} aria-hidden>
+      {"★".repeat(stars)}
     </span>
   );
 }
@@ -138,86 +140,76 @@ export default function SocialProofSection({ data }: SocialProofSectionProps) {
           )}
         </div>
 
-        {/* Google rating summary */}
-        <div className="mt-8 text-center" style={{ marginTop: 32 }}>
-          <div className="inline-flex items-center gap-1 rounded-full border border-[#E5E7EB] bg-white px-4 py-2 shadow-sm">
-            <span className="text-xl font-medium" style={{ color: "#4285F4" }}>G</span>
-            <span className="text-xl" style={{ color: "#EA4335" }}>o</span>
-            <span className="text-xl" style={{ color: "#FBBC04" }}>o</span>
-            <span className="text-xl" style={{ color: "#4285F4" }}>g</span>
-            <span className="text-xl" style={{ color: "#34A853" }}>l</span>
-            <span className="text-xl" style={{ color: "#EA4335" }}>e</span>
+        {/* Trust Header — centered, gradient, Google rating */}
+        <div
+          className="mx-auto mt-10 max-w-2xl rounded-[20px] px-6 py-10 text-center sm:px-10 sm:py-10"
+          style={{
+            background: "linear-gradient(135deg, #f8fafc, #eef2ff)",
+            padding: 40,
+          }}
+        >
+          <div className="inline-flex items-center gap-1 rounded-full border border-[#E5E7EB] bg-white px-3 py-1.5 shadow-sm">
+            <span className="text-lg font-medium sm:text-xl" style={{ color: "#4285F4" }}>G</span>
+            <span className="text-lg sm:text-xl" style={{ color: "#EA4335" }}>o</span>
+            <span className="text-lg sm:text-xl" style={{ color: "#FBBC04" }}>o</span>
+            <span className="text-lg sm:text-xl" style={{ color: "#4285F4" }}>g</span>
+            <span className="text-lg sm:text-xl" style={{ color: "#34A853" }}>l</span>
+            <span className="text-lg sm:text-xl" style={{ color: "#EA4335" }}>e</span>
           </div>
-          <div className="mt-3 flex justify-center gap-1 text-xl text-[#EAB308]">
-            <StarRating rating={google_rating} />
+          <div className="mt-4 flex justify-center">
+            <StarRating rating={google_rating} size="lg" />
           </div>
-          <p className="mt-1 text-sm font-semibold text-[#0F172A]">
+          <p className="mt-2 text-xl font-bold text-[#0F172A] sm:text-2xl">
             {google_rating.toFixed(1)} Google Rating
           </p>
-          <p className="text-sm text-[#64748B]">
+          <p className="mt-1 text-sm font-medium text-[#64748B]">
             {review_count.toLocaleString()}+ Peserta Berpuas Hati
           </p>
-          <div
-            className="mx-auto mt-2 h-px w-12 rounded-full bg-[#E5E7EB]"
-            aria-hidden
-          />
         </div>
 
-        {/* Testimonials */}
+        {/* Testimonial Cards — grid 1/2/3, card design, hover lift */}
         {sortedTestimonials.length > 0 && (
-          <div className="mt-10 lg:mt-12">
-            <div className="relative">
-              <div
-                ref={sliderRef}
-                className="flex snap-x snap-mandatory gap-6 overflow-x-auto pb-2 scroll-smooth lg:grid lg:grid-cols-2 lg:overflow-visible"
-                style={{ scrollbarWidth: "thin" }}
-              >
-                {sortedTestimonials.map((t, i) => (
-                  <div
-                    key={`${t.name}-${i}`}
-                    className="min-w-[85vw] shrink-0 snap-center rounded-2xl bg-white p-5 shadow-md sm:min-w-[380px] lg:min-w-0 lg:max-w-[380px]"
-                    style={{
-                      borderRadius: 16,
-                      padding: 20,
-                      maxWidth: 380,
-                    }}
-                  >
-                    <div className="flex gap-1 text-[#EAB308]">
-                      <StarRating rating={t.rating} />
-                    </div>
-                    <p className="mt-3 text-[15px] leading-relaxed text-[#334155]">
-                      &ldquo;{t.review}&rdquo;
-                    </p>
-                    <p className="mt-3 text-sm font-semibold text-[#0F172A]">
-                      {t.name}
-                    </p>
+          <div className="mt-12 lg:mt-14">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {sortedTestimonials.map((t, i) => (
+                <div
+                  key={`${t.name}-${i}`}
+                  className="rounded-[18px] bg-white p-6 shadow-md transition-transform duration-200 hover:-translate-y-[4px]"
+                >
+                  <div className="flex gap-0.5 text-[#EAB308]">
+                    <StarRating rating={t.rating} />
                   </div>
-                ))}
-              </div>
-              {sortedTestimonials.length > 1 && (
-                <>
-                  <button
-                    type="button"
-                    aria-label="Previous testimonial"
-                    onClick={() => scroll("left")}
-                    className="absolute left-0 top-1/2 z-10 flex -translate-y-1/2 rounded-full bg-white p-2 shadow-md hover:bg-[#F9FAFB] max-lg:flex lg:hidden"
-                  >
-                    <svg className="h-5 w-5 text-[#64748B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Next testimonial"
-                    onClick={() => scroll("right")}
-                    className="absolute right-0 top-1/2 z-10 flex -translate-y-1/2 rounded-full bg-white p-2 shadow-md hover:bg-[#F9FAFB] max-lg:flex lg:hidden"
-                  >
-                    <svg className="h-5 w-5 text-[#64748B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </>
-              )}
+                  <p className="mt-4 text-[15px] leading-relaxed text-[#334155]">
+                    &ldquo;{t.review}&rdquo;
+                  </p>
+                  <div className="mt-4 flex items-center gap-3">
+                    {t.avatar ? (
+                      <img
+                        src={t.avatar}
+                        alt=""
+                        className="h-10 w-10 shrink-0 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div
+                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#E0E7FF] text-sm font-semibold text-[#4338CA]"
+                        aria-hidden
+                      >
+                        {t.name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-[#0F172A]">
+                        {t.name}
+                      </p>
+                      {t.role && (
+                        <p className="truncate text-xs text-[#64748B]">
+                          {t.role}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}

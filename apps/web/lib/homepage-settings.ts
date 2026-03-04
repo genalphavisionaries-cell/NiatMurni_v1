@@ -36,6 +36,8 @@ export type SocialProofBrandLogo = {
 /** CMS: homepage_social_proof — testimonial item */
 export type SocialProofTestimonial = {
   name: string;
+  /** Optional role/subtitle (e.g. "Pengusaha Restoran") — editable in admin */
+  role?: string;
   rating: number;
   review: string;
   avatar: string | null;
@@ -194,6 +196,7 @@ export const defaultHomepageSettings: HomepageSettings = {
     testimonials: [
       {
         name: "Ika Azlan",
+        role: "Pengusaha Restoran",
         rating: 5,
         review: "Terbaik dan sangat mudah faham. Kursus online sangat jelas dan cikgu sangat membantu.",
         avatar: null,
