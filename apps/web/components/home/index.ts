@@ -10,3 +10,4 @@ export { default as UpcomingClassesSection } from "./UpcomingClassesSection";
 export { default as CtaSection } from "./CtaSection";
 export { default as ProgramsSection } from "./ProgramsSection";
 export { default as ContactSection } from "./ContactSection";
+export { default as WhyChooseSection } from "./WhyChooseSection";

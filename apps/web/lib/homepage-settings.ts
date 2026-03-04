@@ -1,13 +1,29 @@
 /**
  * Homepage settings shape — to be loaded from admin API later (e.g. Homepage Settings in Filament).
  * All sections are optional; defaults used when missing.
- * Admin can customize: logo upload, header menu, footer columns/links, hero headline/banner, main banners.
+ * Admin can customize: logo upload, header menu, footer columns/links, hero headline/banner, main banners, why choose.
  */
 
 export type NavLink = {
   label: string;
   href: string;
   external?: boolean;
+};
+
+/** CMS: homepage_why_choose — benefit item editable in admin */
+export type WhyChooseBenefit = {
+  icon: string;
+  title: string;
+  description: string;
+  order: number;
+};
+
+/** CMS: homepage_why_choose — section editable in admin */
+export type WhyChooseSettings = {
+  title: string;
+  subtitle: string;
+  image: string | null;
+  benefits: WhyChooseBenefit[];
 };
 
 export type HomepageSettings = {
@@ -37,6 +53,8 @@ export type HomepageSettings = {
     ctaHref: string;
     variant: "default" | "reverse";
   }[];
+  /** CMS: why_choose — title, subtitle, image, benefits[] */
+  whyChoose: WhyChooseSettings;
 };
 
 const defaultNav: NavLink[] = [
@@ -108,4 +126,15 @@ export const defaultHomepageSettings: HomepageSettings = {
       variant: "reverse",
     },
   ],
+  whyChoose: {
+    title: "Kenapa Pilih Kursus Kami?",
+    subtitle: "Latihan pengendalian makanan yang mudah, cepat dan sah di Malaysia",
+    image: null,
+    benefits: [
+      { icon: "monitor", title: "Kelas Online Mudah", description: "Belajar dari mana sahaja melalui Zoom.", order: 1 },
+      { icon: "clock", title: "Hanya 3 Jam Kursus", description: "Latihan ringkas tetapi lengkap.", order: 2 },
+      { icon: "award", title: "Sijil Sah KKM", description: "Digunakan untuk lesen perniagaan makanan.", order: 3 },
+      { icon: "shield", title: "Sah Seumur Hidup", description: "Tidak perlu memperbaharui sijil.", order: 4 },
+    ],
+  },
 };

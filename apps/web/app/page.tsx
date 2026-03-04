@@ -9,6 +9,7 @@ import {
   CtaSection,
   ProgramsSection,
   ContactSection,
+  WhyChooseSection,
 } from "@/components/home";
 import { defaultHomepageSettings } from "@/lib/homepage-settings";
 
@@ -19,6 +20,7 @@ export default function HomePage() {
     <>
       <main>
         <HeroLayout siteName={settings.siteName} />
+        <WhyChooseSection data={settings.whyChoose} />
         <PromoStrip />
         <FeaturedSection />
         <section className="bg-white py-16 sm:py-20">

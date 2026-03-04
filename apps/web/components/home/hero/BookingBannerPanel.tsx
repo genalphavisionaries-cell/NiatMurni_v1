@@ -12,104 +12,165 @@ const TABS: { id: LanguageFilter; label: string }[] = [
   { id: "English", label: "English" },
 ];
 
-const SIDEBAR_ITEMS = [
-  {
-    id: "booking",
-    label: "Tempah",
-    tooltip: "Open booking panel",
-    onClick: true as const,
-    icon: (
-      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-      </svg>
-    ),
-  },
-  {
-    id: "whatsapp",
-    label: "WhatsApp",
-    tooltip: "Contact us on WhatsApp",
-    href: "https://wa.me/60123456789",
-    icon: (
-      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-      </svg>
-    ),
-  },
-  {
-    id: "login",
-    label: "Login",
-    tooltip: "Login",
-    href: "/login",
-    icon: (
-      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-      </svg>
-    ),
-  },
-] as const;
+// ——— Sidebar types (discriminated union for type-safe access) ———
+type SidebarItem =
+  | {
+      id: string;
+      label: string;
+      tooltip: string;
+      icon: React.ReactNode;
+      type: "action";
+      onClick: () => void;
+    }
+  | {
+      id: string;
+      label: string;
+      tooltip: string;
+      icon: React.ReactNode;
+      type: "link";
+      href: string;
+      external?: boolean;
+    };
+
+// ——— Reusable icon components (easy to add more later) ———
+function CalendarIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </svg>
+  );
+}
+
+function WhatsAppIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+    </svg>
+  );
+}
+
+function UserIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+    </svg>
+  );
+}
 
 export default function BookingBannerPanel() {
   const [collapsed, setCollapsed] = useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<LanguageFilter>("");
-  const [tooltip, setTooltip] = useState<string | null>(null);
+  const [tooltipLabel, setTooltipLabel] = useState<string | null>(null);
   getRecommendedClasses(MOCK_HERO_CLASSES, activeTab, 3);
+
+  // Sidebar items built with current handlers (easy to add more: schedule, support, etc.)
+  const SIDEBAR_ITEMS: SidebarItem[] = [
+    {
+      id: "booking",
+      label: "Tempah",
+      tooltip: "Open booking panel",
+      type: "action",
+      onClick: () => setCollapsed(false),
+      icon: <CalendarIcon />,
+    },
+    {
+      id: "whatsapp",
+      label: "WhatsApp",
+      tooltip: "Contact us on WhatsApp",
+      type: "link",
+      href: "https://wa.me/60123456789",
+      external: true,
+      icon: <WhatsAppIcon />,
+    },
+    {
+      id: "login",
+      label: "Login",
+      tooltip: "Admin Login",
+      type: "link",
+      href: "/login",
+      icon: <UserIcon />,
+    },
+  ];
+
+  const sidebarWidth = sidebarExpanded ? 200 : 48;
 
   return (
     <>
-      {/* Collapsed: fixed vertical sticky sidebar (desktop only) */}
+      {/* ——— Left sticky sidebar (desktop, visible when booking panel is collapsed) ——— */}
       <aside
-        className="fixed left-0 top-1/2 z-20 hidden -translate-y-1/2 flex-col items-center gap-1 py-3 lg:flex"
+        className="fixed left-0 top-1/2 z-[50] hidden -translate-y-1/2 flex-col items-stretch gap-2.5 lg:flex"
         style={{
-          width: 56,
-          borderRadius: "0 14px 14px 0",
-          background: "white",
-          boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+          width: sidebarWidth,
           opacity: collapsed ? 1 : 0,
           pointerEvents: collapsed ? "auto" : "none",
+          transition: "width 0.2s ease, opacity 0.25s ease",
         }}
         aria-hidden={!collapsed}
       >
+        {/* Toggle: expand/collapse sidebar */}
+        <button
+          type="button"
+          aria-label={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
+          onClick={() => setSidebarExpanded((e) => !e)}
+          className="flex flex-shrink-0 items-center justify-center rounded-r-xl bg-white text-[#374151] shadow-[0_6px_18px_rgba(0,0,0,0.12)] transition-all duration-200 ease-out hover:translate-x-1 hover:bg-[#F9FAFB] hover:shadow-[0_8px_24px_rgba(0,0,0,0.18)] focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-1"
+          style={{ width: 48, height: 48 }}
+        >
+          <span
+            className="text-[#374151] transition-transform duration-200"
+            style={{ transform: sidebarExpanded ? "rotate(90deg)" : "rotate(-90deg)" }}
+            aria-hidden
+          >
+            ‹
+          </span>
+        </button>
+
         {SIDEBAR_ITEMS.map((item) => (
-          <div key={item.id} className="relative flex flex-col items-center">
-            {item.onClick ? (
+          <div key={item.id} className="relative flex items-center">
+            {item.type === "action" ? (
               <button
                 type="button"
                 aria-label={item.tooltip}
                 title={item.tooltip}
-                className="flex h-10 w-10 items-center justify-center rounded-lg text-[#374151] transition-colors hover:bg-[#F3F4F6] hover:text-[#111827] focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-1"
-                onClick={() => item.id === "booking" && setCollapsed(false)}
-                onMouseEnter={() => setTooltip(item.label)}
-                onMouseLeave={() => setTooltip(null)}
+                className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-r-xl bg-white text-[#374151] shadow-[0_6px_18px_rgba(0,0,0,0.12)] transition-all duration-200 ease-out hover:translate-x-1 hover:bg-[#F9FAFB] hover:text-[#111827] hover:shadow-[0_8px_24px_rgba(0,0,0,0.18)] focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-1"
+                onClick={item.onClick}
+                onMouseEnter={() => setTooltipLabel(item.label)}
+                onMouseLeave={() => setTooltipLabel(null)}
               >
                 {item.icon}
               </button>
             ) : (
               <Link
-                href={item.href ?? "#"}
-                target={item.id === "whatsapp" ? "_blank" : undefined}
-                rel={item.id === "whatsapp" ? "noopener noreferrer" : undefined}
+                href={item.href}
+                target={item.external ? "_blank" : undefined}
+                rel={item.external ? "noopener noreferrer" : undefined}
                 aria-label={item.tooltip}
                 title={item.tooltip}
-                className="flex h-10 w-10 items-center justify-center rounded-lg text-[#374151] transition-colors hover:bg-[#F3F4F6] hover:text-[#111827] focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-1"
-                onMouseEnter={() => setTooltip(item.label)}
-                onMouseLeave={() => setTooltip(null)}
+                className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-r-xl bg-white text-[#374151] shadow-[0_6px_18px_rgba(0,0,0,0.12)] transition-all duration-200 ease-out hover:translate-x-1 hover:bg-[#F9FAFB] hover:text-[#111827] hover:shadow-[0_8px_24px_rgba(0,0,0,0.18)] focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-1"
+                onMouseEnter={() => setTooltipLabel(item.label)}
+                onMouseLeave={() => setTooltipLabel(null)}
               >
                 {item.icon}
               </Link>
             )}
-            {tooltip === item.label && (
+            {sidebarExpanded && (
+              <span className="ml-2 truncate text-[13px] font-medium text-[#374151]">
+                {item.label}
+              </span>
+            )}
+            {!sidebarExpanded && tooltipLabel === item.label && (
               <span
-                className="absolute left-full top-1/2 z-30 ml-2 -translate-y-1/2 whitespace-nowrap rounded-md bg-[#1F2937] px-2.5 py-1.5 text-[12px] font-medium text-white shadow-lg"
+                className="absolute left-full top-1/2 z-[60] ml-2 -translate-y-1/2 whitespace-nowrap rounded-md bg-[#1F2937] px-2.5 py-1.5 text-[12px] font-medium text-white shadow-lg"
                 role="tooltip"
               >
-                {item.tooltip}
+                {item.label}
               </span>
             )}
           </div>
         ))}
       </aside>
 
-      {/* Collapsed: mobile-only expand tab */}
+      {/* ——— Mobile: expand booking tab when panel is collapsed ——— */}
       <button
         type="button"
         aria-label="Open booking panel"
@@ -121,13 +182,11 @@ export default function BookingBannerPanel() {
         }}
         aria-hidden={!collapsed}
       >
-        <svg className="h-5 w-5 text-[#374151]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
+        <CalendarIcon className="h-5 w-5 text-[#374151]" />
         <span className="text-[10px] font-medium text-[#64748B]">Tempah</span>
       </button>
 
-      {/* Expanded: booking panel */}
+      {/* ——— Expanded booking panel ——— */}
       <div
         className="absolute left-[60px] top-1/2 z-20 flex max-h-[calc(100vh-80px)] w-[420px] max-w-[90vw] -translate-y-1/2 flex-col overflow-hidden rounded-[18px] bg-white/95 p-[26px] shadow-[0_25px_60px_rgba(0,0,0,0.18)] backdrop-blur-[12px] transition-[width,opacity] duration-[0.25s] ease-out max-lg:relative max-lg:left-0 max-lg:top-auto max-lg:mx-auto max-lg:max-h-none max-lg:translate-y-0 max-lg:mt-0"
         style={{
