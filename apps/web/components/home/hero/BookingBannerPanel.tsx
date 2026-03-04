@@ -12,27 +12,10 @@ const TABS: { id: LanguageFilter; label: string }[] = [
   { id: "English", label: "English" },
 ];
 
-// ——— Sidebar types (discriminated union for type-safe access) ———
 type SidebarItem =
-  | {
-      id: string;
-      label: string;
-      tooltip: string;
-      icon: React.ReactNode;
-      type: "action";
-      onClick: () => void;
-    }
-  | {
-      id: string;
-      label: string;
-      tooltip: string;
-      icon: React.ReactNode;
-      type: "link";
-      href: string;
-      external?: boolean;
-    };
+  | { id: string; label: string; tooltip: string; icon: React.ReactNode; type: "action"; onClick: () => void }
+  | { id: string; label: string; tooltip: string; icon: React.ReactNode; type: "link"; href: string; external?: boolean };
 
-// ——— Reusable icon components (easy to add more later) ———
 function CalendarIcon({ className = "h-5 w-5" }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -40,7 +23,6 @@ function CalendarIcon({ className = "h-5 w-5" }: { className?: string }) {
     </svg>
   );
 }
-
 function WhatsAppIcon({ className = "h-5 w-5" }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor">
@@ -48,7 +30,6 @@ function WhatsAppIcon({ className = "h-5 w-5" }: { className?: string }) {
     </svg>
   );
 }
-
 function UserIcon({ className = "h-5 w-5" }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -56,7 +37,6 @@ function UserIcon({ className = "h-5 w-5" }: { className?: string }) {
     </svg>
   );
 }
-
 function ChevronLeftIcon({ className = "h-5 w-5" }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -64,204 +44,134 @@ function ChevronLeftIcon({ className = "h-5 w-5" }: { className?: string }) {
     </svg>
   );
 }
+function ChevronRightIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+    </svg>
+  );
+}
 
-export default function BookingBannerPanel() {
-  const [collapsed, setCollapsed] = useState(false);
-  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+type BookingBannerPanelProps = {
+  collapsed: boolean;
+  onCollapsedChange: (collapsed: boolean) => void;
+};
+
+export default function BookingBannerPanel({ collapsed, onCollapsedChange }: BookingBannerPanelProps) {
   const [activeTab, setActiveTab] = useState<LanguageFilter>("");
-  const [tooltipLabel, setTooltipLabel] = useState<string | null>(null);
   getRecommendedClasses(MOCK_HERO_CLASSES, activeTab, 5);
 
-  // Sidebar items built with current handlers (easy to add more: schedule, support, etc.)
   const SIDEBAR_ITEMS: SidebarItem[] = [
-    {
-      id: "booking",
-      label: "Tempah",
-      tooltip: "Open booking panel",
-      type: "action",
-      onClick: () => setCollapsed(false),
-      icon: <CalendarIcon />,
-    },
-    {
-      id: "whatsapp",
-      label: "WhatsApp",
-      tooltip: "Contact us on WhatsApp",
-      type: "link",
-      href: "https://wa.me/60123456789",
-      external: true,
-      icon: <WhatsAppIcon />,
-    },
-    {
-      id: "login",
-      label: "Login",
-      tooltip: "Admin Login",
-      type: "link",
-      href: "/login",
-      icon: <UserIcon />,
-    },
+    { id: "booking", label: "Tempah", tooltip: "Open booking panel", type: "action", onClick: () => onCollapsedChange(false), icon: <CalendarIcon /> },
+    { id: "whatsapp", label: "WhatsApp", tooltip: "Contact us on WhatsApp", type: "link", href: "https://wa.me/60123456789", external: true, icon: <WhatsAppIcon /> },
+    { id: "login", label: "Login", tooltip: "Login", type: "link", href: "/login", icon: <UserIcon /> },
   ];
 
-  const sidebarWidth = sidebarExpanded ? 200 : 48;
-
-  return (
-    <>
-      {/* ——— Left sticky sidebar (desktop, visible when booking panel is collapsed) ——— */}
-      <aside
-        className="fixed left-0 top-1/2 z-[50] hidden -translate-y-1/2 flex-col items-stretch gap-2.5 lg:flex"
-        style={{
-          width: sidebarWidth,
-          opacity: collapsed ? 1 : 0,
-          pointerEvents: collapsed ? "auto" : "none",
-          transition: "width 0.2s ease, opacity 0.25s ease",
-        }}
-        aria-hidden={!collapsed}
+  /* Collapsed: 48px icon sidebar */
+  if (collapsed) {
+    return (
+      <div
+        className="flex flex-col items-center gap-3 rounded-xl bg-white pt-5 shadow-[0_20px_50px_rgba(0,0,0,0.1)]"
+        style={{ width: 48, paddingTop: 20, gap: 12 }}
       >
-        {/* Toggle: expand/collapse sidebar */}
         <button
           type="button"
-          aria-label={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
-          onClick={() => setSidebarExpanded((e) => !e)}
-          className="flex flex-shrink-0 items-center justify-center rounded-r-xl bg-white text-[#374151] shadow-[0_6px_18px_rgba(0,0,0,0.12)] transition-all duration-200 ease-out hover:translate-x-1 hover:bg-[#F9FAFB] hover:shadow-[0_8px_24px_rgba(0,0,0,0.18)] focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-1"
-          style={{ width: 48, height: 48 }}
+          aria-label="Expand booking panel"
+          onClick={() => onCollapsedChange(false)}
+          className="flex h-10 w-10 items-center justify-center rounded-lg text-[#374151] hover:bg-[#F3F4F6] focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-1"
         >
-          <span
-            className="text-[#374151] transition-transform duration-200"
-            style={{ transform: sidebarExpanded ? "rotate(90deg)" : "rotate(-90deg)" }}
-            aria-hidden
-          >
-            ‹
-          </span>
+          <ChevronRightIcon className="h-5 w-5" />
+        </button>
+        {SIDEBAR_ITEMS.map((item) =>
+          item.type === "action" ? (
+            <button
+              key={item.id}
+              type="button"
+              aria-label={item.tooltip}
+              onClick={item.onClick}
+              className="flex h-10 w-10 items-center justify-center rounded-lg text-[#374151] hover:bg-[#F3F4F6] focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-1"
+            >
+              {item.icon}
+            </button>
+          ) : (
+            <Link
+              key={item.id}
+              href={item.href}
+              target={item.external ? "_blank" : undefined}
+              rel={item.external ? "noopener noreferrer" : undefined}
+              aria-label={item.tooltip}
+              className="flex h-10 w-10 items-center justify-center rounded-lg text-[#374151] hover:bg-[#F3F4F6] focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-1"
+            >
+              {item.icon}
+            </Link>
+          )
+        )}
+      </div>
+    );
+  }
+
+  /* Expanded: full panel */
+  return (
+    <>
+      <div
+        className="booking-panel relative flex max-h-[80vh] flex-col overflow-hidden rounded-[20px] bg-white shadow-[0_20px_50px_rgba(0,0,0,0.1)]"
+        style={{
+          width: 420,
+          padding: 24,
+          boxShadow: "0 20px 50px rgba(0,0,0,0.1)",
+        }}
+      >
+        <button
+          type="button"
+          aria-label="Collapse panel"
+          onClick={() => onCollapsedChange(true)}
+          className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-lg text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#0F172A] focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-1"
+          style={{ top: 16, right: 16 }}
+        >
+          <ChevronLeftIcon className="h-5 w-5" />
         </button>
 
-        {SIDEBAR_ITEMS.map((item) => (
-          <div key={item.id} className="relative flex items-center">
-            {item.type === "action" ? (
-              <button
-                type="button"
-                aria-label={item.tooltip}
-                title={item.tooltip}
-                className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-r-xl bg-white text-[#374151] shadow-[0_6px_18px_rgba(0,0,0,0.12)] transition-all duration-200 ease-out hover:translate-x-1 hover:bg-[#F9FAFB] hover:text-[#111827] hover:shadow-[0_8px_24px_rgba(0,0,0,0.18)] focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-1"
-                onClick={item.onClick}
-                onMouseEnter={() => setTooltipLabel(item.label)}
-                onMouseLeave={() => setTooltipLabel(null)}
-              >
-                {item.icon}
-              </button>
-            ) : (
-              <Link
-                href={item.href}
-                target={item.external ? "_blank" : undefined}
-                rel={item.external ? "noopener noreferrer" : undefined}
-                aria-label={item.tooltip}
-                title={item.tooltip}
-                className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-r-xl bg-white text-[#374151] shadow-[0_6px_18px_rgba(0,0,0,0.12)] transition-all duration-200 ease-out hover:translate-x-1 hover:bg-[#F9FAFB] hover:text-[#111827] hover:shadow-[0_8px_24px_rgba(0,0,0,0.18)] focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-1"
-                onMouseEnter={() => setTooltipLabel(item.label)}
-                onMouseLeave={() => setTooltipLabel(null)}
-              >
-                {item.icon}
-              </Link>
-            )}
-            {sidebarExpanded && (
-              <span className="ml-2 truncate text-[13px] font-medium text-[#374151]">
-                {item.label}
-              </span>
-            )}
-            {!sidebarExpanded && tooltipLabel === item.label && (
-              <span
-                className="absolute left-full top-1/2 z-[60] ml-2 -translate-y-1/2 whitespace-nowrap rounded-md bg-[#1F2937] px-2.5 py-1.5 text-[12px] font-medium text-white shadow-lg"
-                role="tooltip"
-              >
-                {item.label}
-              </span>
-            )}
-          </div>
-        ))}
-      </aside>
+        <p className="text-[13px] font-semibold uppercase tracking-wider text-[#2563EB]">
+          Tempah Kursus Anda
+        </p>
+        <h2 className="mt-1 text-[22px] font-bold leading-tight text-[#0F172A]">
+          Kursus Pengendalian Makanan Wajib KKM
+        </h2>
+        <p className="mt-2 text-[13px] text-[#64748B]">
+          Latihan rasmi untuk pengendali makanan. Sijil sah KKM dikeluarkan dalam 12 jam.
+        </p>
 
-      {/* ——— Mobile: expand booking tab when panel is collapsed ——— */}
-      <button
-        type="button"
-        aria-label="Open booking panel"
-        onClick={() => setCollapsed(false)}
-        className="fixed bottom-6 left-4 z-20 flex flex-col items-center gap-0.5 rounded-xl border-0 bg-white p-2.5 shadow-[0_10px_30px_rgba(0,0,0,0.15)] transition-opacity lg:hidden"
-        style={{
-          opacity: collapsed ? 1 : 0,
-          pointerEvents: collapsed ? "auto" : "none",
-        }}
-        aria-hidden={!collapsed}
-      >
-        <CalendarIcon className="h-5 w-5 text-[#374151]" />
-        <span className="text-[10px] font-medium text-[#64748B]">Tempah</span>
-      </button>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <span className="inline-flex items-center gap-1 rounded-full bg-[#F0FDF4] px-3 py-1.5 text-[12px] font-semibold text-[#166534]">
+            ✓ Sijil dalam masa 12 jam
+          </span>
+          <span className="inline-flex items-center gap-1 rounded-full bg-[#EFF6FF] px-3 py-1.5 text-[12px] font-semibold text-[#1D4ED8]">
+            ✓ Yuran hanya RM50
+          </span>
+        </div>
 
-      {/* ——— Expanded booking panel ——— */}
-      <div
-        className="booking-panel absolute left-[60px] top-1/2 z-20 flex max-h-[80vh] w-[360px] max-w-[90vw] -translate-y-1/2 flex-col overflow-hidden rounded-[18px] bg-white/95 p-[26px] shadow-[0_25px_60px_rgba(0,0,0,0.18)] backdrop-blur-[12px] transition-[width,opacity] duration-[0.25s] ease-out max-lg:relative max-lg:left-0 max-lg:top-auto max-lg:mx-auto max-lg:max-h-none max-lg:translate-y-0 max-lg:mt-0"
-        style={{
-          width: collapsed ? 0 : 360,
-          minHeight: collapsed ? 0 : "auto",
-          padding: collapsed ? 0 : 26,
-          borderRadius: 18,
-          opacity: collapsed ? 0 : 1,
-          pointerEvents: collapsed ? "none" : "auto",
-          overflow: "hidden",
-        }}
-        aria-hidden={collapsed}
-      >
-        {!collapsed && (
-          <>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {TABS.map((tab) => (
             <button
+              key={tab.id || "all"}
               type="button"
-              aria-label="Collapse panel"
-              className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-lg text-[#64748B] transition-colors hover:bg-[#F1F5F9] hover:text-[#0F172A] focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-1"
-              onClick={() => setCollapsed(true)}
+              aria-pressed={activeTab === tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className="rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-1"
+              style={
+                activeTab === tab.id
+                  ? { background: "#2563EB", color: "white" }
+                  : { background: "#F3F4F6", color: "#374151" }
+              }
             >
-              <ChevronLeftIcon className="h-5 w-5" aria-hidden />
+              {tab.label}
             </button>
+          ))}
+        </div>
 
-            <p className="text-[13px] font-semibold uppercase tracking-wider text-[#2563EB]">
-              Tempah Kursus Anda
-            </p>
-            <h2 className="mt-1 text-[22px] font-bold leading-tight text-[#0F172A]">
-              Kursus Pengendalian Makanan Wajib KKM
-            </h2>
-            <p className="mt-2 text-[13px] text-[#64748B]">
-              Latihan rasmi untuk pengendali makanan. Sijil sah KKM dikeluarkan dalam 12 jam.
-            </p>
-
-            <div className="mt-3 flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-1 rounded-full bg-[#F0FDF4] px-3 py-1.5 text-[12px] font-semibold text-[#166534]">
-                ✓ Sijil dalam masa 12 jam
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-[#EFF6FF] px-3 py-1.5 text-[12px] font-semibold text-[#1D4ED8]">
-                ✓ Yuran hanya RM50
-              </span>
-            </div>
-
-            <div className="mt-4 flex flex-wrap gap-2">
-              {TABS.map((tab) => (
-                <button
-                  key={tab.id || "all"}
-                  type="button"
-                  aria-pressed={activeTab === tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className="rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-1"
-                  style={
-                    activeTab === tab.id
-                      ? { background: "#2563EB", color: "white" }
-                      : { background: "#F3F4F6", color: "#374151" }
-                  }
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="mt-4 flex min-h-0 flex-1 flex-col overflow-y-auto" style={{ scrollbarWidth: "thin" }}>
-              <QuickClassList selectedLanguage={activeTab} />
-            </div>
-          </>
-        )}
+        <div className="mt-4 flex min-h-0 flex-1 flex-col overflow-y-auto" style={{ scrollbarWidth: "thin" }}>
+          <QuickClassList selectedLanguage={activeTab} />
+        </div>
       </div>
     </>
   );

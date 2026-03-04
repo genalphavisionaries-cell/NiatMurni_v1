@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { HomepageSettings } from "@/lib/homepage-settings";
 
 type FooterProps = {
-  settings: Pick<HomepageSettings, "footerColumns" | "footerBottom" | "siteName">;
+  settings: Pick<HomepageSettings, "footerColumns" | "footerBottom" | "siteName" | "paymentMethodIcons">;
 };
 
 const QUICK_LINKS = [
@@ -20,15 +20,17 @@ const LOGIN_LINKS = [
   { label: "Log Masuk Tutor", href: "/login/tutor" },
 ] as const;
 
-const PAYMENT_METHODS = [
-  "VISA",
-  "Mastercard",
-  "AMEX",
-  "JCB",
-  "Discover",
-  "Diners Club",
-  "UnionPay",
-] as const;
+const PAYMENT_METHODS: { id: string; label: string }[] = [
+  { id: "visa", label: "VISA" },
+  { id: "mastercard", label: "Mastercard" },
+  { id: "amex", label: "AMEX" },
+  { id: "jcb", label: "JCB" },
+  { id: "discover", label: "Discover" },
+  { id: "diners", label: "Diners Club" },
+  { id: "unionpay", label: "UnionPay" },
+  { id: "qr", label: "QR" },
+  { id: "duitnow", label: "DuitNow" },
+];
 
 const LEGAL_LINKS = [
   { label: "Privacy Policy", href: "/privacy" },
@@ -97,24 +99,44 @@ export default function Footer({ settings }: FooterProps) {
                 <div className="flex items-center gap-2">
                   <PadlockIcon className="h-5 w-5 text-[#0F172A]" />
                   <span className="text-sm font-medium text-[#0F172A]">
-                    Guaranteed safe & secure checkout
+                    Guaranteed Safe & Secured Online Payment
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 rounded bg-[#32325D] px-2.5 py-1.5">
                   <span className="text-[10px] font-medium text-white">Powered by</span>
-                  <span className="text-xs font-semibold text-white">stripe</span>
+                  <span className="text-sm font-semibold text-white" style={{ fontFamily: "inherit" }}>Stripe</span>
                 </div>
               </div>
               <div className="my-3 h-px bg-[#E5E7EB]" />
               <div className="flex flex-wrap items-center gap-2">
-                {PAYMENT_METHODS.map((name) => (
-                  <span
-                    key={name}
-                    className="rounded bg-[#F3F4F6] px-2 py-1 text-[10px] font-medium text-[#374151]"
-                  >
-                    {name}
-                  </span>
-                ))}
+                {PAYMENT_METHODS.map(({ id, label }) => {
+                  const iconUrl = settings.paymentMethodIcons?.[id] ?? `/images/payment/${id}.svg`;
+                  return (
+                    <span
+                      key={id}
+                      className="inline-flex h-7 w-10 items-center justify-center overflow-hidden rounded bg-[#F3F4F6] px-1 py-0.5"
+                      title={label}
+                    >
+                      <img
+                        src={iconUrl}
+                        alt={label}
+                        className="h-5 w-auto max-w-full object-contain"
+                        onError={(e) => {
+                          const el = e.currentTarget;
+                          el.style.display = "none";
+                          const fallback = el.nextElementSibling as HTMLElement | null;
+                          if (fallback) fallback.style.display = "inline";
+                        }}
+                      />
+                      <span
+                        className="text-[10px] font-medium text-[#374151]"
+                        style={{ display: "none" }}
+                      >
+                        {label}
+                      </span>
+                    </span>
+                  );
+                })}
               </div>
             </div>
           </div>

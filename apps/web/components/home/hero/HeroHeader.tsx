@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import Link from "next/link";
+import LogoBox from "./LogoBox";
 
 type HeroHeaderProps = {
   siteName?: string;
@@ -31,91 +31,79 @@ export default function HeroHeader({ siteName = "Niat Murni Academy", logoUrl = 
   }, []);
 
   return (
-    <header className="site-header top-nav relative z-[50] flex items-center justify-between px-6 py-6 sm:px-8 sm:py-8">
-      <div className="logo-container flex flex-shrink-0 items-center">
-        <Link href="/" className="focus:outline focus:outline-2 focus:outline-white focus:outline-offset-2">
-          {logoUrl ? (
-            <img
-              src={logoUrl}
-              alt={`${siteName} Logo`}
-              className="h-9 w-auto object-contain"
-              style={{ height: 36, width: "auto", objectFit: "contain" }}
-            />
-          ) : (
-            <span className="text-lg font-semibold text-white drop-shadow-md transition-opacity hover:opacity-90">
-              {siteName}
-            </span>
-          )}
-        </Link>
-      </div>
-
-      <div className="header-right flex flex-1 items-center justify-end gap-3">
-        <div className="relative" ref={langRef}>
-          <button
-            type="button"
-            aria-haspopup="listbox"
-            aria-expanded={langOpen}
-            onClick={() => setLangOpen((o) => !o)}
-            className="flex items-center gap-1.5 rounded-lg border border-white/30 bg-white/10 px-2.5 py-1.5 text-[13px] font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/20 focus:outline focus:outline-2 focus:outline-white focus:outline-offset-2"
-          >
-            <span>{lang.flag}</span>
-            <span>{lang.label}</span>
-            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          {langOpen && (
-            <ul
-              role="listbox"
-              className="absolute right-0 top-full z-20 mt-1.5 min-w-[100px] rounded-lg border border-[#E5E7EB] bg-white py-1 shadow-lg"
-            >
-              {LANG_OPTIONS.map((opt) => (
-                <li key={opt.id} role="option" aria-selected={lang.id === opt.id}>
-                  <button
-                    type="button"
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-[#0F172A] hover:bg-[#F3F4F6] focus:bg-[#F3F4F6] focus:outline"
-                    onClick={() => {
-                      setLang(opt);
-                      setLangOpen(false);
-                    }}
-                  >
-                    <span>{opt.flag}</span>
-                    <span>{opt.label}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+    <header
+      className="site-header absolute left-0 top-0 z-[50] flex w-full items-center justify-end px-10"
+      style={{
+        height: 72,
+        padding: "0 40px",
+      }}
+    >
+      <LogoBox logoUrl={logoUrl} alt={siteName} />
+      <div className="relative ml-4" ref={langRef}>
         <button
           type="button"
-          aria-label={menuOpen ? "Close menu" : "Menu"}
-          aria-expanded={menuOpen}
-          className="flex h-10 w-10 items-center justify-center rounded-lg text-white/90 transition-colors duration-200 hover:bg-white/10 focus:outline focus:outline-2 focus:outline-white focus:outline-offset-2"
-          onClick={() => setMenuOpen((o) => !o)}
+          aria-haspopup="listbox"
+          aria-expanded={langOpen}
+          onClick={() => setLangOpen((o) => !o)}
+          className="flex items-center gap-1.5 rounded-lg border border-white/30 bg-white/10 px-2.5 py-1.5 text-[13px] font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/20 focus:outline focus:outline-2 focus:outline-white focus:outline-offset-2"
         >
-          <span className="relative h-6 w-6">
-            <span
-              className="absolute left-1/2 top-1/2 block h-0.5 w-4 -translate-x-1/2 -translate-y-1/2 bg-current transition-all duration-200"
-              style={{
-                top: menuOpen ? "50%" : "30%",
-                transform: menuOpen ? "translate(-50%,-50%) rotate(45deg)" : "translate(-50%,-50%)",
-              }}
-            />
-            <span
-              className="absolute left-1/2 top-1/2 block h-0.5 w-4 -translate-x-1/2 -translate-y-1/2 bg-current transition-opacity duration-200"
-              style={{ opacity: menuOpen ? 0 : 1 }}
-            />
-            <span
-              className="absolute left-1/2 top-1/2 block h-0.5 w-4 -translate-x-1/2 -translate-y-1/2 bg-current transition-all duration-200"
-              style={{
-                top: menuOpen ? "50%" : "70%",
-                transform: menuOpen ? "translate(-50%,-50%) rotate(-45deg)" : "translate(-50%,-50%)",
-              }}
-            />
-          </span>
+          <span>{lang.flag}</span>
+          <span>{lang.label}</span>
+          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
         </button>
+        {langOpen && (
+          <ul
+            role="listbox"
+            className="absolute right-0 top-full z-20 mt-1.5 min-w-[100px] rounded-lg border border-[#E5E7EB] bg-white py-1 shadow-lg"
+          >
+            {LANG_OPTIONS.map((opt) => (
+              <li key={opt.id} role="option" aria-selected={lang.id === opt.id}>
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-[#0F172A] hover:bg-[#F3F4F6] focus:bg-[#F3F4F6] focus:outline"
+                  onClick={() => {
+                    setLang(opt);
+                    setLangOpen(false);
+                  }}
+                >
+                  <span>{opt.flag}</span>
+                  <span>{opt.label}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
+      <button
+        type="button"
+        aria-label={menuOpen ? "Close menu" : "Menu"}
+        aria-expanded={menuOpen}
+        className="ml-3 flex h-10 w-10 items-center justify-center rounded-lg text-white/90 transition-colors hover:bg-white/10 focus:outline focus:outline-2 focus:outline-white focus:outline-offset-2"
+        onClick={() => setMenuOpen((o) => !o)}
+      >
+        <span className="relative h-6 w-6">
+          <span
+            className="absolute left-1/2 top-1/2 block h-0.5 w-4 -translate-x-1/2 -translate-y-1/2 bg-current transition-all duration-200"
+            style={{
+              top: menuOpen ? "50%" : "30%",
+              transform: menuOpen ? "translate(-50%,-50%) rotate(45deg)" : "translate(-50%,-50%)",
+            }}
+          />
+          <span
+            className="absolute left-1/2 top-1/2 block h-0.5 w-4 -translate-x-1/2 -translate-y-1/2 bg-current transition-opacity duration-200"
+            style={{ opacity: menuOpen ? 0 : 1 }}
+          />
+          <span
+            className="absolute left-1/2 top-1/2 block h-0.5 w-4 -translate-x-1/2 -translate-y-1/2 bg-current transition-all duration-200"
+            style={{
+              top: menuOpen ? "50%" : "70%",
+              transform: menuOpen ? "translate(-50%,-50%) rotate(-45deg)" : "translate(-50%,-50%)",
+            }}
+          />
+        </span>
+      </button>
     </header>
   );
 }

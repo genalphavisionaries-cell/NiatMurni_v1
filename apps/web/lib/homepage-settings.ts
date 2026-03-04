@@ -83,6 +83,8 @@ export type HomepageSettings = {
   whyChoose: WhyChooseSettings;
   /** CMS: homepage_social_proof — title, subtitle, google_rating, review_count, brand_logos[], testimonials[] */
   socialProof: SocialProofSettings;
+  /** Optional: payment method icon URLs keyed by id (e.g. visa, mastercard, qr, duitnow). Admin can upload; missing keys fall back to label. */
+  paymentMethodIcons?: Record<string, string>;
 };
 
 const defaultNav: NavLink[] = [
