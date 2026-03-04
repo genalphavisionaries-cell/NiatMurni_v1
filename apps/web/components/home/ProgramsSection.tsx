@@ -1,55 +1,69 @@
 import Link from "next/link";
 
-const features = [
+/** Demo programme cards — admin can drive from API/settings later. */
+const demoPrograms = [
   {
-    title: "KKM-recognised",
-    description: "Our food handler programme is recognised by the Ministry of Health Malaysia.",
-    icon: "✓",
+    id: "1",
+    name: "KKM Food Handler Certification",
+    description: "Full programme recognised by the Ministry of Health. Covers food safety principles, hygiene, and compliance.",
+    duration: "1 day",
+    mode: "Online & physical",
   },
   {
-    title: "Online & physical",
-    description: "Choose the format that fits your schedule—attend in person or join live online.",
-    icon: "✓",
-  },
-  {
-    title: "Certificate & verification",
-    description: "Receive a certificate with QR verification for employers and auditors.",
-    icon: "✓",
+    id: "2",
+    name: "Refresher Course",
+    description: "For those renewing certification. Updated content and quick assessment.",
+    duration: "Half day",
+    mode: "Online",
   },
 ];
 
 export default function ProgramsSection() {
   return (
-    <section id="programs" className="scroll-mt-20 bg-stone-50 py-16 sm:py-20">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+    <section id="programs-list" className="scroll-mt-20 bg-surface py-20 sm:py-24">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-stone-900 sm:text-3xl">
-            Why train with us
+          <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+            Our programmes
           </h2>
-          <p className="mx-auto mt-3 max-w-xl text-stone-600">
-            Professional food safety training designed to meet regulatory requirements and support your business.
+          <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-600">
+            Structured courses designed to meet regulatory requirements and industry standards.
           </p>
         </div>
-        <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          {features.map((f) => (
+        <div className="mt-14 grid gap-8 sm:grid-cols-2">
+          {demoPrograms.map((prog) => (
             <div
-              key={f.title}
-              className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm"
+              key={prog.id}
+              className="rounded-2xl border border-slate-200 bg-white p-8 shadow-card transition hover:shadow-card-hover"
             >
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-600 font-bold">
-                {f.icon}
-              </span>
-              <h3 className="mt-4 font-semibold text-stone-900">{f.title}</h3>
-              <p className="mt-2 text-stone-600">{f.description}</p>
+              <div className="flex flex-wrap gap-2">
+                <span className="rounded-lg bg-primary-500/10 px-3 py-1 text-xs font-semibold text-primary-700">
+                  {prog.duration}
+                </span>
+                <span className="rounded-lg bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+                  {prog.mode}
+                </span>
+              </div>
+              <h3 className="mt-4 text-xl font-semibold text-slate-900">{prog.name}</h3>
+              <p className="mt-3 leading-relaxed text-slate-600">{prog.description}</p>
+              <Link
+                href="#classes"
+                className="mt-6 inline-flex items-center text-sm font-semibold text-primary-600 hover:text-primary-700"
+              >
+                View upcoming classes
+                <svg className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
             </div>
           ))}
         </div>
         <p className="mt-10 text-center">
           <Link
             href="#classes"
-            className="font-medium text-amber-600 hover:underline"
+            className="inline-flex rounded-xl bg-primary-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-primary-600"
           >
-            See upcoming classes →
+            See all upcoming classes
           </Link>
         </p>
       </div>

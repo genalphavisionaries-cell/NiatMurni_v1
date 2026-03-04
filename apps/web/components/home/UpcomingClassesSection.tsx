@@ -24,48 +24,56 @@ export default function UpcomingClassesSection() {
   }, []);
 
   return (
-    <section id="classes" className="scroll-mt-20 bg-white py-16 sm:py-20">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+    <section id="classes" className="scroll-mt-20 bg-white py-20 sm:py-24">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-stone-900 sm:text-3xl">
-            Upcoming Classes
+          <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+            Upcoming classes
           </h2>
-          <p className="mx-auto mt-3 max-w-xl text-stone-600">
+          <p className="mx-auto mt-4 max-w-2xl text-slate-600">
             Book your seat for the next available sessions. Online and physical options available.
           </p>
         </div>
-        <div className="mt-10">
+        <div className="mt-14">
           {loading ? (
-            <div className="flex justify-center py-12">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" />
+            <div className="flex justify-center py-16">
+              <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
             </div>
           ) : classes.length === 0 ? (
-            <p className="text-center text-stone-500 py-12">
-              No upcoming classes at the moment. Check back soon.
-            </p>
+            <div className="rounded-2xl border border-slate-200 bg-surface py-16 text-center">
+              <p className="text-slate-600">No upcoming classes at the moment. Check back soon.</p>
+              <Link
+                href="#contact"
+                className="mt-4 inline-block text-sm font-semibold text-primary-600 hover:text-primary-700"
+              >
+                Contact us for enquiries
+              </Link>
+            </div>
           ) : (
-            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {classes.slice(0, 6).map((c) => (
                 <li
                   key={c.id}
-                  className="flex flex-col rounded-xl border border-stone-200 bg-white p-5 shadow-sm transition hover:shadow-md"
+                  className="flex flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-card transition hover:shadow-card-hover"
                 >
-                  <h3 className="font-semibold text-stone-900">{c.program_name}</h3>
-                  <p className="mt-1 text-sm text-stone-500">
+                  <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                    {c.mode}
+                  </span>
+                  <h3 className="mt-3 text-lg font-semibold text-slate-900">{c.program_name}</h3>
+                  <p className="mt-1 text-sm text-slate-500">
                     {new Date(c.starts_at).toLocaleString("en-MY", {
                       dateStyle: "medium",
                       timeStyle: "short",
-                    })}{" "}
-                    · {c.mode}
+                    })}
                   </p>
                   {c.trainer_name && (
-                    <p className="mt-0.5 text-sm text-stone-500">{c.trainer_name}</p>
+                    <p className="mt-0.5 text-sm text-slate-500">{c.trainer_name}</p>
                   )}
                   <Link
                     href={`/class/${c.id}`}
-                    className="mt-4 inline-flex w-fit rounded-full bg-amber-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-600"
+                    className="mt-5 inline-flex w-fit rounded-xl bg-primary-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-600 active:scale-[0.98]"
                   >
-                    View & Register
+                    View & register
                   </Link>
                 </li>
               ))}
@@ -73,9 +81,12 @@ export default function UpcomingClassesSection() {
           )}
         </div>
         {!loading && classes.length > 0 && (
-          <p className="mt-6 text-center">
-            <Link href="/#classes" className="text-amber-600 font-medium hover:underline">
-              View all classes
+          <p className="mt-8 text-center">
+            <Link
+              href="/#classes"
+              className="text-sm font-semibold text-primary-600 hover:text-primary-700"
+            >
+              View all classes →
             </Link>
           </p>
         )}

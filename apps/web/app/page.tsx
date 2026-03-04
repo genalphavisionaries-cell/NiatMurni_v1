@@ -3,6 +3,9 @@ import {
   Footer,
   Hero,
   MainBanner,
+  PromoStrip,
+  FeaturedSection,
+  PromoGrid,
   UpcomingClassesSection,
   CtaSection,
   ProgramsSection,
@@ -25,16 +28,19 @@ export default function HomePage() {
       />
       <main>
         <Hero settings={settings.hero} />
-        <ProgramsSection />
-        <section className="bg-white">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
-            <div className="space-y-16">
+        <PromoStrip />
+        <FeaturedSection />
+        <section className="bg-white py-16 sm:py-20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="space-y-12">
               {settings.mainBanners.map((banner) => (
                 <MainBanner key={banner.id} banner={banner} />
               ))}
             </div>
           </div>
         </section>
+        <PromoGrid />
+        <ProgramsSection />
         <UpcomingClassesSection />
         <CtaSection />
         <ContactSection />

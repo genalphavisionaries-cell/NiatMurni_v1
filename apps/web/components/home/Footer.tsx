@@ -9,12 +9,12 @@ export default function Footer({ settings }: FooterProps) {
   const { footerColumns, footerBottom, siteName } = settings;
 
   return (
-    <footer className="border-t border-stone-200 bg-stone-900 text-stone-300">
-      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+    <footer className="border-t border-slate-200 bg-slate-900 text-slate-300">
+      <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div className="sm:col-span-2 lg:col-span-1">
             <p className="text-lg font-semibold text-white">{siteName}</p>
-            <p className="mt-2 text-sm">
+            <p className="mt-3 text-sm leading-relaxed text-slate-400">
               Professional food safety training and KKM-recognised certification.
             </p>
           </div>
@@ -23,7 +23,7 @@ export default function Footer({ settings }: FooterProps) {
               <h3 className="text-sm font-semibold uppercase tracking-wider text-white">
                 {col.heading}
               </h3>
-              <ul className="mt-4 space-y-2">
+              <ul className="mt-4 space-y-3">
                 {col.links.map((link) =>
                   link.external ? (
                     <li key={link.href + link.label}>
@@ -31,14 +31,17 @@ export default function Footer({ settings }: FooterProps) {
                         href={link.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm transition hover:text-white"
+                        className="text-sm text-slate-400 transition hover:text-primary-400"
                       >
                         {link.label}
                       </a>
                     </li>
                   ) : (
                     <li key={link.href + link.label}>
-                      <Link href={link.href} className="text-sm transition hover:text-white">
+                      <Link
+                        href={link.href}
+                        className="text-sm text-slate-400 transition hover:text-primary-400"
+                      >
                         {link.label}
                       </Link>
                     </li>
@@ -48,7 +51,7 @@ export default function Footer({ settings }: FooterProps) {
             </div>
           ))}
         </div>
-        <div className="mt-10 border-t border-stone-700 pt-8 text-center text-sm">
+        <div className="mt-12 border-t border-slate-700 pt-8 text-center text-sm text-slate-500">
           {footerBottom}
         </div>
       </div>
