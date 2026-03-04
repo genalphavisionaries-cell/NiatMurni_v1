@@ -1,7 +1,6 @@
 /**
- * Homepage settings shape — to be loaded from admin API later (e.g. Homepage Settings in Filament).
+ * Homepage settings shape — to be loaded from admin API when NEXT_PUBLIC_ADMIN_API_URL is set.
  * All sections are optional; defaults used when missing.
- * Admin can customize: logo upload, header menu, footer columns/links, hero headline/banner, main banners, why choose.
  */
 
 export type NavLink = {
@@ -36,7 +35,6 @@ export type SocialProofBrandLogo = {
 /** CMS: homepage_social_proof — testimonial item */
 export type SocialProofTestimonial = {
   name: string;
-  /** Optional role/subtitle (e.g. "Pengusaha Restoran") — editable in admin */
   role?: string;
   rating: number;
   review: string;
@@ -64,9 +62,7 @@ export type HomepageSettings = {
     links: NavLink[];
   }[];
   footerBottom: string;
-  /** Footer brand column: logo image URL (admin upload). If null, site name is shown as text. */
   footerLogoUrl: string | null;
-  /** Footer brand column: description paragraph below logo/site name (CMS-editable). */
   footerDescription: string;
   hero: {
     headline: string;
@@ -85,13 +81,9 @@ export type HomepageSettings = {
     ctaHref: string;
     variant: "default" | "reverse";
   }[];
-  /** CMS: why_choose — title, subtitle, image, benefits[] */
   whyChoose: WhyChooseSettings;
-  /** CMS: homepage_social_proof — title, subtitle, google_rating, review_count, brand_logos[], testimonials[] */
   socialProof: SocialProofSettings;
-  /** Optional: payment method icon URLs keyed by id (e.g. visa, mastercard, qr, duitnow). Admin can upload; missing keys fall back to label. */
   paymentMethodIcons?: Record<string, string>;
-  /** Footer SSL/security badge image URL (admin upload). If set, replaces the default "Secured by positiveSSL" badge. */
   footerSslBadgeUrl?: string | null;
 };
 
@@ -212,3 +204,38 @@ export const defaultHomepageSettings: HomepageSettings = {
     ],
   },
 };
+
+const ADMIN_API = process.env.NEXT_PUBLIC_ADMIN_API_URL;
+
+function deepMerge<T extends object>(defaults: T, overrides: Partial<T> | null | undefined): T {
+  if (overrides == null || typeof overrides !== "object") return defaults;
+  const out = { ...defaults };
+  for (const key of Object.keys(overrides) as (keyof T)[]) {
+    const d = (defaults as Record<string, unknown>)[key as string];
+    const o = (overrides as Record<string, unknown>)[key as string];
+    if (o != null && typeof o === "object" && !Array.isArray(o) && typeof d === "object" && d != null && !Array.isArray(d)) {
+      (out as Record<string, unknown>)[key as string] = deepMerge(d as object, o as object);
+    } else if (o !== undefined) {
+      (out as Record<string, unknown>)[key as string] = o;
+    }
+  }
+  return out;
+}
+
+/**
+ * Fetch homepage settings from admin API when NEXT_PUBLIC_ADMIN_API_URL is set.
+ * Falls back to defaultHomepageSettings on failure or when env is not set.
+ */
+export async function getHomepageSettings(): Promise<HomepageSettings> {
+  if (!ADMIN_API?.trim()) return defaultHomepageSettings;
+  try {
+    const res = await fetch(`${ADMIN_API.replace(/\/$/, "")}/api/homepage-settings`, {
+      next: { revalidate: 60 },
+    });
+    if (!res.ok) return defaultHomepageSettings;
+    const data = (await res.json()) as Partial<HomepageSettings>;
+    return deepMerge(defaultHomepageSettings, data);
+  } catch {
+    return defaultHomepageSettings;
+  }
+}

@@ -12,10 +12,10 @@ import {
   WhyChooseSection,
   SocialProofSection,
 } from "@/components/home";
-import { defaultHomepageSettings } from "@/lib/homepage-settings";
+import { getHomepageSettings } from "@/lib/homepage-settings";
 
-export default function HomePage() {
-  const settings = defaultHomepageSettings;
+export default async function HomePage() {
+  const settings = await getHomepageSettings();
 
   return (
     <>

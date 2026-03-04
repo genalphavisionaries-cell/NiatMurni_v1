@@ -15,8 +15,14 @@ class HomepageSetting extends Model
         'header_nav',
         'footer_columns',
         'footer_bottom',
+        'footer_logo_url',
+        'footer_description',
+        'footer_ssl_badge_url',
+        'payment_method_icons',
         'hero',
         'main_banners',
+        'why_choose',
+        'social_proof',
     ];
 
     protected function casts(): array
@@ -26,6 +32,9 @@ class HomepageSetting extends Model
             'footer_columns' => 'array',
             'hero' => 'array',
             'main_banners' => 'array',
+            'payment_method_icons' => 'array',
+            'why_choose' => 'array',
+            'social_proof' => 'array',
         ];
     }
 
