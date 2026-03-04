@@ -1,14 +1,9 @@
 import {
   Footer,
   HeroLayout,
-  MainBanner,
   PromoStrip,
-  FeaturedSection,
   PromoGrid,
   UpcomingClassesSection,
-  CtaSection,
-  ProgramsSection,
-  ContactSection,
   WhyChooseSection,
   SocialProofSection,
 } from "@/components/home";
@@ -24,21 +19,8 @@ export default async function HomePage() {
         <WhyChooseSection data={settings.whyChoose} />
         <SocialProofSection data={settings.socialProof} />
         <PromoStrip />
-        <FeaturedSection />
-        <section className="bg-white py-16 sm:py-20">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="space-y-12">
-              {settings.mainBanners.map((banner) => (
-                <MainBanner key={banner.id} banner={banner} />
-              ))}
-            </div>
-          </div>
-        </section>
         <PromoGrid />
-        <ProgramsSection />
         <UpcomingClassesSection />
-        <CtaSection />
-        <ContactSection />
       </main>
       <Footer
         settings={{

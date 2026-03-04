@@ -3,9 +3,40 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { fetchUpcomingClasses, type ClassSession } from "@/lib/api";
+import ClassCard from "@/components/home/hero/ClassCard";
+import {
+  MOCK_HERO_CLASSES,
+  getRecommendedClasses,
+  type HeroClassItem,
+  type LanguageFilter,
+} from "@/components/home/hero/hero-classes";
+
+/** Map API class to hero-style item for ClassCard */
+function toHeroItem(c: ClassSession): HeroClassItem {
+  const starts = new Date(c.starts_at);
+  const ends = new Date(c.ends_at);
+  const dayNames = ["Ahad", "Isnin", "Selasa", "Rabu", "Khamis", "Jumaat", "Sabtu"];
+  const dateStr = starts.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }).replace(/ /g, " ");
+  const timeStr = starts.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: true })
+    + " – "
+    + ends.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: true });
+  return {
+    id: String(c.id),
+    date: dateStr,
+    dateSort: c.starts_at.slice(0, 10),
+    day: dayNames[starts.getDay()],
+    time: timeStr,
+    slots: c.capacity ?? 15,
+    mode: c.mode === "online" ? "Online" : "Physical",
+    language: c.language ?? "B. Melayu",
+  };
+}
+
+const DEMO_CLASSES = MOCK_HERO_CLASSES;
+const DEMO_LIMIT = 6;
 
 export default function UpcomingClassesSection() {
-  const [classes, setClasses] = useState<ClassSession[]>([]);
+  const [apiClasses, setApiClasses] = useState<ClassSession[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -13,7 +44,7 @@ export default function UpcomingClassesSection() {
     setLoading(true);
     fetchUpcomingClasses()
       .then((list) => {
-        if (!cancelled) setClasses(list);
+        if (!cancelled) setApiClasses(list);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -23,73 +54,64 @@ export default function UpcomingClassesSection() {
     };
   }, []);
 
+  const useDemo = !loading && apiClasses.length === 0;
+  const displayList: HeroClassItem[] = useDemo
+    ? DEMO_CLASSES.slice(0, DEMO_LIMIT)
+    : apiClasses.slice(0, DEMO_LIMIT).map(toHeroItem);
+  const firstRecommendedId = useDemo
+    ? getRecommendedClasses(DEMO_CLASSES, "" as LanguageFilter, 1)[0]?.id
+    : displayList[0]?.id;
+
   return (
     <section id="classes" className="scroll-mt-20 bg-white py-20 sm:py-24">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
         <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+          <h2 className="text-3xl font-bold tracking-tight text-[#0F172A] sm:text-4xl">
             Upcoming classes
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-slate-600">
+          <p className="mx-auto mt-4 max-w-2xl text-[#64748B]">
             Book your seat for the next available sessions. Online and physical options available.
           </p>
         </div>
-        <div className="mt-14">
+
+        <div className="mt-10">
           {loading ? (
             <div className="flex justify-center py-16">
-              <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
-            </div>
-          ) : classes.length === 0 ? (
-            <div className="rounded-2xl border border-slate-200 bg-surface py-16 text-center">
-              <p className="text-slate-600">No upcoming classes at the moment. Check back soon.</p>
-              <Link
-                href="#contact"
-                className="mt-4 inline-block text-sm font-semibold text-primary-600 hover:text-primary-700"
-              >
-                Contact us for enquiries
-              </Link>
+              <div className="h-10 w-10 animate-spin rounded-full border-2 border-[#2563EB] border-t-transparent" />
             </div>
           ) : (
-            <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {classes.slice(0, 6).map((c) => (
-                <li
-                  key={c.id}
-                  className="flex flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-card transition hover:shadow-card-hover"
-                >
-                  <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
-                    {c.mode}
-                  </span>
-                  <h3 className="mt-3 text-lg font-semibold text-slate-900">{c.program_name}</h3>
-                  <p className="mt-1 text-sm text-slate-500">
-                    {new Date(c.starts_at).toLocaleString("en-MY", {
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                    })}
-                  </p>
-                  {c.trainer_name && (
-                    <p className="mt-0.5 text-sm text-slate-500">{c.trainer_name}</p>
-                  )}
-                  <Link
-                    href={`/class/${c.id}`}
-                    className="mt-5 inline-flex w-fit rounded-xl bg-primary-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-600 active:scale-[0.98]"
-                  >
-                    View & register
+            <>
+              <ul className="flex flex-col gap-3">
+                {displayList.map((c) => {
+                  const isNext = firstRecommendedId === c.id;
+                  return (
+                    <li key={c.id}>
+                      <ClassCard item={c} isNextAvailable={isNext} />
+                    </li>
+                  );
+                })}
+              </ul>
+              {useDemo && (
+                <p className="mt-6 text-center text-sm text-[#64748B]">
+                  Demo content.{" "}
+                  <Link href="#contact" className="font-medium text-[#2563EB] hover:underline">
+                    Contact us for enquiries
                   </Link>
-                </li>
-              ))}
-            </ul>
+                </p>
+              )}
+              {!useDemo && displayList.length > 0 && (
+                <p className="mt-6 text-center">
+                  <Link
+                    href="#classes"
+                    className="text-sm font-semibold text-[#2563EB] hover:text-[#1D4ED8]"
+                  >
+                    View all classes →
+                  </Link>
+                </p>
+              )}
+            </>
           )}
         </div>
-        {!loading && classes.length > 0 && (
-          <p className="mt-8 text-center">
-            <Link
-              href="/#classes"
-              className="text-sm font-semibold text-primary-600 hover:text-primary-700"
-            >
-              View all classes →
-            </Link>
-          </p>
-        )}
       </div>
     </section>
   );

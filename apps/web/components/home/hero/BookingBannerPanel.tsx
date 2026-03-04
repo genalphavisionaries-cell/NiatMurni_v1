@@ -67,12 +67,12 @@ export default function BookingBannerPanel({ collapsed, onCollapsedChange }: Boo
     { id: "login", label: "Login", tooltip: "Login", type: "link", href: "/login", icon: <UserIcon /> },
   ];
 
-  /* Collapsed: 48px icon sidebar */
+  /* Collapsed: 56px icon sidebar */
   if (collapsed) {
     return (
       <div
-        className="flex flex-col items-center gap-3 rounded-xl bg-white pt-5 shadow-[0_20px_50px_rgba(0,0,0,0.1)]"
-        style={{ width: 48, paddingTop: 20, gap: 12 }}
+        className="flex flex-col items-center gap-3 rounded-xl bg-white pt-5 shadow-[0_25px_60px_rgba(0,0,0,0.15)]"
+        style={{ width: 56, paddingTop: 20, gap: 12 }}
       >
         <button
           type="button"
@@ -114,11 +114,10 @@ export default function BookingBannerPanel({ collapsed, onCollapsedChange }: Boo
   return (
     <>
       <div
-        className="booking-panel relative flex max-h-[80vh] flex-col overflow-hidden rounded-[20px] bg-white shadow-[0_20px_50px_rgba(0,0,0,0.1)]"
+        className="booking-panel relative flex max-h-[80vh] w-full flex-col overflow-hidden rounded-[20px] bg-white"
         style={{
-          width: 420,
           padding: 24,
-          boxShadow: "0 20px 50px rgba(0,0,0,0.1)",
+          boxShadow: "0 25px 60px rgba(0,0,0,0.15)",
         }}
       >
         <button
@@ -169,8 +168,19 @@ export default function BookingBannerPanel({ collapsed, onCollapsedChange }: Boo
           ))}
         </div>
 
-        <div className="mt-4 flex min-h-0 flex-1 flex-col overflow-y-auto" style={{ scrollbarWidth: "thin" }}>
-          <QuickClassList selectedLanguage={activeTab} />
+        <div className="mt-4 flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="min-h-0 flex-1 overflow-y-auto" style={{ scrollbarWidth: "thin" }}>
+            <QuickClassList selectedLanguage={activeTab} />
+          </div>
+          <div className="mt-3 shrink-0 border-t border-[#E5E7EB] pt-3">
+            <Link
+              href="/#classes"
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#0F172A] py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-[#1E293B] focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-1"
+            >
+              Lihat Jadual Kelas
+              <span aria-hidden>→</span>
+            </Link>
+          </div>
         </div>
       </div>
     </>

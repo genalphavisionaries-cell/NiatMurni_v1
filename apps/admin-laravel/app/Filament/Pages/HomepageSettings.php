@@ -348,6 +348,7 @@ class HomepageSettings extends Page implements HasForms
                                         ->schema([
                                             TextInput::make('name')->label('Name')->required()->maxLength(255),
                                             TextInput::make('role')->label('Role / subtitle')->maxLength(255)->placeholder('e.g. Pengusaha Restoran'),
+                                            TextInput::make('date')->label('Date (e.g. February 11 or Mac 2025)')->maxLength(100)->placeholder('optional'),
                                             TextInput::make('rating')->label('Rating (1–5)')->numeric()->minValue(1)->maxValue(5)->default(5),
                                             Textarea::make('review')->label('Review text')->required()->rows(3)->maxLength(2000),
                                             FileUpload::make('avatar')
@@ -560,6 +561,7 @@ class HomepageSettings extends Page implements HasForms
             $testimonials[] = [
                 'name' => $t['name'] ?? '',
                 'role' => $t['role'] ?? null,
+                'date' => ! empty($t['date']) ? $t['date'] : null,
                 'rating' => (int) ($t['rating'] ?? 5),
                 'review' => $t['review'] ?? '',
                 'avatar' => $t['avatar'] ?? null,

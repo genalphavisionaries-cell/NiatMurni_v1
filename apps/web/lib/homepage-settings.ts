@@ -36,6 +36,8 @@ export type SocialProofBrandLogo = {
 export type SocialProofTestimonial = {
   name: string;
   role?: string;
+  /** Optional display date (e.g. "February 11" or "March 11, 2021") */
+  date?: string;
   rating: number;
   review: string;
   avatar: string | null;
@@ -160,7 +162,7 @@ export const defaultHomepageSettings: HomepageSettings = {
     },
   ],
   whyChoose: {
-    title: "Kenapa Pilih Kursus Kami?",
+    title: "Kenapa Pilih Kursus Oleh Niat Murni",
     subtitle: "Latihan pengendalian makanan yang mudah, cepat dan sah di Malaysia",
     image: null,
     benefits: [
@@ -189,6 +191,7 @@ export const defaultHomepageSettings: HomepageSettings = {
       {
         name: "Ika Azlan",
         role: "Pengusaha Restoran",
+        date: "Februari 2025",
         rating: 5,
         review: "Terbaik dan sangat mudah faham. Kursus online sangat jelas dan cikgu sangat membantu.",
         avatar: null,
@@ -196,6 +199,7 @@ export const defaultHomepageSettings: HomepageSettings = {
       },
       {
         name: "Nona AB",
+        date: "Mac 2025",
         rating: 5,
         review: "Alhamdulillah kelas sangat berbaloi. Tak mengantuk walaupun online.",
         avatar: null,

@@ -32,7 +32,7 @@ export default function HeroHeader({ siteName = "Niat Murni Academy", logoUrl = 
 
   return (
     <header
-      className="site-header absolute left-0 top-0 z-[50] flex w-full items-center justify-end px-10"
+      className="site-header absolute left-0 top-0 z-[20] flex w-full items-center justify-end"
       style={{
         height: 72,
         padding: "0 40px",

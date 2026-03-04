@@ -1,22 +1,37 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import type { SocialProofSettings } from "@/lib/homepage-settings";
 
 type SocialProofSectionProps = {
   data: SocialProofSettings;
 };
 
+/** Google review URL - replace with your actual Google Place ID / review link */
+const GOOGLE_REVIEW_URL = "https://search.google.com/local/writereview?placeid=YOUR_PLACE_ID";
+
 const BRAND_LOGO_BOX_SIZE = 120;
-const AUTO_SLIDE_THRESHOLD = 6;
-const AUTO_SLIDE_INTERVAL_MS = 3000;
+const REVIEW_TRUNCATE_LENGTH = 120;
 
 function StarRating({ rating, size = "md" }: { rating: number; size?: "md" | "lg" }) {
   const stars = Math.min(5, Math.max(0, Math.round(rating)));
-  const sizeClass = size === "lg" ? "text-2xl sm:text-3xl" : "text-base";
+  const sizeClass = size === "lg" ? "text-xl" : "text-sm";
   return (
     <span className={`inline-flex gap-0.5 text-[#EAB308] ${sizeClass}`} aria-hidden>
       {"★".repeat(stars)}
+    </span>
+  );
+}
+
+function GoogleGIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <span className={`inline-flex items-center ${className}`} aria-hidden>
+      <span className="text-sm font-medium" style={{ color: "#4285F4" }}>G</span>
+      <span className="text-sm" style={{ color: "#EA4335" }}>o</span>
+      <span className="text-sm" style={{ color: "#FBBC04" }}>o</span>
+      <span className="text-sm" style={{ color: "#4285F4" }}>g</span>
+      <span className="text-sm" style={{ color: "#34A853" }}>l</span>
+      <span className="text-sm" style={{ color: "#EA4335" }}>e</span>
     </span>
   );
 }
@@ -30,34 +45,14 @@ export default function SocialProofSection({ data }: SocialProofSectionProps) {
     brand_logos,
     testimonials,
   } = data;
-  const sliderRef = useRef<HTMLDivElement>(null);
-  const [isPaused, setIsPaused] = useState(false);
+  const testimonialRef = useRef<HTMLDivElement>(null);
   const sortedLogos = [...brand_logos].sort((a, b) => a.order - b.order);
   const sortedTestimonials = [...testimonials].sort((a, b) => a.order - b.order);
-  const shouldAutoSlide = sortedLogos.length > AUTO_SLIDE_THRESHOLD;
 
-  useEffect(() => {
-    if (!shouldAutoSlide || isPaused || !sliderRef.current) return;
-    const el = sliderRef.current;
-    const step = BRAND_LOGO_BOX_SIZE + 24;
-    const timer = setInterval(() => {
-      if (!el) return;
-      const maxScroll = el.scrollWidth - el.clientWidth;
-      if (maxScroll <= 0) return;
-      const next = el.scrollLeft + step;
-      if (next >= maxScroll - 1) {
-        el.scrollTo({ left: 0, behavior: "smooth" });
-      } else {
-        el.scrollBy({ left: step, behavior: "smooth" });
-      }
-    }, AUTO_SLIDE_INTERVAL_MS);
-    return () => clearInterval(timer);
-  }, [shouldAutoSlide, isPaused, sortedLogos.length]);
-
-  const scroll = (dir: "left" | "right") => {
-    if (!sliderRef.current) return;
-    const step = BRAND_LOGO_BOX_SIZE + 24;
-    sliderRef.current.scrollBy({ left: dir === "left" ? -step : step, behavior: "smooth" });
+  const scrollTestimonials = () => {
+    if (testimonialRef.current) {
+      testimonialRef.current.scrollBy({ left: 320, behavior: "smooth" });
+    }
   };
 
   return (
@@ -78,21 +73,16 @@ export default function SocialProofSection({ data }: SocialProofSectionProps) {
           )}
         </header>
 
-        {/* Brand logos: single row, image boxes; auto-slide when more than 6 */}
-        <div
-          className="relative mt-10 flex items-center justify-center overflow-hidden"
-          onMouseEnter={() => setIsPaused(true)}
-          onMouseLeave={() => setIsPaused(false)}
-        >
+        {/* Brand logos row */}
+        <div className="relative mt-10 flex items-center justify-center overflow-hidden">
           <div
-            ref={sliderRef}
-            className="flex w-full snap-x snap-mandatory items-center gap-6 overflow-x-auto scroll-smooth py-2"
-            style={{ scrollbarWidth: "thin" }}
+            className="flex w-full snap-x snap-mandatory items-center gap-6 overflow-x-auto scroll-smooth py-2 [&::-webkit-scrollbar]:hidden"
+            style={{ scrollbarWidth: "none" }}
           >
             {sortedLogos.map((item, i) => (
               <div
                 key={`${item.company_name}-${i}`}
-                className="flex shrink-0 snap-center items-center justify-center rounded-lg border border-[#E5E7EB] bg-[#FAFAFA] transition-colors hover:border-[#CBD5E1] hover:bg-white"
+                className="flex shrink-0 snap-center items-center justify-center rounded-lg border border-[#E5E8F0] bg-[#FAFAFA] transition-colors hover:border-[#CBD5E1] hover:bg-white"
                 style={{
                   width: BRAND_LOGO_BOX_SIZE,
                   height: 72,
@@ -114,106 +104,122 @@ export default function SocialProofSection({ data }: SocialProofSectionProps) {
               </div>
             ))}
           </div>
-          {shouldAutoSlide && sortedLogos.length > 0 && (
-            <>
-              <button
-                type="button"
-                aria-label="Previous logos"
-                onClick={() => scroll("left")}
-                className="absolute left-2 z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/90 text-[#64748B] shadow-md hover:bg-white hover:text-[#0F172A] max-lg:hidden"
-              >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              <button
-                type="button"
-                aria-label="Next logos"
-                onClick={() => scroll("right")}
-                className="absolute right-2 z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/90 text-[#64748B] shadow-md hover:bg-white hover:text-[#0F172A] max-lg:hidden"
-              >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </>
-          )}
         </div>
 
-        {/* Trust Header — centered, gradient, Google rating */}
-        <div
-          className="mx-auto mt-10 max-w-2xl rounded-[20px] px-6 py-10 text-center sm:px-10 sm:py-10"
-          style={{
-            background: "linear-gradient(135deg, #f8fafc, #eef2ff)",
-            padding: 40,
-          }}
-        >
-          <div className="inline-flex items-center gap-1 rounded-full border border-[#E5E7EB] bg-white px-3 py-1.5 shadow-sm">
-            <span className="text-lg font-medium sm:text-xl" style={{ color: "#4285F4" }}>G</span>
-            <span className="text-lg sm:text-xl" style={{ color: "#EA4335" }}>o</span>
-            <span className="text-lg sm:text-xl" style={{ color: "#FBBC04" }}>o</span>
-            <span className="text-lg sm:text-xl" style={{ color: "#4285F4" }}>g</span>
-            <span className="text-lg sm:text-xl" style={{ color: "#34A853" }}>l</span>
-            <span className="text-lg sm:text-xl" style={{ color: "#EA4335" }}>e</span>
+        {/* Google Rating header — horizontal bar like reference */}
+        <div className="mt-10 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#E5E7EB] bg-[#FAFAFA] px-6 py-5">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2">
+              <GoogleGIcon className="h-5 w-5" />
+              <span className="text-base font-semibold text-[#0F172A]">Google Rating</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-bold text-[#0F172A]">
+                {google_rating.toFixed(1)}
+              </span>
+              <StarRating rating={google_rating} size="lg" />
+              <span className="text-sm text-[#64748B]">
+                {review_count.toLocaleString()} reviews
+              </span>
+            </div>
           </div>
-          <div className="mt-4 flex justify-center">
-            <StarRating rating={google_rating} size="lg" />
-          </div>
-          <p className="mt-2 text-xl font-bold text-[#0F172A] sm:text-2xl">
-            {google_rating.toFixed(1)} Google Rating
-          </p>
-          <p className="mt-1 text-sm font-medium text-[#64748B]">
-            {review_count.toLocaleString()}+ Peserta Berpuas Hati
-          </p>
+          <a
+            href={GOOGLE_REVIEW_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 rounded-lg bg-[#2563EB] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#1D4ED8] focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-2"
+          >
+            Write a Review
+          </a>
         </div>
 
-        {/* Testimonial Cards — grid 1/2/3, card design, hover lift */}
+        {/* Testimonial cards — horizontal scroll, card layout like reference */}
         {sortedTestimonials.length > 0 && (
-          <div className="mt-12 lg:mt-14">
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="relative mt-8">
+            <div
+              ref={testimonialRef}
+              className="flex gap-6 overflow-x-auto scroll-smooth pb-2 [&::-webkit-scrollbar]:hidden"
+              style={{ scrollbarWidth: "none" }}
+            >
               {sortedTestimonials.map((t, i) => (
-                <div
-                  key={`${t.name}-${i}`}
-                  className="rounded-[18px] bg-white p-6 shadow-md transition-transform duration-200 hover:-translate-y-[4px]"
-                >
-                  <div className="flex gap-0.5 text-[#EAB308]">
-                    <StarRating rating={t.rating} />
-                  </div>
-                  <p className="mt-4 text-[15px] leading-relaxed text-[#334155]">
-                    &ldquo;{t.review}&rdquo;
-                  </p>
-                  <div className="mt-4 flex items-center gap-3">
-                    {t.avatar ? (
-                      <img
-                        src={t.avatar}
-                        alt=""
-                        className="h-10 w-10 shrink-0 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div
-                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#E0E7FF] text-sm font-semibold text-[#4338CA]"
-                        aria-hidden
-                      >
-                        {t.name.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-[#0F172A]">
-                        {t.name}
-                      </p>
-                      {t.role && (
-                        <p className="truncate text-xs text-[#64748B]">
-                          {t.role}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
+                <TestimonialCard key={`${t.name}-${i}`} testimonial={t} />
               ))}
             </div>
+            {sortedTestimonials.length > 1 && (
+              <button
+                type="button"
+                aria-label="More reviews"
+                onClick={scrollTestimonials}
+                className="absolute right-0 top-1/2 flex h-10 w-10 -translate-y-1/2 shrink-0 items-center justify-center rounded-full border border-[#E5E7EB] bg-white text-[#64748B] shadow-sm transition-colors hover:bg-[#F9FAFB] hover:text-[#0F172A]"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            )}
           </div>
         )}
       </div>
     </section>
+  );
+}
+
+function TestimonialCard({
+  testimonial: t,
+}: {
+  testimonial: SocialProofSettings["testimonials"][number];
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const needsTruncate = t.review.length > REVIEW_TRUNCATE_LENGTH;
+  const displayText = expanded || !needsTruncate
+    ? t.review
+    : t.review.slice(0, REVIEW_TRUNCATE_LENGTH) + "…";
+
+  return (
+    <div
+      className="w-[300px] shrink-0 snap-start rounded-xl border border-[#E5E7EB] bg-white p-5 shadow-sm transition-shadow hover:shadow-md sm:w-[320px]"
+    >
+      <div className="flex items-start gap-3">
+        {t.avatar ? (
+          <img
+            src={t.avatar}
+            alt=""
+            className="h-11 w-11 shrink-0 rounded-full object-cover"
+          />
+        ) : (
+          <div
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#E5E7EB] text-sm font-semibold text-[#64748B]"
+            aria-hidden
+          >
+            {t.name.charAt(0).toUpperCase()}
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-[#0F172A]">{t.name}</p>
+          <div className="mt-1 flex items-center gap-2">
+            <StarRating rating={t.rating} />
+            {t.date && (
+              <span className="text-xs text-[#64748B]">{t.date}</span>
+            )}
+          </div>
+        </div>
+      </div>
+      <p className="mt-3 text-[14px] leading-relaxed text-[#334155]">
+        &ldquo;{displayText}&rdquo;
+      </p>
+      {needsTruncate && !expanded && (
+        <button
+          type="button"
+          onClick={() => setExpanded(true)}
+          className="mt-1 text-[13px] font-medium text-[#2563EB] hover:underline focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-1"
+        >
+          Read more
+        </button>
+      )}
+      <div className="mt-4 flex items-center gap-1.5 text-[12px] text-[#64748B]">
+        <GoogleGIcon className="h-3.5 w-3.5" />
+        <span>Posted on Google</span>
+      </div>
+    </div>
   );
 }

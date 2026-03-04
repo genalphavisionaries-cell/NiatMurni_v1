@@ -165,6 +165,7 @@ class HomepageSettingsController extends Controller
             $out[] = [
                 'name' => $t['name'] ?? '',
                 'role' => $t['role'] ?? null,
+                'date' => ! empty($t['date']) ? $t['date'] : null,
                 'rating' => (int) ($t['rating'] ?? 5),
                 'review' => $t['review'] ?? '',
                 'avatar' => $resolve($t['avatar'] ?? null),
