@@ -62,6 +62,10 @@ export type HomepageSettings = {
     links: NavLink[];
   }[];
   footerBottom: string;
+  /** Footer brand column: logo image URL (admin upload). If null, site name is shown as text. */
+  footerLogoUrl: string | null;
+  /** Footer brand column: description paragraph below logo/site name (CMS-editable). */
+  footerDescription: string;
   hero: {
     headline: string;
     subheadline: string;
@@ -85,6 +89,8 @@ export type HomepageSettings = {
   socialProof: SocialProofSettings;
   /** Optional: payment method icon URLs keyed by id (e.g. visa, mastercard, qr, duitnow). Admin can upload; missing keys fall back to label. */
   paymentMethodIcons?: Record<string, string>;
+  /** Footer SSL/security badge image URL (admin upload). If set, replaces the default "Secured by positiveSSL" badge. */
+  footerSslBadgeUrl?: string | null;
 };
 
 const defaultNav: NavLink[] = [
@@ -125,6 +131,9 @@ export const defaultHomepageSettings: HomepageSettings = {
   headerNav: defaultNav,
   footerColumns: defaultFooterColumns,
   footerBottom: "© Niat Murni Academy. All rights reserved.",
+  footerLogoUrl: null,
+  footerDescription:
+    "Penyedia latihan kursus pengendalian makanan untuk pengusaha makanan di seluruh Malaysia.",
   hero: {
     headline: "Professional Food Safety Training",
     subheadline:

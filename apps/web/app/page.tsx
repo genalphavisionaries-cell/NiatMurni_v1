@@ -46,6 +46,9 @@ export default function HomePage() {
           footerBottom: settings.footerBottom,
           siteName: settings.siteName,
           paymentMethodIcons: settings.paymentMethodIcons,
+          footerLogoUrl: settings.footerLogoUrl,
+          footerDescription: settings.footerDescription,
+          footerSslBadgeUrl: settings.footerSslBadgeUrl,
         }}
       />
     </>

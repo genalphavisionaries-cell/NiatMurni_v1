@@ -4,7 +4,10 @@ import Link from "next/link";
 import type { HomepageSettings } from "@/lib/homepage-settings";
 
 type FooterProps = {
-  settings: Pick<HomepageSettings, "footerColumns" | "footerBottom" | "siteName" | "paymentMethodIcons">;
+  settings: Pick<
+    HomepageSettings,
+    "footerColumns" | "footerBottom" | "siteName" | "paymentMethodIcons" | "footerLogoUrl" | "footerDescription" | "footerSslBadgeUrl"
+  >;
 };
 
 const QUICK_LINKS = [
@@ -39,7 +42,7 @@ const LEGAL_LINKS = [
 ] as const;
 
 export default function Footer({ settings }: FooterProps) {
-  const { siteName } = settings;
+  const { siteName, footerLogoUrl, footerDescription } = settings;
 
   return (
     <footer
@@ -49,11 +52,31 @@ export default function Footer({ settings }: FooterProps) {
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-12">
         {/* ——— Main: 4 columns ——— */}
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {/* Column 1: Brand */}
+          {/* Column 1: Brand — logo (admin upload) or site name, then CMS-editable description */}
           <div>
-            <p className="text-lg font-bold text-white">{siteName}</p>
+            <div className="flex items-center">
+              {footerLogoUrl ? (
+                <>
+                  <img
+                    src={footerLogoUrl}
+                    alt={siteName}
+                    className="h-9 w-auto max-w-[200px] object-contain object-left"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                      const next = e.currentTarget.nextElementSibling;
+                      if (next instanceof HTMLElement) next.style.display = "block";
+                    }}
+                  />
+                  <p className="text-lg font-bold text-white" style={{ display: "none" }}>
+                    {siteName}
+                  </p>
+                </>
+              ) : (
+                <p className="text-lg font-bold text-white">{siteName}</p>
+              )}
+            </div>
             <p className="mt-3 text-sm leading-relaxed text-white/90">
-              Penyedia latihan kursus pengendalian makanan untuk pengusaha makanan di seluruh Malaysia.
+              {footerDescription}
             </p>
             <p className="mt-2 text-xs text-white/70">Berdaftar di Malaysia</p>
           </div>
@@ -142,7 +165,7 @@ export default function Footer({ settings }: FooterProps) {
           </div>
         </div>
 
-        {/* ——— Bottom strip: legal + copyright | SSL badge ——— */}
+        {/* ——— Bottom strip: legal + copyright | SSL badge (space on right reserved for WhatsApp) ——— */}
         <div className="mt-10 border-t border-[#334155] pt-8">
           <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
             <div className="text-center sm:text-left">
@@ -161,18 +184,47 @@ export default function Footer({ settings }: FooterProps) {
                 © 2026 {siteName}. All Rights Reserved
               </p>
             </div>
-            <div className="flex flex-col items-center sm:items-end">
-              <div className="flex items-center gap-2 rounded border-2 border-[#EAB308] bg-white px-3 py-2">
-                <PadlockIcon className="h-5 w-5 shrink-0 text-[#0F172A]" />
-                <div className="text-center">
-                  <p className="text-[10px] font-semibold uppercase leading-tight text-[#0F172A]">
-                    Secured by
-                  </p>
-                  <p className="text-xs font-bold text-[#0F172A]">
-                    positive<span className="text-[#16A34A]">SSL</span>
-                  </p>
+            <div className="flex flex-col items-center sm:mr-14 sm:items-end">
+              {settings.footerSslBadgeUrl ? (
+                <div className="relative">
+                  <img
+                    src={settings.footerSslBadgeUrl}
+                    alt="Secured by positiveSSL"
+                    className="h-12 w-auto max-w-[180px] object-contain object-right"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                      const next = e.currentTarget.nextElementSibling;
+                      if (next instanceof HTMLElement) next.style.display = "flex";
+                    }}
+                  />
+                  <div
+                    className="flex items-center gap-2 rounded border-2 border-[#EAB308] bg-white px-3 py-2"
+                    style={{ display: "none" }}
+                  >
+                    <PadlockIcon className="h-5 w-5 shrink-0 text-[#0F172A]" />
+                    <div className="text-center">
+                      <p className="text-[10px] font-semibold uppercase leading-tight text-[#0F172A]">
+                        Secured by
+                      </p>
+                      <p className="text-xs font-bold text-[#0F172A]">
+                        positive<span className="text-[#16A34A]">SSL</span>
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="flex items-center gap-2 rounded border-2 border-[#EAB308] bg-white px-3 py-2">
+                  <PadlockIcon className="h-5 w-5 shrink-0 text-[#0F172A]" />
+                  <div className="text-center">
+                    <p className="text-[10px] font-semibold uppercase leading-tight text-[#0F172A]">
+                      Secured by
+                    </p>
+                    <p className="text-xs font-bold text-[#0F172A]">
+                      positive<span className="text-[#16A34A]">SSL</span>
+                    </p>
+                  </div>
+                </div>
+              )}
               <p className="mt-1.5 text-[11px] text-white/60">
                 Website secured with SSL encryption.
               </p>
