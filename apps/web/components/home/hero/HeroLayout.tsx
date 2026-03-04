@@ -1,5 +1,8 @@
-import QuickClassPanel from "./QuickClassPanel";
-import HeroVisualPanel from "./HeroVisualPanel";
+"use client";
+
+import HeroHeader from "./HeroHeader";
+import HeroSlider from "./HeroSlider";
+import BookingBannerPanel from "./BookingBannerPanel";
 
 type HeroLayoutProps = {
   siteName?: string;
@@ -8,15 +11,18 @@ type HeroLayoutProps = {
 export default function HeroLayout({ siteName }: HeroLayoutProps) {
   return (
     <section
-      className="grid h-screen w-full grid-cols-[440px_1fr] overflow-hidden max-lg:grid-cols-1 max-lg:grid-rows-[auto_1fr]"
+      className="relative flex min-h-screen w-full flex-col overflow-hidden"
       aria-label="Hero"
     >
-      <aside className="h-full shrink-0 overflow-y-auto max-lg:max-h-[70vh]">
-        <QuickClassPanel />
-      </aside>
-      <div className="relative h-full min-h-0">
-        <HeroVisualPanel siteName={siteName} />
+      <HeroHeader siteName={siteName} />
+
+      {/* Slider: full width background; on mobile flex-1 so panel can stack below */}
+      <div className="relative min-h-[50vh] flex-1">
+        <HeroSlider />
       </div>
+
+      {/* Floating on desktop; stacked below slider on mobile */}
+      <BookingBannerPanel />
     </section>
   );
 }

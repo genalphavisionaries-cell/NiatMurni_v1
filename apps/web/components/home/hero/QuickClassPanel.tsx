@@ -4,23 +4,26 @@ import Link from "next/link";
 import { useState } from "react";
 import QuickClassList from "./QuickClassList";
 import QuantitySelector from "./QuantitySelector";
+import LanguageQuickSelector from "./LanguageQuickSelector";
+import { getRecommendedClasses, MOCK_HERO_CLASSES, type LanguageFilter } from "./hero-classes";
 
-const TABS = [
-  { id: "all", label: "All Classes" },
-  { id: "bm", label: "Bahasa Melayu" },
-  { id: "ch", label: "Chinese" },
-  { id: "en", label: "English" },
+const TABS: { id: LanguageFilter; label: string }[] = [
+  { id: "", label: "All Classes" },
+  { id: "B. Melayu", label: "Bahasa Melayu" },
+  { id: "Chinese", label: "Chinese" },
+  { id: "English", label: "English" },
 ];
 
 export default function QuickClassPanel() {
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = useState<LanguageFilter>("");
+  const recommended = getRecommendedClasses(MOCK_HERO_CLASSES, activeTab, 3);
 
   return (
     <div
       className="flex w-full max-w-[440px] flex-col gap-7 overflow-y-auto p-12 font-inter"
       style={{ background: "#F8F7F3" }}
     >
-      {/* 3.1 Small Label */}
+      {/* Small Label */}
       <div className="flex items-center gap-2">
         <svg
           className="h-4 w-4 shrink-0 text-[#2563EB]"
@@ -43,16 +46,19 @@ export default function QuickClassPanel() {
         </span>
       </div>
 
-      {/* 3.2 Main Title */}
-      <h1
-        className="text-[34px] font-bold leading-[1.15] text-[#0F172A]"
-      >
+      {/* Main Title */}
+      <h1 className="text-[34px] font-bold leading-[1.15] text-[#0F172A]">
         Kursus Pengendalian
         <br />
         Makanan Wajib KKM
       </h1>
 
-      {/* 3.3 Badges */}
+      {/* Social proof */}
+      <p className="flex items-center gap-3 text-[13px] text-[#64748B]">
+        <span>⭐ Trusted by 25,000+ food handlers nationwide</span>
+      </p>
+
+      {/* Badges */}
       <div className="flex flex-wrap gap-2">
         <span
           className="rounded-lg px-2.5 py-1.5 text-[13px] font-semibold"
@@ -68,14 +74,24 @@ export default function QuickClassPanel() {
         </span>
       </div>
 
-      {/* 3.4 Class Filter Tabs */}
+      {/* Language Quick Selector */}
+      <LanguageQuickSelector
+        selectedLanguage={activeTab}
+        onLanguageChange={setActiveTab}
+        hasRecommendedClasses={recommended.length > 0}
+      />
+
+      {/* Class Filter Tabs */}
       <div className="flex gap-2.5">
         {TABS.map((tab) => (
           <button
-            key={tab.id}
+            key={tab.id || "all"}
             type="button"
+            aria-pressed={activeTab === tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className="rounded-lg border px-3 py-1.5 text-[13px] transition"
+            className={`rounded-lg border px-3 py-1.5 text-[13px] transition-all duration-200 focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-2 ${
+              activeTab !== tab.id ? "hover:bg-[#F1F5F9]" : ""
+            }`}
             style={
               activeTab === tab.id
                 ? { background: "#2563EB", color: "white", borderColor: "#2563EB" }
@@ -87,36 +103,43 @@ export default function QuickClassPanel() {
         ))}
       </div>
 
-      {/* 3.5 Class List */}
-      <QuickClassList />
+      {/* Class List */}
+      <QuickClassList selectedLanguage={activeTab} />
 
-      {/* 3.6 Quantity Selector */}
+      {/* Quantity Selector */}
       <div className="flex items-center justify-between gap-4">
         <span className="text-sm font-medium text-[#0F172A]">Kuantiti</span>
         <QuantitySelector />
       </div>
 
-      {/* 3.7 CTA */}
+      {/* CTA */}
       <button
         type="button"
-        className="w-full rounded-[10px] py-2.5 px-4 font-semibold text-white transition hover:bg-[#1D4ED8]"
+        className="w-full rounded-[10px] py-2.5 px-4 font-semibold text-white transition-[background-color,transform] duration-200 hover:bg-[#1D4ED8] hover:-translate-y-px focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-2 active:translate-y-0"
         style={{ background: "#2563EB" }}
       >
         Pilih Kelas
       </button>
 
-      {/* 3.8 Bottom CTAs */}
+      {/* Trust under CTA */}
+      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-[#64748B]">
+        <span>✓ Sijil sah KKM</span>
+        <span>✓ Online training</span>
+        <span>✓ Certificate within 12 hours</span>
+      </div>
+
+      {/* Bottom CTAs */}
       <div className="flex flex-col gap-3">
         <button
           type="button"
-          className="w-full rounded-[10px] py-3 px-[18px] font-semibold text-white transition hover:opacity-90"
+          className="w-full rounded-[10px] py-3 px-[18px] font-semibold text-white transition-[background-color,transform] duration-200 hover:-translate-y-px focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-2 active:translate-y-0"
           style={{ background: "#F59E0B" }}
         >
           Daftar Secara Kumpulan
         </button>
         <Link
           href="/#classes"
-          className="text-center font-semibold transition hover:underline"
+          className="text-center font-semibold transition hover:underline focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-2"
           style={{ color: "#2563EB" }}
         >
           Lihat Semua →

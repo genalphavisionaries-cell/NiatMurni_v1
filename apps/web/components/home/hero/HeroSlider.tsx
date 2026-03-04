@@ -23,7 +23,7 @@ export default function HeroSlider() {
       {SLIDES.map((slide, i) => (
         <div
           key={i}
-          className="absolute inset-0 transition-opacity duration-700 ease-in-out"
+          className="absolute inset-0 transition-opacity duration-[600ms] ease-in-out"
           style={{
             opacity: i === index ? 1 : 0,
             zIndex: i === index ? 1 : 0,
@@ -38,6 +38,7 @@ export default function HeroSlider() {
               src={slide.src}
               alt={slide.alt}
               className="h-full w-full object-cover"
+              loading="lazy"
               onError={(e) => {
                 e.currentTarget.style.display = "none";
               }}
@@ -57,7 +58,7 @@ export default function HeroSlider() {
             key={i}
             type="button"
             aria-label={`Slide ${i + 1}`}
-            className={`h-2 rounded-full transition-all ${
+            className={`h-2 rounded-full transition-all duration-200 focus:outline focus:outline-2 focus:outline-white focus:outline-offset-2 ${
               i === index ? "w-6 bg-white" : "w-2 bg-white/50"
             }`}
             onClick={() => setIndex(i)}

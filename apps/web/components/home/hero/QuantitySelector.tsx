@@ -28,18 +28,18 @@ export default function QuantitySelector({
       <button
         type="button"
         aria-label="Decrease"
-        className="flex h-7 w-7 items-center justify-center bg-[#F1F5F9] text-hero-text-primary hover:bg-slate-200"
+        className="flex h-7 w-7 items-center justify-center bg-[#F1F5F9] text-[#0F172A] transition-colors duration-150 hover:bg-[#E2E8F0] focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-2 active:bg-[#CBD5E1]"
         onClick={() => update(value - 1)}
       >
         <span className="text-sm font-medium">−</span>
       </button>
-      <span className="min-w-[2rem] px-2 text-center font-medium text-hero-text-primary">
+      <span className="min-w-[2rem] px-2 text-center font-medium text-[#0F172A]">
         {value}
       </span>
       <button
         type="button"
         aria-label="Increase"
-        className="flex h-7 w-7 items-center justify-center bg-[#F1F5F9] text-hero-text-primary hover:bg-slate-200"
+        className="flex h-7 w-7 items-center justify-center bg-[#F1F5F9] text-[#0F172A] transition-colors duration-150 hover:bg-[#E2E8F0] focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-2 active:bg-[#CBD5E1]"
         onClick={() => update(value + 1)}
       >
         <span className="text-sm font-medium">+</span>
