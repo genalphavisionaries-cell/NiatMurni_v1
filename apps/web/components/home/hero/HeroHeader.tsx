@@ -30,7 +30,7 @@ export default function HeroHeader({ siteName = "Niat Murni Academy" }: HeroHead
   }, []);
 
   return (
-    <header className="absolute left-0 right-0 top-0 z-10 flex items-center justify-between px-6 py-6 sm:px-8 sm:py-8">
+    <header className="top-nav flex items-center justify-between px-6 py-6 sm:px-8 sm:py-8">
       <Link
         href="/"
         className="text-lg font-semibold text-white drop-shadow-md transition-opacity duration-200 hover:opacity-90 focus:outline focus:outline-2 focus:outline-white focus:outline-offset-2"

@@ -37,3 +37,32 @@ body {
 .hero-fade-in {
   animation: hero-fade-in 0.3s ease-out forwards;
 }
+
+.hero-slider {
+  background-color: #0f172a;
+  background-image: url("/images/food-handling-hero.jpg");
+  background-size: cover;
+  background-position: center;
+}
+
+.hero-overlay {
+  background: linear-gradient(
+    rgba(0, 0, 0, 0.45),
+    rgba(0, 0, 0, 0.55)
+  );
+}
+
+.hero-container {
+  padding-left: 80px;
+}
+
+@media (max-width: 1024px) {
+  .hero-container {
+    padding-left: 0;
+  }
+}
+
+.top-nav {
+  z-index: 100;
+  position: relative;
+}

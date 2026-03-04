@@ -11,7 +11,7 @@ type HeroLayoutProps = {
 export default function HeroLayout({ siteName }: HeroLayoutProps) {
   return (
     <section
-      className="relative flex min-h-screen w-full flex-col overflow-hidden"
+      className="hero-container relative flex min-h-screen w-full flex-col overflow-hidden max-lg:pl-0"
       aria-label="Hero"
     >
       <HeroHeader siteName={siteName} />

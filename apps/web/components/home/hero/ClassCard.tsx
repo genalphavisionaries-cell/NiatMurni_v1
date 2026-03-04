@@ -12,40 +12,53 @@ type ClassCardProps = {
 export default function ClassCard({ item, isNextAvailable = false }: ClassCardProps) {
   const { date, day, time, slots, mode, language } = item;
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-[#E2E8F0] bg-white p-4 transition-all duration-200 ease-out hover:shadow-[0_10px_24px_rgba(0,0,0,0.06)]">
-      <div className="min-w-0 flex-1">
+    <div className="flex flex-col gap-1.5 rounded-lg border border-[#E2E8F0] bg-white p-[10px] transition-all duration-200 ease-out hover:shadow-[0_8px_20px_rgba(0,0,0,0.06)]">
+      {/* Row 1: Date + Time */}
+      <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5">
+        <p className="text-[13px] font-semibold text-[#0F172A]">
+          {date} ({day})
+        </p>
+        <p className="text-[12px] text-[#64748B]">{time}</p>
+      </div>
+      {/* Row 2: Mode + Language tags */}
+      <div className="flex flex-wrap items-center gap-1">
         {isNextAvailable && (
           <span
-            className="mb-1.5 inline-block rounded-md px-1.5 py-0.5 text-[11px] font-semibold"
-            style={{ background: "#DBEAFE", color: "#1D4ED8" }}
+            className="font-semibold"
+            style={{
+              background: "#DBEAFE",
+              color: "#1D4ED8",
+              fontSize: "11px",
+              padding: "3px 6px",
+              borderRadius: 6,
+            }}
           >
             Next Available
           </span>
         )}
-        <p className="font-semibold text-[#0F172A]">
-          {date} ({day})
-        </p>
-        <p className="mt-0.5 text-sm text-[#64748B]">{time}</p>
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          <span className="rounded-md bg-[#EFF6FF] px-2 py-1 text-xs font-medium text-[#2563EB]">
-            {mode}
-          </span>
-          <span className="rounded-md bg-[#EFF6FF] px-2 py-1 text-xs font-medium text-[#2563EB]">
-            {language}
-          </span>
-        </div>
-      </div>
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#E2E8F0] pt-3">
-        <span className="text-[12px] font-medium text-[#64748B]">
-          {slots} tempat lagi
+        <span className="rounded bg-[#EFF6FF] px-1.5 py-0.5 text-[11px] font-medium text-[#2563EB]">
+          {mode}
         </span>
-        <div className="flex items-center gap-2">
+        <span className="rounded bg-[#EFF6FF] px-1.5 py-0.5 text-[11px] font-medium text-[#2563EB]">
+          {language}
+        </span>
+      </div>
+      {/* Row 3: Seats + Quantity + Daftar */}
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+        <span
+          className="text-[13px] font-semibold"
+          style={{ color: "#DC2626" }}
+          title={slots <= 10 ? "Hampir penuh" : undefined}
+        >
+          🔥 {slots <= 10 ? "Hampir penuh" : `${slots} tempat lagi`}
+        </span>
+        <div className="flex items-center gap-1.5">
           <QuantitySelector min={1} max={10} defaultValue={1} />
           <Link
             href={`/booking/${item.id}`}
-            className="inline-flex shrink-0 items-center justify-center rounded-lg bg-[#2563EB] px-3 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[#1D4ED8] focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-2"
+            className="inline-flex shrink-0 items-center justify-center rounded-md bg-[#2563EB] px-2.5 py-1.5 text-[12px] font-semibold text-white transition-colors hover:bg-[#1D4ED8] focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-1"
           >
-            Daftar Kelas
+            Daftar
           </Link>
         </div>
       </div>
