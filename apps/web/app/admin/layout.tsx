@@ -1,9 +1,9 @@
-import { DashboardLayout } from "@/components/dashboard";
+import { AdminLayoutClient } from "./AdminLayoutClient";
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <DashboardLayout role="admin">{children}</DashboardLayout>;
+  return <AdminLayoutClient>{children}</AdminLayoutClient>;
 }

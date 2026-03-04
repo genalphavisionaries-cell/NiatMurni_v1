@@ -2,9 +2,11 @@
 
 import { Bell, LogOut, Menu, Search, User } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { SIDEBAR_WIDTH } from "./dashboard-config";
+import { ADMIN_SESSION_COOKIE } from "@/lib/auth";
 
 type TopbarProps = {
   role: "admin" | "tutor" | "participant";
@@ -13,10 +15,20 @@ type TopbarProps = {
 };
 
 export function Topbar({ role, sidebarCollapsed, onMenuClick }: TopbarProps) {
+  const router = useRouter();
   const [searchFocused, setSearchFocused] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
 
   const basePath = role === "admin" ? "/admin" : role === "tutor" ? "/tutor" : "/participant";
+
+  const handleLogout = () => {
+    setUserOpen(false);
+    if (role === "admin") {
+      document.cookie = `${ADMIN_SESSION_COOKIE}=; path=/; max-age=0`;
+      router.push("/admin/login");
+      router.refresh();
+    }
+  };
 
   return (
     <header
@@ -84,14 +96,25 @@ export function Topbar({ role, sidebarCollapsed, onMenuClick }: TopbarProps) {
                 >
                   Profile
                 </Link>
-                <Link
-                  href="/"
-                  className="flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                  onClick={() => setUserOpen(false)}
-                >
-                  <LogOut className="h-4 w-4" />
-                  Logout
-                </Link>
+                {role === "admin" ? (
+                  <button
+                    type="button"
+                    className="flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Logout
+                  </button>
+                ) : (
+                  <Link
+                    href="/"
+                    className="flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    onClick={() => setUserOpen(false)}
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Logout
+                  </Link>
+                )}
               </div>
             </>
           )}
