@@ -2,6 +2,8 @@
 
 Ops Admin + Finance/Compliance Admin UI. Thin client to Go Core.
 
+**Can’t log in or not sure how to set up?** → See **[ADMIN-LOGIN-GUIDE.md](./ADMIN-LOGIN-GUIDE.md)** for step-by-step instructions (including Render and local testing).
+
 ## Run (local)
 
 1. **Install dependencies** (requires PHP 8.2+ and Composer):
@@ -28,6 +30,15 @@ Ops Admin + Finance/Compliance Admin UI. Thin client to Go Core.
    php artisan serve
    ```
    Then open http://localhost:8000 (redirects to `/admin` when Filament is installed). Log in with the credentials above.
+
+### Can't log in?
+
+- **Reset admin passwords** (local or production):
+  ```bash
+  php artisan admin:ensure-admin
+  ```
+  Then try again with `admin@niatmurniacademy.com` / `NiatMurniAdmin!`
+- **Production:** Ensure `SESSION_DRIVER=database` and migrations have run (so the `sessions` table exists). Run `php artisan admin:ensure-admin` after deploy if admins were not created.
 
 ## Rules
 

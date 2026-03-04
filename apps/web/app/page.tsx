@@ -1,7 +1,7 @@
 import {
   Header,
   Footer,
-  Hero,
+  HeroLayout,
   MainBanner,
   PromoStrip,
   FeaturedSection,
@@ -27,7 +27,7 @@ export default function HomePage() {
         }}
       />
       <main>
-        <Hero settings={settings.hero} />
+        <HeroLayout siteName={settings.siteName} />
         <PromoStrip />
         <FeaturedSection />
         <section className="bg-white py-16 sm:py-20">

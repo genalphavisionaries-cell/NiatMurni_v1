@@ -20,6 +20,22 @@ const config: Config = {
           800: "#854d0e",
           900: "#713f12",
         },
+        brand: {
+          DEFAULT: "#2563EB",
+          hover: "#1D4ED8",
+        },
+        hero: {
+          bg: "#F8F7F3",
+          accent: "#F59E0B",
+          "text-primary": "#0F172A",
+          "text-secondary": "#64748B",
+          border: "#E2E8F0",
+          badge: {
+            amber: { bg: "#FEF3C7", text: "#92400E" },
+            blue: { bg: "#DBEAFE", text: "#1E40AF" },
+            tag: { bg: "#EFF6FF", text: "#2563EB" },
+          },
+        },
         surface: {
           DEFAULT: "#f8fafc",
           card: "#ffffff",
@@ -30,6 +46,7 @@ const config: Config = {
       fontFamily: {
         sans: ["var(--font-outfit)", "system-ui", "sans-serif"],
         display: ["var(--font-outfit)", "system-ui", "sans-serif"],
+        inter: ["var(--font-inter)", "Inter", "system-ui", "sans-serif"],
       },
       borderRadius: {
         "2xl": "1rem",
