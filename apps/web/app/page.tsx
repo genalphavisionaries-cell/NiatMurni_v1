@@ -1,5 +1,4 @@
 import {
-  Header,
   Footer,
   HeroLayout,
   MainBanner,
@@ -18,14 +17,6 @@ export default function HomePage() {
 
   return (
     <>
-      <Header
-        settings={{
-          siteName: settings.siteName,
-          logoUrl: settings.logoUrl,
-          logoAlt: settings.logoAlt,
-          headerNav: settings.headerNav,
-        }}
-      />
       <main>
         <HeroLayout siteName={settings.siteName} />
         <PromoStrip />
