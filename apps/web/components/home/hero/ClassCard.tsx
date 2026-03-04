@@ -14,10 +14,7 @@ export default function ClassCard({ item, isNextAvailable = false }: ClassCardPr
   const isLowStock = slots <= 10;
 
   return (
-    <div
-      className="group relative flex flex-col overflow-hidden rounded-xl border border-[#E2E8F0] bg-white shadow-sm transition-all duration-200 hover:border-[#2563EB]/30 hover:shadow-md sm:flex-row sm:items-center sm:justify-between sm:gap-6"
-      style={{ paddingLeft: 14 }}
-    >
+    <div className="group relative flex flex-col overflow-hidden rounded-xl border border-[#E2E8F0] bg-white shadow-sm transition-all duration-200 hover:border-[#2563EB]/30 hover:shadow-md">
       {/* Left accent bar */}
       <div
         className="absolute left-0 top-0 h-full w-1 shrink-0 rounded-l-xl"
@@ -25,16 +22,26 @@ export default function ClassCard({ item, isNextAvailable = false }: ClassCardPr
         aria-hidden
       />
 
-      <div className="flex min-w-0 flex-1 flex-col gap-2 py-4 pr-4 sm:flex-row sm:items-center sm:gap-6 sm:py-4 sm:pr-0">
-        {/* Date & time */}
-        <div className="flex flex-col gap-0.5">
-          <span className="text-sm font-semibold text-[#0F172A]">
-            {date} <span className="font-normal text-[#64748B]">({day})</span>
+      <div className="flex flex-col gap-3 pl-4 pr-4 py-4 sm:pl-5 sm:pr-5 sm:py-4">
+        {/* Row 1: Date + time (left) | Seats (right) — no overlap */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-[#0F172A] leading-tight">
+              {date} <span className="font-normal text-[#64748B]">({day})</span>
+            </p>
+            <p className="mt-0.5 text-xs text-[#64748B] leading-tight whitespace-nowrap">
+              {time.replace(/\s*–\s*/g, " – ")}
+            </p>
+          </div>
+          <span
+            className={`shrink-0 inline-flex items-center gap-1 text-xs font-semibold ${isLowStock ? "text-[#DC2626]" : "text-[#0F172A]"}`}
+          >
+            <span aria-hidden>🔥</span>
+            {isLowStock ? "Hampir penuh" : `${slots} seats left`}
           </span>
-          <span className="text-xs text-[#64748B]">{time.replace(/\s/g, " ")}</span>
         </div>
 
-        {/* Tags */}
+        {/* Row 2: Tags only — single row, no wrap into seats */}
         <div className="flex flex-wrap items-center gap-1.5">
           {isNextAvailable && (
             <span className="rounded-full bg-[#DBEAFE] px-2.5 py-0.5 text-xs font-semibold text-[#1D4ED8]">
@@ -48,17 +55,9 @@ export default function ClassCard({ item, isNextAvailable = false }: ClassCardPr
             {language}
           </span>
         </div>
-      </div>
 
-      {/* Right: seats + quantity + CTA */}
-      <div className="flex flex-wrap items-center gap-3 border-t border-[#E2E8F0] bg-[#FAFAFA]/80 px-4 py-3 sm:border-t-0 sm:border-l sm:bg-transparent sm:pl-0 sm:pr-4 sm:py-4">
-        <span
-          className={`inline-flex items-center gap-1 text-xs font-semibold ${isLowStock ? "text-[#DC2626]" : "text-[#0F172A]"}`}
-        >
-          <span aria-hidden>🔥</span>
-          {isLowStock ? "Hampir penuh" : `${slots} seats left`}
-        </span>
-        <div className="flex items-center gap-3">
+        {/* Row 3: Quantity (left) | Daftar (right) */}
+        <div className="flex items-center justify-between gap-3 pt-0.5">
           <QuantitySelector min={1} max={10} defaultValue={1} />
           <Link
             href={`/booking/${item.id}`}
