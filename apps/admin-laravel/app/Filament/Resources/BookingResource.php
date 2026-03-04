@@ -21,7 +21,8 @@ class BookingResource extends Resource
 
     protected static ?string $modelLabel = 'Booking';
 
-    protected static ?string $navigationGroup = 'Operations';
+    protected static ?string $navigationGroup = 'Bookings & Participants';
+    protected static ?int $navigationSort = 4;
 
     public static function getEloquentQuery(): Builder
     {

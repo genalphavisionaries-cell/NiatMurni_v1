@@ -17,6 +17,9 @@ class ParticipantResource extends Resource
 
     protected static ?string $modelLabel = 'Participant';
 
+    protected static ?string $navigationGroup = 'Bookings & Participants';
+    protected static ?int $navigationSort = 5;
+
     public static function getEloquentQuery(): Builder
     {
         $q = parent::getEloquentQuery();

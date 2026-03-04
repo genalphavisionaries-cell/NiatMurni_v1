@@ -19,7 +19,8 @@ class ClassSessionResource extends Resource
 
     protected static ?string $modelLabel = 'Class Session';
 
-    protected static ?string $navigationGroup = 'Scheduling';
+    protected static ?string $navigationGroup = 'Courses';
+    protected static ?int $navigationSort = 3;
 
     public static function getEloquentQuery(): Builder
     {

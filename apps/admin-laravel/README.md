@@ -11,15 +11,23 @@ Ops Admin + Finance/Compliance Admin UI. Thin client to Go Core.
    php artisan key:generate
    ```
 2. **Optional:** SQLite for local auth/session. Create `database/database.sqlite` and run `php artisan migrate` if using DB.
-3. **Install Filament panel** (first time only):
+3. **Create admin user** (so you can log in):
+   ```bash
+   php artisan db:seed --class=AdminUserSeeder
+   ```
+   Then log in at `/admin` with:
+   - **Email:** `admin@niatmurni.my`
+   - **Password:** `NiatMurniAdmin!`
+   (Change this password in production.)
+4. **Install Filament panel** (first time only):
    ```bash
    php artisan filament:install --panels
    ```
-4. **Start server:**
+5. **Start server:**
    ```bash
    php artisan serve
    ```
-   Then open http://localhost:8000 (redirects to `/admin` when Filament is installed).
+   Then open http://localhost:8000 (redirects to `/admin` when Filament is installed). Log in with the credentials above.
 
 ## Rules
 
