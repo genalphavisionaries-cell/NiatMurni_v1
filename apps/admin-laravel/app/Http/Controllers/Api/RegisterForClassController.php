@@ -10,6 +10,10 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
+/**
+ * Legacy: Registration and payment redirect belong in Go (see docs/ARCHITECTURE_SPLIT.md).
+ * Keep this controller until Go implements POST /public/register returning { redirect_url }.
+ */
 class RegisterForClassController extends Controller
 {
     public function __invoke(Request $request, StripeService $stripe): JsonResponse

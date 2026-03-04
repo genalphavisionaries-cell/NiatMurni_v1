@@ -36,23 +36,122 @@
 
 ## 3. Service Responsibilities
 
-### Laravel (Admin)
+**Strict split:** frontend and automation call **Go** for all business operations. **Laravel** is limited to admin, auth, CMS, and schema.
 
-- Admin authentication & roles
-- **Schema owner** — owns and runs migrations
-- Filament admin UI
-- Stripe webhook handling
-- Zoom admin control
+### Laravel — only these four areas
 
-### Go API
+| Area | Responsibility |
+|------|----------------|
+| **Admin panel** | Filament UI; manage programs, sessions, participants, employers, bookings, certificates, audit logs. All admin reads/writes go through Go API. |
+| **Authentication** | Admin login, sessions, roles (no participant auth). |
+| **CMS** | Homepage and marketing content (e.g. homepage settings API consumed by Next.js). |
+| **Migrations** | Schema owner; all migrations live in Laravel and are run by Laravel. Go does **not** run migrations. |
 
-- Booking lifecycle
-- Attendance rules
-- Certification logic
-- State machine enforcement
-- API authentication
+Laravel does **not** handle: classes, bookings, payments, registrations, or certificates. Those are implemented in Go.
 
-**Rule:** Laravel owns schema and migrations. Go reads/writes the database only (no migrations).
+### Go API — business logic and data
+
+| Area | Responsibility |
+|------|----------------|
+| **Classes** | List upcoming, get by ID; class session data. |
+| **Bookings** | Create, get status; booking lifecycle and state machine. |
+| **Payments** | Stripe Checkout session creation, webhooks that transition booking to paid. |
+| **Registrations** | Public registration: find-or-create participant, create booking, return payment redirect URL. |
+| **Certificates** | Issuance, QR verification, revocation; certificate state. |
+| **Attendance** | Rules, recording, eligibility for certification. |
+| **API auth** | Token or other auth for non-public Go endpoints. |
+
+**Rule:** Laravel owns schema and migrations only. Go reads/writes the database for all business data (no migrations). Next.js calls **Go** for classes, bookings, registration, and payment flows; Next.js calls **Laravel** only for admin login and CMS (e.g. homepage settings).
+
+---
+
+### 3A. Ideal API responsibilities (platform contract)
+
+**Go API (core platform)** — Next.js and admin read business data from here:
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/classes/upcoming` | List upcoming classes (public). |
+| GET | `/classes/:id` | Get class by ID. |
+| POST | `/bookings` | Create booking (e.g. from registration). |
+| GET | `/bookings/:id` | Get booking status. |
+| POST | `/payments` | Create payment session (e.g. Stripe Checkout); returns redirect URL. |
+| POST | `/certificate/generate` | Generate certificate (admin or post-verification). |
+
+This is the **platform API**. All class, booking, payment, and certificate flows go through Go. (Current Go routes may use `/public/classes/upcoming`; align to `/classes/upcoming` when convenient.)
+
+**Laravel CMS API** — internal admin only (admin panel uses these):
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/admin/homepage-settings` | Read homepage CMS. |
+| POST | `/admin/homepage-settings` | Save homepage CMS. |
+| GET | `/admin/testimonials` | Read testimonials. |
+| POST | `/admin/testimonials` | Save testimonials. |
+| GET | `/admin/banners` | Read banners. |
+| POST | `/admin/banners` | Save banners. |
+
+Admin panel writes CMS data to Laravel; for business data (classes, bookings, etc.) the admin panel calls the **Go API** (read-only from admin).
+
+---
+
+### 3B. Database ownership (recommended)
+
+**Option A (recommended):** split by domain to avoid migration conflicts.
+
+| Owner | Tables | Notes |
+|-------|--------|-------|
+| **Go** | `classes`, `class_sessions`, `bookings`, `payments`, `participants`, `programs`, `certificates`, `attendance_records`, `verification_records`, `audit_logs`, etc. | Business tables; Go runs migrations for these (or a shared migration source). |
+| **Laravel** | `homepage_settings`, `testimonials`, `banners`, `users`, `sessions`, `cache`, etc. | CMS and admin-only tables; Laravel runs migrations for these. |
+
+This keeps CMS changes in Laravel and business schema in Go (or a single owner per table set), avoiding conflicts. If you keep a single schema owner (Laravel) for now, document that as the current state and Option A as the target.
+
+---
+
+### 3C. Frontend API usage
+
+**Next.js** should call:
+
+- **GO_API_BASE_URL** for: classes, booking, payment, certificate.
+  - Example: `GET /classes/upcoming`, `GET /classes/:id`, `POST /bookings`, `GET /bookings/:id`, `POST /payments`, `POST /certificate/generate` (as applicable).
+- **Laravel** only for: homepage content, testimonials, banners (CMS).
+  - Example: `GET /api/homepage-settings` → Laravel (or `GET /admin/homepage-settings` if behind admin auth and exposed for frontend).
+
+**Admin panel** data flow:
+
+- **Writes CMS data** → Laravel → Postgres (homepage_settings, testimonials, banners).
+- **Reads business data** → Go API (e.g. view classes, view bookings).
+- Example: “View classes” → call Go API; “Edit homepage” → write Laravel DB.
+
+---
+
+### 3D. Final architecture (recommended)
+
+```
+Browser
+   │
+Next.js (Public Website)
+   │
+   ├── Go API (core platform)
+   │      Classes
+   │      Booking
+   │      Payments
+   │      Certificates
+   │
+   └── Laravel CMS
+   │      Admin Panel (Filament)
+   │      Homepage Builder
+   │      Testimonials
+   │      Branding
+   │      Settings
+   │
+   ▼
+Postgres
+```
+
+Optional later: **API Gateway** in front of Go and Laravel for a single entry point (Next.js → Gateway → Go / Laravel). Not required for initial launch.
+
+**Admin UI:** Use **Laravel + Filament** for the admin panel (dashboard, tables, forms, uploads, filters, tabs, modern layout). The codebase already uses Filament.
 
 ---
 
@@ -94,9 +193,12 @@
 
 ## 6. Database Rule
 
-- **Laravel** = schema owner; all migrations live in Laravel and are run by Laravel (e.g. `php artisan migrate --force` in Docker).
-- **Go API** = reads and writes the database only; does **not** run or own migrations.
+**Recommended (Option A):** Go owns business tables; Laravel owns CMS tables. See §3B. This prevents migration conflicts (each service migrates only its own tables).
+
+**Current alternative:** Single schema owner (Laravel) for all tables; Go only reads/writes. Acceptable but riskier when both services evolve schema.
+
 - **Supabase** = PostgreSQL only (use connection pooling where applicable).
+- If using Option A: Laravel runs migrations only for CMS/admin tables; Go (or a shared migration repo) runs migrations for business tables.
 
 ---
 
@@ -165,11 +267,16 @@
 
 ## Quick Reference
 
-- **Schema owner:** Laravel only.
-- **Go:** No migrations; only reads/writes DB.
-- **Stripe:** Webhook-driven transition to **Booking paid** → then verification eligible.
-- **Zoom:** One meeting per class; attendance feeds certification.
+- **Laravel:** Admin panel, Authentication, CMS, Migrations (CMS tables only in Option A). No classes, bookings, payments, registrations, or certificates.
+- **Go:** Platform API: classes, bookings, payments, certificates (§3A). Option A: Go owns business tables; Laravel owns CMS tables (§3B).
+- **Next.js:** GO_API_BASE_URL for classes/booking/payment/certificate; Laravel only for homepage, testimonials, banners (§3C).
+- **Admin:** Writes CMS → Laravel DB; reads business data → Go API (§3C, §3D).
+- **Stripe:** Checkout and webhooks that set booking to paid → implemented in Go.
+- **Zoom:** One meeting per class; attendance feeds certification (Go).
 - **State machines:** Booking, Class, Certificate as above.
 - **Secrets:** Render env vars; never in repo.
+- **API Gateway:** Optional later; not required for launch.
+
+**Migration note:** If Laravel still exposes registration or Stripe webhooks, treat as legacy; move to Go so Laravel keeps only admin, auth, CMS, and migrations. See docs/ARCHITECTURE_SPLIT.md.
 
 Use this document as the main blueprint when implementing or reviewing features.

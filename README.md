@@ -6,10 +6,11 @@
 
 ## Golden Rules (Non‑Negotiable)
 1. **Go Core is the source of truth** for business state (identity, bookings, classes, verification, attendance, questionnaires, certificates, shipments, audit logs).
-2. **Next.js and Laravel never write to Postgres directly.** They call Go APIs only.
-3. **n8n / WhatsApp automations never decide eligibility or mutate business truth.** They only send messages and report delivery outcomes.
-4. **Every admin override requires:** who + when + reason (audit logged).
-5. **After class start:** “Move” is blocked. Only **Admin Transfer** creates a new booking (preserves history). Verification resets on move/transfer.
+2. **Next.js and Laravel never write to Postgres directly for business data.** They call Go APIs for classes, bookings, payments, registrations, certificates. Laravel only writes to Postgres for schema (migrations) and admin auth/sessions.
+3. **Laravel handles only:** Admin panel, Authentication (admin), CMS, Migrations. **Go handles:** Classes, Bookings, Payments, Registrations, Certificates (and attendance, state machines).
+4. **n8n / WhatsApp automations never decide eligibility or mutate business truth.** They only send messages and report delivery outcomes.
+5. **Every admin override requires:** who + when + reason (audit logged).
+6. **After class start:** “Move” is blocked. Only **Admin Transfer** creates a new booking (preserves history). Verification resets on move/transfer.
 
 ## Repo Layout
 - `apps/web-next` — public site + participant portal + trainer portal (Next.js)

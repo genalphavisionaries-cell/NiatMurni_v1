@@ -1,6 +1,9 @@
 const GO_API_URL = process.env.NEXT_PUBLIC_GO_API_URL || "";
 const LARAVEL_API_URL = process.env.NEXT_PUBLIC_LARAVEL_API_URL || "";
 
+// Architecture: registration & payments belong in Go. Once Go exposes e.g. POST /public/register
+// returning { redirect_url }, switch registerForClass to use GO_API_URL instead of LARAVEL_API_URL.
+
 export type ClassSession = {
   id: number;
   program_id: number;
