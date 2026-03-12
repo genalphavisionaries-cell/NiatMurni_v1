@@ -10,6 +10,12 @@
   --muted: #64748b;
   --card: #ffffff;
   --border: #e2e8f0;
+  /* Theme system (admin can override via settings) */
+  --primary: #0f172a;
+  --primary-hover: #1e293b;
+  --card-bg: #ffffff;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
 }
 
 body {

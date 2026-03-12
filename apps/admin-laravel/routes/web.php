@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return redirect('/admin');
+    return response()->json(['message' => 'Niat Murni API', 'docs' => '/api'], 200);
 });
 
 Route::get('/up', function () {

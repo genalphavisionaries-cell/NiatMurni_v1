@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
-use Filament\Models\Contracts\FilamentUser;
-use Filament\Panel;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable
 {
+    use HasApiTokens;
+
     protected $fillable = [
         'name',
         'email',
@@ -33,12 +34,9 @@ class User extends Authenticatable implements FilamentUser
         ];
     }
 
-    public function canAccessPanel(Panel $panel): bool
+    public function canAccessAdmin(): bool
     {
-        if ($panel->getId() !== 'admin') {
-            return false;
-        }
-        return $this->is_active !== false;
+        return $this->is_active !== false && in_array($this->role, ['admin', 'trainer'], true);
     }
 
     public function isAdmin(): bool

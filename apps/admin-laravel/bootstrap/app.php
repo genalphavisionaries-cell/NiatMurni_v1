@@ -14,6 +14,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->validateCsrfTokens(except: [
             'webhooks/stripe',
+            'api/*',
+        ]);
+        $middleware->api(prepend: [
+            \App\Http\Middleware\SanctumTokenFromCookie::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

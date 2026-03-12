@@ -21,11 +21,22 @@ export type ClassSession = {
   zoom_join_url?: string;
 };
 
+const BUILD_FETCH_TIMEOUT_MS = 5000;
+
 export async function fetchUpcomingClasses(): Promise<ClassSession[]> {
-  const res = await fetch(`${GO_API_URL}/public/classes/upcoming`);
-  if (!res.ok) return [];
-  const data = await res.json();
-  return Array.isArray(data.classes) ? data.classes : [];
+  if (!GO_API_URL) return [];
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), BUILD_FETCH_TIMEOUT_MS);
+  try {
+    const res = await fetch(`${GO_API_URL}/public/classes/upcoming`, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data.classes) ? data.classes : [];
+  } catch {
+    clearTimeout(timeout);
+    return [];
+  }
 }
 
 export async function fetchClass(id: string): Promise<ClassSession | null> {
