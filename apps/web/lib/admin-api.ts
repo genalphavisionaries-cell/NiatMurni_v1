@@ -4,12 +4,17 @@
  * Uses credentials (cookies) for auth.
  */
 
-const baseURL =
-  typeof window !== "undefined"
-    ? (process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_LARAVEL_API_URL || "")
-    : "";
+function getBaseURL(): string {
+  if (typeof window === "undefined") return "";
+  const env = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_LARAVEL_API_URL;
+  if (env && (env.startsWith("http://") || env.startsWith("https://"))) return env.replace(/\/$/, "");
+  const origin = window.location?.origin;
+  if (origin && origin !== "null" && (origin.startsWith("http://") || origin.startsWith("https://")))
+    return origin;
+  return "http://localhost:8000";
+}
 
-export const adminApiBaseURL = baseURL;
+export const adminApiBaseURL = getBaseURL();
 
 export type AdminUser = {
   id: number;
@@ -26,8 +31,9 @@ async function request<T>(
   options: RequestInit & { params?: Record<string, string> } = {}
 ): Promise<T> {
   const { params, ...init } = options;
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const url = new URL(path, baseURL || origin);
+  const base = getBaseURL();
+  if (!base) throw new Error("Admin API base URL is not configured. Set NEXT_PUBLIC_API_URL or NEXT_PUBLIC_LARAVEL_API_URL.");
+  const url = new URL(path, base);
   if (params) {
     Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
   }
