@@ -28,9 +28,11 @@ func New(addr string, pool *pgxpool.Pool) *Server {
 	bookings := &handlers.BookingsHandler{Pool: pool}
 
 	r.HandleFunc("/public/classes/upcoming", classes.ListUpcoming).Methods(http.MethodGet)
+	r.HandleFunc("/classes/upcoming", classes.ListUpcoming).Methods(http.MethodGet)
 	r.HandleFunc("/classes/{id}", classes.GetByID).Methods(http.MethodGet)
 	r.HandleFunc("/bookings", bookings.Create).Methods(http.MethodPost)
 	r.HandleFunc("/bookings/{id}", bookings.GetStatus).Methods(http.MethodGet)
+	r.HandleFunc("/bookings/{id}/status", bookings.UpdateStatus).Methods(http.MethodPatch, http.MethodPut)
 
 	s := &Server{
 		addr:   addr,

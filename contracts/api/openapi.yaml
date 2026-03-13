@@ -5,6 +5,34 @@ info:
 servers:
   - url: http://localhost:8080
 paths:
+  /classes/upcoming:
+    get:
+      summary: List upcoming classes (alias for /public/classes/upcoming)
+      parameters:
+        - name: from_date
+          in: query
+          schema: { type: string }
+        - name: to_date
+          in: query
+          schema: { type: string }
+        - name: mode
+          in: query
+          schema: { type: string, enum: [online, physical] }
+        - name: language
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  classes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ClassSession'
   /public/classes/upcoming:
     get:
       summary: List upcoming classes for public schedule widget (next 6 available + up to 4 recent sold-out)
@@ -118,6 +146,32 @@ paths:
                     enum: [pending, reserved, paid, verified, completed, certified, cancelled, transferred]
                   booking:
                     $ref: '#/components/schemas/Booking'
+        '404':
+          description: Booking not found
+    patch:
+      summary: Update booking status (state machine enforced)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [pending, reserved, paid, verified, completed, certified, cancelled, transferred]
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Invalid transition
         '404':
           description: Booking not found
   /payments/stripe/checkout:

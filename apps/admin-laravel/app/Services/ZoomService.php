@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\AttendanceRecord;
 use App\Models\ClassSession;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -145,5 +147,59 @@ class ZoomService
             return null;
         }
         return $response->json('participants', []);
+    }
+
+    /**
+     * Sync attendance from Zoom participant report into attendance_records (source = zoom).
+     * Matches Zoom participants to bookings by participant email; creates or updates one record per booking.
+     */
+    public function syncAttendanceFromZoom(ClassSession $session): int
+    {
+        if (! $session->zoom_meeting_id) {
+            return 0;
+        }
+        $participants = $this->getMeetingParticipantReport($session->zoom_meeting_id);
+        if (! is_array($participants) || count($participants) === 0) {
+            return 0;
+        }
+        $count = 0;
+        foreach ($session->bookings as $booking) {
+            $participant = $booking->participant;
+            $email = $participant->email ?? null;
+            $durationSeconds = null;
+            $joinTime = null;
+            $leaveTime = null;
+            foreach ($participants as $p) {
+                $zoomEmail = $p['user_email'] ?? $p['email'] ?? null;
+                if ($zoomEmail && strcasecmp($zoomEmail, $email) === 0) {
+                    $durationSeconds = (int) ($p['duration'] ?? 0);
+                    $joinTime = isset($p['join_time']) ? Carbon::parse($p['join_time']) : null;
+                    $leaveTime = isset($p['leave_time']) ? Carbon::parse($p['leave_time']) : null;
+                    break;
+                }
+            }
+            if ($durationSeconds === null && count($participants) > 0) {
+                continue;
+            }
+            $record = $booking->attendanceRecords()->where('source', 'zoom')->first();
+            if ($record) {
+                $record->update([
+                    'duration_seconds' => $durationSeconds ?? $record->duration_seconds,
+                    'check_in_at' => $joinTime ?? $record->check_in_at,
+                    'check_out_at' => $leaveTime ?? $record->check_out_at,
+                    'attendance_duration_minutes' => $durationSeconds !== null ? (int) round($durationSeconds / 60) : $record->attendance_duration_minutes,
+                ]);
+            } else {
+                $booking->attendanceRecords()->create([
+                    'check_in_at' => $joinTime,
+                    'check_out_at' => $leaveTime,
+                    'duration_seconds' => $durationSeconds ?? 0,
+                    'attendance_duration_minutes' => $durationSeconds !== null ? (int) round($durationSeconds / 60) : null,
+                    'source' => 'zoom',
+                ]);
+            }
+            $count++;
+        }
+        return $count;
     }
 }

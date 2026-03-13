@@ -28,6 +28,7 @@ export const SIDEBAR_WIDTH = 260;
 
 const adminNav: NavItem[] = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
+  { label: "Programs", href: "/admin/programs", icon: FolderOpen },
   { label: "Classes", href: "/admin/classes", icon: Calendar },
   { label: "Bookings", href: "/admin/bookings", icon: BookOpen },
   { label: "Participants", href: "/admin/participants", icon: Users },

@@ -7,6 +7,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/niatmurni/core-go/internal/domain"
 	"github.com/niatmurni/core-go/internal/repository"
 )
 
@@ -88,6 +89,60 @@ func (h *BookingsHandler) GetStatus(w http.ResponseWriter, r *http.Request) {
 		respondErr(w, http.StatusNotFound, "not_found", "booking not found")
 		return
 	}
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"status":  booking.Status,
+		"booking": booking,
+	})
+}
+
+// UpdateStatusRequest is the JSON body for PATCH /bookings/{id}/status.
+type UpdateStatusRequest struct {
+	Status string `json:"status"`
+}
+
+// UpdateStatus handles PATCH /bookings/{id}/status - validates transition via state machine then updates.
+// Admin overrides are done in Laravel (with audit_log); this endpoint enforces allowed transitions only.
+func (h *BookingsHandler) UpdateStatus(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	idStr := vars["id"]
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil || id <= 0 {
+		respondErr(w, http.StatusBadRequest, "invalid_id", "booking id must be a positive integer")
+		return
+	}
+	if r.Header.Get("Content-Type") != "application/json" && r.Header.Get("Content-Type") != "" {
+		respondErr(w, http.StatusUnsupportedMediaType, "invalid_content_type", "expect application/json")
+		return
+	}
+	var req UpdateStatusRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondErr(w, http.StatusBadRequest, "invalid_body", err.Error())
+		return
+	}
+	if req.Status == "" {
+		respondErr(w, http.StatusBadRequest, "invalid_input", "status is required")
+		return
+	}
+
+	current, err := repository.GetBookingStatus(r.Context(), h.Pool, id)
+	if err != nil {
+		respondErr(w, http.StatusInternalServerError, "get_booking_failed", err.Error())
+		return
+	}
+	if current == "" {
+		respondErr(w, http.StatusNotFound, "not_found", "booking not found")
+		return
+	}
+	if !domain.CanTransition(current, req.Status) {
+		respondErr(w, http.StatusBadRequest, "invalid_transition", "transition from "+current+" to "+req.Status+" is not allowed")
+		return
+	}
+
+	if err := repository.SetBookingStatus(r.Context(), h.Pool, id, req.Status); err != nil {
+		respondErr(w, http.StatusInternalServerError, "update_failed", err.Error())
+		return
+	}
+	booking, _ := repository.GetBookingByID(r.Context(), h.Pool, id)
 	respondJSON(w, http.StatusOK, map[string]interface{}{
 		"status":  booking.Status,
 		"booking": booking,

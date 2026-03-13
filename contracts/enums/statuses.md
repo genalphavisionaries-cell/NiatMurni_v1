@@ -1,9 +1,14 @@
 # Status Enums
 
-## BookingState
-- reservation
-- pending_payment
+Canonical values; Laravel migrations and Go API use these same strings.
+
+## BookingStatus (bookings.status)
+- pending
+- reserved
 - paid
+- verified
+- completed
+- certified
 - cancelled
 - transferred
 

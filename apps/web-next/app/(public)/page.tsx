@@ -9,11 +9,18 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [mode, setMode] = useState("");
   const [language, setLanguage] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    fetchUpcomingClasses({ mode: mode || undefined, language: language || undefined })
+    fetchUpcomingClasses({
+      from_date: fromDate || undefined,
+      to_date: toDate || undefined,
+      mode: mode || undefined,
+      language: language || undefined,
+    })
       .then((list) => {
         if (!cancelled) setClasses(list);
       })
@@ -23,7 +30,7 @@ export default function HomePage() {
     return () => {
       cancelled = true;
     };
-  }, [mode, language]);
+  }, [mode, language, fromDate, toDate]);
 
   return (
     <main className="min-h-screen bg-stone-50">
@@ -34,6 +41,24 @@ export default function HomePage() {
 
       <section className="max-w-4xl mx-auto px-6 py-8">
         <div className="flex flex-wrap gap-4 mb-6">
+          <label className="flex items-center gap-2">
+            <span className="text-sm text-stone-600">From date</span>
+            <input
+              type="date"
+              className="rounded border border-stone-300 px-3 py-1.5 text-sm"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+            />
+          </label>
+          <label className="flex items-center gap-2">
+            <span className="text-sm text-stone-600">To date</span>
+            <input
+              type="date"
+              className="rounded border border-stone-300 px-3 py-1.5 text-sm"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+            />
+          </label>
           <label className="flex items-center gap-2">
             <span className="text-sm text-stone-600">Mode</span>
             <select

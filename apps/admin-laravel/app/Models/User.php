@@ -53,4 +53,9 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Employer::class);
     }
+
+    public function classSessionsAsTrainer(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ClassSession::class, 'trainer_id');
+    }
 }
