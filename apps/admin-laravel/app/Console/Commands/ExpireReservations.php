@@ -33,7 +33,7 @@ class ExpireReservations extends Command
     {
         $count = $this->reservationService->expireReservations();
 
-        $this->info(\"Expired {$count} reservations\");
+        $this->info("Expired {$count} reservations");
 
         return self::SUCCESS;
     }
