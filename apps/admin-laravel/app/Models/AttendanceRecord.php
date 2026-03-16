@@ -12,10 +12,8 @@ class AttendanceRecord extends Model
         'check_in_at',
         'check_out_at',
         'duration_seconds',
-        'attendance_duration_minutes',
         'source',
         'recorded_by',
-        'verified_by',
     ];
 
     protected function casts(): array
@@ -34,10 +32,5 @@ class AttendanceRecord extends Model
     public function recordedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'recorded_by');
-    }
-
-    public function verifiedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'verified_by');
     }
 }

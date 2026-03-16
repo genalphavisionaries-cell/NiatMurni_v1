@@ -12,10 +12,9 @@ class Program extends Model
         'slug',
         'description',
         'default_capacity',
-        'min_threshold',
-        'delivery_mode',
-        'duration_hours',
-        'price',
+        'min_threshold_minutes',
+        'base_price_cents',
+        'language',
         'is_active',
     ];
 
@@ -29,5 +28,10 @@ class Program extends Model
     public function classSessions(): HasMany
     {
         return $this->hasMany(ClassSession::class);
+    }
+
+    public function questionBanks(): HasMany
+    {
+        return $this->hasMany(QuestionBank::class);
     }
 }

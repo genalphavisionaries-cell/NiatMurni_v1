@@ -12,7 +12,7 @@ class ClassSession extends Model
 
     protected $fillable = [
         'program_id',
-        'trainer_id',
+        'tutor_id',
         'starts_at',
         'ends_at',
         'mode',
@@ -20,7 +20,8 @@ class ClassSession extends Model
         'venue',
         'location',
         'capacity',
-        'min_threshold',
+        'min_threshold_minutes',
+        'price_cents',
         'status',
         'zoom_meeting_id',
         'zoom_join_url',
@@ -39,13 +40,28 @@ class ClassSession extends Model
         return $this->belongsTo(Program::class);
     }
 
-    public function trainer(): BelongsTo
+    public function tutor(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'trainer_id');
+        return $this->belongsTo(Tutor::class);
     }
 
     public function bookings(): HasMany
     {
         return $this->hasMany(Booking::class);
+    }
+
+    public function reservations(): HasMany
+    {
+        return $this->hasMany(Reservation::class);
+    }
+
+    public function classQuestionnaires(): HasMany
+    {
+        return $this->hasMany(ClassQuestionnaire::class);
+    }
+
+    public function tutorEarnings(): HasMany
+    {
+        return $this->hasMany(TutorEarning::class);
     }
 }

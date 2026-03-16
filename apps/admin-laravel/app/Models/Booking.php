@@ -12,19 +12,20 @@ class Booking extends Model
     protected $fillable = [
         'participant_id',
         'class_session_id',
-        'booking_reference',
+        'employer_id',
+        'reservation_id',
         'status',
         'payment_status',
+        'source',
         'stripe_payment_intent_id',
         'stripe_invoice_id',
         'stripe_checkout_session_id',
-        'payment_amount',
-        'payment_method',
-        'booked_by_type',
+        'total_amount_cents',
         'paid_at',
         'verified_at',
         'completed_at',
         'certified_at',
+        'cancelled_at',
     ];
 
     protected function casts(): array
@@ -34,7 +35,7 @@ class Booking extends Model
             'verified_at' => 'datetime',
             'completed_at' => 'datetime',
             'certified_at' => 'datetime',
-            'payment_amount' => 'decimal:2',
+            'cancelled_at' => 'datetime',
         ];
     }
 
@@ -48,6 +49,26 @@ class Booking extends Model
         return $this->belongsTo(ClassSession::class);
     }
 
+    public function employer(): BelongsTo
+    {
+        return $this->belongsTo(Employer::class);
+    }
+
+    public function reservation(): BelongsTo
+    {
+        return $this->belongsTo(Reservation::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    public function attendanceRecords(): HasMany
+    {
+        return $this->hasMany(AttendanceRecord::class);
+    }
+
     public function verificationRecord(): HasOne
     {
         return $this->hasOne(VerificationRecord::class);
@@ -58,8 +79,13 @@ class Booking extends Model
         return $this->hasOne(Certificate::class);
     }
 
-    public function attendanceRecords(): HasMany
+    public function tutorEarnings(): HasMany
     {
-        return $this->hasMany(AttendanceRecord::class);
+        return $this->hasMany(TutorEarning::class);
+    }
+
+    public function questionnaireResponses(): HasMany
+    {
+        return $this->hasMany(QuestionnaireResponse::class);
     }
 }

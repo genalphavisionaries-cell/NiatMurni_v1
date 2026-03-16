@@ -46,4 +46,9 @@ class Participant extends Model
     {
         return $this->hasMany(Booking::class);
     }
+
+    public function questionnaireResponses(): HasMany
+    {
+        return $this->hasMany(QuestionnaireResponse::class);
+    }
 }

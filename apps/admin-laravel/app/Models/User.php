@@ -3,11 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasApiTokens;
+    use HasApiTokens, Notifiable;
 
     protected $fillable = [
         'name',
@@ -16,7 +20,6 @@ class User extends Authenticatable
         'role',
         'employer_id',
         'phone',
-        'is_active',
         'last_login_at',
     ];
 
@@ -29,14 +32,13 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'is_active' => 'boolean',
             'last_login_at' => 'datetime',
         ];
     }
 
     public function canAccessAdmin(): bool
     {
-        return $this->is_active !== false && in_array($this->role, ['admin', 'trainer'], true);
+        return in_array($this->role, ['admin', 'tutor', 'staff'], true);
     }
 
     public function isAdmin(): bool
@@ -46,16 +48,26 @@ class User extends Authenticatable
 
     public function isTrainer(): bool
     {
-        return $this->role === 'trainer';
+        return $this->role === 'tutor';
     }
 
-    public function employer(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function employer(): BelongsTo
     {
         return $this->belongsTo(Employer::class);
     }
 
-    public function classSessionsAsTrainer(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function tutor(): HasOne
     {
-        return $this->hasMany(ClassSession::class, 'trainer_id');
+        return $this->hasOne(Tutor::class);
+    }
+
+    public function participants(): HasMany
+    {
+        return $this->hasMany(Participant::class);
+    }
+
+    public function auditLogs(): HasMany
+    {
+        return $this->hasMany(AuditLog::class);
     }
 }

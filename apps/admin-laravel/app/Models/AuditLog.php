@@ -9,7 +9,6 @@ class AuditLog extends Model
 {
     public $timestamps = false;
 
-    const CREATED_AT = 'created_at';
     const UPDATED_AT = null;
 
     protected $fillable = [
@@ -20,6 +19,8 @@ class AuditLog extends Model
         'reason',
         'old_values',
         'new_values',
+        'ip_address',
+        'user_agent',
     ];
 
     protected function casts(): array

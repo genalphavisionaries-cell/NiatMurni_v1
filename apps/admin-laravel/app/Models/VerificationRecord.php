@@ -13,6 +13,7 @@ class VerificationRecord extends Model
         'reviewed_by',
         'reviewed_at',
         'notes',
+        'evidence_url',
     ];
 
     protected function casts(): array

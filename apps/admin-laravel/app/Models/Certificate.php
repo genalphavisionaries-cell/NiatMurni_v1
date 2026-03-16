@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Certificate extends Model
 {
@@ -16,7 +17,6 @@ class Certificate extends Model
         'revoked_at',
         'revoked_reason',
         'revoked_by',
-        'generated_pdf_path',
     ];
 
     protected function casts(): array
@@ -32,7 +32,12 @@ class Certificate extends Model
         return $this->belongsTo(Booking::class);
     }
 
-    public function revokedByUser(): BelongsTo
+    public function shipment(): HasOne
+    {
+        return $this->hasOne(Shipment::class);
+    }
+
+    public function revokedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'revoked_by');
     }
