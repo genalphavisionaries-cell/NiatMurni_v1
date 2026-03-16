@@ -6,23 +6,22 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Stores certificates issued to participants after class completion.
+     */
     public function up(): void
     {
         Schema::create('certificates', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('booking_id')->unique()->constrained('bookings')->cascadeOnDelete();
+            $table->foreignId('booking_id')
+                ->constrained('bookings')
+                ->cascadeOnDelete();
             $table->string('certificate_number')->unique();
-            $table->string('qr_token')->unique();
-            $table->string('status')->default('valid'); // valid, revoked
             $table->timestamp('issued_at')->nullable();
-            $table->timestamp('revoked_at')->nullable();
-            $table->text('revoked_reason')->nullable();
-            $table->foreignId('revoked_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->string('qr_code')->nullable();
+            $table->string('verification_token')->unique();
+            $table->string('pdf_path')->nullable();
             $table->timestamps();
-        });
-
-        Schema::table('certificates', function (Blueprint $table) {
-            $table->index('qr_token');
         });
     }
 

@@ -56,9 +56,17 @@ return new class extends Migration
             $table->foreignId('verified_by')->nullable()->after('recorded_by')->constrained('users')->nullOnDelete();
         });
 
-        Schema::table('certificates', function (Blueprint $table) {
-            $table->text('generated_pdf_path')->nullable()->after('revoked_by');
-        });
+        if (Schema::hasTable('certificates')) {
+            Schema::table('certificates', function (Blueprint $table) {
+                if (! Schema::hasColumn('certificates', 'generated_pdf_path')) {
+                    if (Schema::hasColumn('certificates', 'revoked_by')) {
+                        $table->text('generated_pdf_path')->nullable()->after('revoked_by');
+                    } else {
+                        $table->text('generated_pdf_path')->nullable();
+                    }
+                }
+            });
+        }
 
         Schema::create('stripe_events', function (Blueprint $table) {
             $table->id();

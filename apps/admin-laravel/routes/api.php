@@ -2,6 +2,10 @@
 
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\StripeWebhookController;
+use App\Http\Controllers\Admin\AdminBookingCompletionController;
+use App\Http\Controllers\Admin\AdminFinanceReportController;
+use App\Http\Controllers\Admin\AdminRefundController;
+use App\Http\Controllers\Public\CertificateDownloadController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -13,6 +17,17 @@ Route::post('/payments/checkout', [PaymentController::class, 'createCheckoutSess
 
 // Stripe webhook (must remain public / unauthenticated)
 Route::post('/webhooks/stripe', [StripeWebhookController::class, 'handle']);
+
+// Admin booking refund (temporarily public, will be secured later)
+Route::post('/admin/bookings/{bookingId}/refund', [AdminRefundController::class, 'refund']);
+
+Route::post('/admin/bookings/{bookingId}/complete', [AdminBookingCompletionController::class, 'complete']);
+
+Route::get('/certificate/download/{token}', [CertificateDownloadController::class, 'download']);
+
+Route::get('/admin/finance/revenue-timeline', [AdminFinanceReportController::class, 'revenueTimeline']);
+Route::get('/admin/finance/refund-timeline', [AdminFinanceReportController::class, 'refundTimeline']);
+Route::get('/admin/finance/tutor-payout-timeline', [AdminFinanceReportController::class, 'tutorPayoutTimeline']);
 
 // Admin API auth (Sanctum token in HttpOnly cookie)
 Route::post('/admin/login', [App\Http\Controllers\Api\AdminAuthController::class, 'login'])->name('api.admin.login');

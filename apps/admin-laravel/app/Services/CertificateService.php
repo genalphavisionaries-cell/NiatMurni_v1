@@ -4,62 +4,43 @@ namespace App\Services;
 
 use App\Models\Booking;
 use App\Models\Certificate;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class CertificateService
 {
-    /**
-     * Generate a unique certificate number (non-sequential).
-     */
-    public function generateCertificateNumber(): string
-    {
-        $prefix = 'NM';
-        do {
-            $suffix = strtoupper(Str::random(8));
-            $number = $prefix . '-' . $suffix;
-        } while (Certificate::where('certificate_number', $number)->exists());
-
-        return $number;
-    }
+    public function __construct(
+        protected CertificatePdfService $certificatePdfService
+    ) {}
 
     /**
-     * Generate a unique QR token for public verification URL.
+     * Issue a certificate for a completed booking. Returns existing certificate if one already exists.
      */
-    public function generateQrToken(): string
+    public function issueCertificate(int $bookingId): Certificate
     {
-        do {
-            $token = Str::random(32);
-        } while (Certificate::where('qr_token', $token)->exists());
+        $booking = Booking::with('participant')->findOrFail($bookingId);
 
-        return $token;
-    }
-
-    /**
-     * Issue a certificate for a booking. Booking must be in status 'completed'.
-     * Creates certificate, sets booking to certified.
-     */
-    public function issueForBooking(Booking $booking): ?Certificate
-    {
-        if ($booking->status !== 'completed') {
-            return null;
-        }
-        if ($booking->certificate()->exists()) {
-            return $booking->certificate;
+        $existing = Certificate::where('booking_id', $bookingId)->first();
+        if ($existing) {
+            return $existing;
         }
 
-        $certificate = Certificate::create([
-            'booking_id' => $booking->id,
-            'certificate_number' => $this->generateCertificateNumber(),
-            'qr_token' => $this->generateQrToken(),
-            'status' => 'valid',
-            'issued_at' => now(),
-        ]);
+        return DB::transaction(function () use ($booking) {
+            $nextId = (Certificate::max('id') ?? 0) + 1;
+            $certificateNumber = 'NM-' . date('Y') . '-' . str_pad((string) $nextId, 4, '0', STR_PAD_LEFT);
 
-        $booking->update([
-            'status' => 'certified',
-            'certified_at' => now(),
-        ]);
+            $verificationToken = Str::uuid()->toString();
+            $qrCode = '/certificate/verify/' . $verificationToken;
 
-        return $certificate;
+            $certificate = Certificate::create([
+                'booking_id' => $booking->id,
+                'certificate_number' => $certificateNumber,
+                'verification_token' => $verificationToken,
+                'qr_code' => $qrCode,
+                'issued_at' => now(),
+            ]);
+
+            return $this->certificatePdfService->generatePdf($certificate);
+        });
     }
 }

@@ -15,6 +15,8 @@ class Payment extends Model
         'currency',
         'status',
         'paid_at',
+        'refunded_at',
+        'refund_amount_cents',
         'provider_payload',
     ];
 
@@ -22,6 +24,7 @@ class Payment extends Model
     {
         return [
             'paid_at' => 'datetime',
+            'refunded_at' => 'datetime',
             'provider_payload' => 'array',
         ];
     }
