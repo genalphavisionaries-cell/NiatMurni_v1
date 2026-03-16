@@ -8,30 +8,23 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class TutorEarning extends Model
 {
     protected $fillable = [
-        'tutor_id',
-        'class_session_id',
         'booking_id',
+        'tutor_id',
         'amount_cents',
         'status',
-        'locked_at',
-        'notes',
+        'paid_at',
     ];
 
     protected function casts(): array
     {
         return [
-            'locked_at' => 'datetime',
+            'paid_at' => 'datetime',
         ];
     }
 
     public function tutor(): BelongsTo
     {
         return $this->belongsTo(Tutor::class);
-    }
-
-    public function classSession(): BelongsTo
-    {
-        return $this->belongsTo(ClassSession::class);
     }
 
     public function booking(): BelongsTo

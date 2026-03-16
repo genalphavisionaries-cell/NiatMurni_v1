@@ -2,6 +2,79 @@
 
 namespace App\Services;
 
+use Stripe\Exception\ApiErrorException;
+use Stripe\Exception\SignatureVerificationException;
+use Stripe\StripeClient;
+use Stripe\Webhook;
+
+class StripeService
+{
+    protected StripeClient $client;
+
+    public function __construct()
+    {
+        $secretKey = setting('stripe_secret_key');
+
+        if (empty($secretKey)) {
+            throw new \RuntimeException('Stripe secret key is not configured. Set stripe_secret_key in system settings.');
+        }
+
+        $this->client = new StripeClient($secretKey);
+    }
+
+    /**
+     * Create a Stripe Checkout Session for a one-time payment.
+     *
+     * @throws ApiErrorException
+     */
+    public function createCheckoutSession(int $amountCents, string $currency, array $metadata = []): \Stripe\Checkout\Session
+    {
+        $appUrl = rtrim((string) config('app.url'), '/');
+
+        return $this->client->checkout->sessions->create([
+            'payment_method_types' => ['card'],
+            'mode' => 'payment',
+            'line_items' => [[
+                'price_data' => [
+                    'currency' => $currency,
+                    'unit_amount' => $amountCents,
+                    'product_data' => [
+                        'name' => 'Food Handler Course',
+                    ],
+                ],
+                'quantity' => 1,
+            ]],
+            'metadata' => $metadata,
+            'success_url' => $appUrl . '/payment-success',
+            'cancel_url' => $appUrl . '/payment-cancel',
+        ]);
+    }
+
+    /**
+     * Verify and construct a Stripe webhook event from payload and signature.
+     *
+     * @throws SignatureVerificationException
+     */
+    public function constructEvent(string $payload, string $signature): \Stripe\Event
+    {
+        $secret = setting('stripe_webhook_secret');
+
+        if (empty($secret)) {
+            throw new \RuntimeException('Stripe webhook secret is not configured. Set stripe_webhook_secret in system settings.');
+        }
+
+        return Webhook::constructEvent(
+            $payload,
+            $signature,
+            $secret,
+        );
+    }
+}
+
+<?php
+
+namespace App\Services;
+
 use App\Models\Booking;
 use Stripe\Checkout\Session as StripeSession;
 use Stripe\Exception\ApiErrorException;

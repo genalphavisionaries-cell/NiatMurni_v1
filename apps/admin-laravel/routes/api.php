@@ -1,10 +1,18 @@
 <?php
 
+use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\StripeWebhookController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/homepage-settings', App\Http\Controllers\Api\HomepageSettingsController::class)->name('api.homepage-settings');
 Route::post('/register', App\Http\Controllers\Api\RegisterForClassController::class)->name('api.register');
+
+// Payment / Stripe checkout (public endpoint)
+Route::post('/payments/checkout', [PaymentController::class, 'createCheckoutSession']);
+
+// Stripe webhook (must remain public / unauthenticated)
+Route::post('/webhooks/stripe', [StripeWebhookController::class, 'handle']);
 
 // Admin API auth (Sanctum token in HttpOnly cookie)
 Route::post('/admin/login', [App\Http\Controllers\Api\AdminAuthController::class, 'login'])->name('api.admin.login');
