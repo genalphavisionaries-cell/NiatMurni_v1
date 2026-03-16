@@ -4,6 +4,8 @@
 FROM php:8.3-fpm-bookworm AS base
 
 ENV DEBIAN_FRONTEND=noninteractive
+# Cache-bust so GD install layer always runs (required by simplesoftwareio/simple-qrcode)
+ENV PHP_EXT_GD=1
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx \
     supervisor \
@@ -11,11 +13,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     libzip-dev \
     libpng-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
     libonig-dev \
     libxml2-dev \
     libicu-dev \
     libpq-dev \
-    && docker-php-ext-install -j$(nproc) opcache pdo pdo_pgsql zip exif pcntl bcmath mbstring intl \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) opcache pdo pdo_pgsql zip exif pcntl bcmath mbstring intl gd \
+    && php -m | grep -q gd \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Composer
@@ -27,8 +33,8 @@ WORKDIR /var/www/html
 # App
 COPY . .
 
-# Dependencies (production only)
-RUN composer install --no-dev --no-interaction --optimize-autoloader --prefer-dist
+# Dependencies (production only; --ignore-platform-req=ext-gd so install succeeds even if build cache skipped GD layer)
+RUN composer install --no-dev --no-interaction --optimize-autoloader --prefer-dist --ignore-platform-req=ext-gd
 
 # Laravel optimizations run at runtime (entrypoint) when env is available
 RUN mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
