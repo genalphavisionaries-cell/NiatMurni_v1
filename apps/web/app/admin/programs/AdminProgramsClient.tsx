@@ -164,7 +164,8 @@ function ProgramForm({
         min_threshold: minThreshold,
         delivery_mode: deliveryMode,
         duration_hours: durationHours,
-        price: price ? parseFloat(price) : null,
+        // Program.price is typed as string | null | undefined, so send string to satisfy TS
+        price: price || null,
         is_active: isActive,
       };
       if (initial) {
