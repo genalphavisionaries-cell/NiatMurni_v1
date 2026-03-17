@@ -7,6 +7,8 @@ use App\Models\ClassSession;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Arr;
@@ -86,9 +88,17 @@ class ManageClassAttendance extends Page implements HasForms
                                 'present' => 'Present',
                                 'absent' => 'Absent',
                             ])
-                            ->nullable(),
+                            ->nullable()
+                            ->live()
+                            ->afterStateUpdated(function (Set $set, ?string $state): void {
+                                if ($state === 'absent') {
+                                    $set('exam_passed', false);
+                                }
+                            }),
                         \Filament\Forms\Components\Toggle::make('exam_passed')
-                            ->label('Exam passed'),
+                            ->label('Exam passed')
+                            ->disabled(fn (Get $get): bool => $get('attendance_status') === 'absent')
+                            ->helperText(fn (Get $get): ?string => $get('attendance_status') === 'absent' ? 'Cannot pass exam when absent.' : null),
                     ])
                     ->columns(3)
                     ->defaultItems(0)
@@ -110,9 +120,12 @@ class ManageClassAttendance extends Page implements HasForms
                 continue;
             }
 
+            $attendanceStatus = $row['attendance_status'] ?? null;
+            $examPassed = $attendanceStatus === 'absent' ? false : (bool) ($row['exam_passed'] ?? false);
+
             Booking::query()->where('id', $bookingId)->update([
-                'attendance_status' => $row['attendance_status'] ?? null,
-                'exam_passed' => (bool) ($row['exam_passed'] ?? false),
+                'attendance_status' => $attendanceStatus,
+                'exam_passed' => $examPassed,
             ]);
         }
 
@@ -135,7 +148,9 @@ class ManageClassAttendance extends Page implements HasForms
     {
         $bookings = $this->data['bookings'] ?? [];
         foreach ($bookings as $i => $row) {
-            $this->data['bookings'][$i]['exam_passed'] = true;
+            if (($row['attendance_status'] ?? null) !== 'absent') {
+                $this->data['bookings'][$i]['exam_passed'] = true;
+            }
         }
         $this->form->fill($this->data);
     }

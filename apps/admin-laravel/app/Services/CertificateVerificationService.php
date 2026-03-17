@@ -22,6 +22,16 @@ class CertificateVerificationService
             ])
             ->firstOrFail();
 
+        if ($certificate->status === 'revoked') {
+            return [
+                'certificate_number' => $certificate->certificate_number,
+                'participant_name' => $certificate->booking?->participant?->full_name ?? '—',
+                'course_name' => $certificate->booking?->classSession?->program?->name ?? '—',
+                'issued_at' => $certificate->issued_at?->toIso8601String(),
+                'status' => 'revoked',
+            ];
+        }
+
         $booking = $certificate->booking;
         $participant = $booking?->participant;
         $program = $booking?->classSession?->program;

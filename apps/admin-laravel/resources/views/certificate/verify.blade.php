@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $valid ? 'Certificate Verified' : 'Certificate Not Found' }} | Niat Murni</title>
+    <title>@if($valid && ($data['status'] ?? '') === 'revoked')Certificate Revoked@elseif($valid)Certificate Verified@elseCertificate Not Found@endif | Niat Murni</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -47,11 +47,21 @@
         .message { color: #6b7280; margin: 0 0 1rem; line-height: 1.5; }
         .issued-by { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb; font-size: 0.875rem; color: #6b7280; line-height: 1.5; }
         .verified-on { margin-top: 0.75rem; font-size: 0.8125rem; color: #9ca3af; }
+        .message--warning { color: #b91c1c; font-weight: 500; background: #fef2f2; padding: 0.75rem 1rem; border-radius: 8px; }
     </style>
 </head>
 <body>
     <div class="card">
-        @if($valid)
+        @if($valid && ($data['status'] ?? '') === 'revoked')
+            <h1 class="title">Certificate Revoked</h1>
+            <span class="badge badge--invalid">REVOKED</span>
+            <p class="message message--warning">This certificate has been revoked and is no longer valid.</p>
+            <div class="detail">
+                <div class="detail-label">Certificate Number</div>
+                <div class="detail-value">{{ $data['certificate_number'] }}</div>
+            </div>
+            <div class="issued-by">This certificate was officially issued by Niat Murni Academy but has since been revoked.</div>
+        @elseif($valid)
             <h1 class="title">Certificate Verified</h1>
             <span class="badge badge--valid">VALID</span>
             <div class="detail">

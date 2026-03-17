@@ -14,12 +14,15 @@ class Certificate extends Model
         'qr_code',
         'verification_token',
         'pdf_path',
+        'status',
+        'revoked_at',
     ];
 
     protected function casts(): array
     {
         return [
             'issued_at' => 'datetime',
+            'revoked_at' => 'datetime',
         ];
     }
 
