@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use App\Models\Setting;
 use App\Services\CertificateService;
 
 class AdminBookingCompletionController extends Controller
@@ -23,15 +24,18 @@ class AdminBookingCompletionController extends Controller
             ]);
         }
 
-        if ($booking->attendance_status !== 'present') {
+        $requireAttendance = $this->settingAsBool('require_attendance');
+        $requireExamPass = $this->settingAsBool('require_exam_pass');
+
+        if ($requireAttendance && $booking->attendance_status !== 'present') {
             return response()->json([
-                'message' => 'Cannot complete booking: attendance or exam not satisfied',
+                'message' => 'Cannot complete booking: requirements not satisfied',
             ], 400);
         }
 
-        if ($booking->exam_passed !== true) {
+        if ($requireExamPass && $booking->exam_passed !== true) {
             return response()->json([
-                'message' => 'Cannot complete booking: attendance or exam not satisfied',
+                'message' => 'Cannot complete booking: requirements not satisfied',
             ], 400);
         }
 
@@ -44,5 +48,12 @@ class AdminBookingCompletionController extends Controller
             'status' => 'completed',
             'certificate_number' => $certificate->certificate_number,
         ]);
+    }
+
+    private function settingAsBool(string $key): bool
+    {
+        $value = Setting::query()->where('key', $key)->value('value');
+
+        return $value === 'true' || $value === '1';
     }
 }
