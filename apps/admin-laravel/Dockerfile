@@ -36,10 +36,10 @@ COPY . .
 # Dependencies (production only; --ignore-platform-req=ext-gd so install succeeds even if build cache skipped GD layer)
 RUN composer install --no-dev --no-interaction --optimize-autoloader --prefer-dist --ignore-platform-req=ext-gd
 
-# Laravel optimizations run at runtime (entrypoint) when env is available
+# Ensure storage + bootstrap/cache exist and are writable; whole app readable by PHP-FPM (www-data)
 RUN mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache \
-    && chown -R www-data:www-data storage bootstrap/cache
+    && chown -R www-data:www-data /var/www/html
 
 # Nginx
 COPY docker/nginx.conf /etc/nginx/sites-available/default

@@ -9,6 +9,10 @@ Route::get('/up', function () {
     return 'ok';
 });
 
+Route::get('/debug', function () {
+    return 'Laravel is working';
+});
+
 Route::get('/verify/{qrToken}', App\Http\Controllers\CertificateVerifyController::class)->name('verify.certificate');
 Route::post('/webhooks/stripe', App\Http\Controllers\StripeWebhookController::class)->name('webhooks.stripe');
 
