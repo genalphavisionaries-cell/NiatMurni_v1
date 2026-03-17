@@ -1,21 +1,25 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-
-const ADMIN_BACKEND_URL = "https://admin.niatmurniacademy.com";
+import { ADMIN_SESSION_COOKIE } from "@/lib/auth";
 
 /**
- * No proxy: /admin on the frontend is not forwarded to the backend.
- * Redirect /admin (and all /admin/*) to the Laravel Filament panel on the admin subdomain.
+ * Protect /admin: redirect to /admin/login if not authenticated.
+ * Admin panel is served at https://niatmurniacademy.com/admin (Next.js).
  */
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   if (!pathname.startsWith("/admin")) return NextResponse.next();
+  if (pathname.startsWith("/admin/login")) return NextResponse.next();
 
-  const target = new URL(pathname, ADMIN_BACKEND_URL);
-  target.search = request.nextUrl.search;
-  return NextResponse.redirect(target.toString(), 302);
+  const session = request.cookies.get(ADMIN_SESSION_COOKIE);
+  if (!session?.value) {
+    const login = new URL("/admin/login", request.url);
+    login.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(login);
+  }
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/admin", "/admin/(.*)"],
+  matcher: ["/admin", "/admin/((?!login).*)"],
 };

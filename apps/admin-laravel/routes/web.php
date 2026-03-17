@@ -13,17 +13,5 @@ Route::get('/up', function () {
     return 'ok';
 });
 
-Route::get('/debug', function () {
-    return 'Laravel is working';
-});
-
-Route::get('/host-check', function () {
-    return request()->getHost();
-});
-
 Route::get('/verify/{qrToken}', App\Http\Controllers\CertificateVerifyController::class)->name('verify.certificate');
 Route::post('/webhooks/stripe', App\Http\Controllers\StripeWebhookController::class)->name('webhooks.stripe');
-
-Route::get('/debug-settings', function () {
-    return \App\Models\Setting::all();
-});

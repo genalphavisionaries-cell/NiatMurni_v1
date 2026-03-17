@@ -1,10 +1,12 @@
-# Deploy: admin.niatmurniacademy.com (Laravel + Filament)
+# Deploy: Laravel admin backend
+
+**Current admin UI:** https://niatmurniacademy.com/admin (Next.js on main domain). The Laravel app is the API/backend; Filament is at path `/admin` when the Laravel host is hit directly.
 
 ## Container (Render)
 
-- Set **APP_URL** in the service environment: `https://admin.niatmurniacademy.com`
-- Document root is fixed in `docker/nginx.conf` as `/var/www/html/public`; no manual Nginx changes needed.
-- Use `/debug` to confirm Laravel is responding (returns "Laravel is working").
+- Set **APP_URL** to the Laravel service URL (e.g. `https://your-service.onrender.com` or custom domain when used).
+- Document root is fixed in `docker/nginx.conf` as `/var/www/html/public`.
+- Use `/up` to confirm Laravel is responding (returns "ok").
 
 ## Nginx (VPS)
 

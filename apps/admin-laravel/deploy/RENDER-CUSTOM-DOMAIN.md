@@ -1,6 +1,8 @@
 # Bind admin.niatmurniacademy.com to Render (fix 403)
 
-Laravel works at **niatmurniacademy.com/admin** (via redirect from main site) but **admin.niatmurniacademy.com/admin** returns **403** when the subdomain is not bound to the Render service.
+**Note:** Subdomain migration is **paused**. Current working admin URL is **https://niatmurniacademy.com/admin** (Next.js). This doc is for when you resume moving admin to the subdomain.
+
+Laravel works at **niatmurniacademy.com/admin** (via main site) but **admin.niatmurniacademy.com/admin** returns **403** when the subdomain is not bound to the Render service.
 
 ---
 

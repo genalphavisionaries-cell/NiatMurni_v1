@@ -20,7 +20,7 @@ class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
-        // Panel at /admin: https://admin.niatmurniacademy.com/admin (root redirects here)
+        // Panel at /admin (path only; no domain restriction)
         return $panel
             ->default()
             ->id('admin')
