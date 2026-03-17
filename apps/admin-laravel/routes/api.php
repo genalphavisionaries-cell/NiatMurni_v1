@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\CertificateVerificationController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\StripeWebhookController;
 use App\Http\Controllers\Admin\AdminBookingCompletionController;
@@ -23,6 +24,7 @@ Route::post('/admin/bookings/{bookingId}/refund', [AdminRefundController::class,
 
 Route::post('/admin/bookings/{bookingId}/complete', [AdminBookingCompletionController::class, 'complete']);
 
+Route::get('/certificate/verify/{token}', [CertificateVerificationController::class, 'verify']);
 Route::get('/certificate/download/{token}', [CertificateDownloadController::class, 'download']);
 
 Route::get('/admin/finance/revenue-timeline', [AdminFinanceReportController::class, 'revenueTimeline']);
