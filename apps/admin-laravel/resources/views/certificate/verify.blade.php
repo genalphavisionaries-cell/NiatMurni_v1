@@ -45,6 +45,8 @@
         .detail-label { font-size: 0.75rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
         .detail-value { font-size: 1rem; color: #111827; font-weight: 500; }
         .message { color: #6b7280; margin: 0 0 1rem; line-height: 1.5; }
+        .issued-by { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb; font-size: 0.875rem; color: #6b7280; line-height: 1.5; }
+        .verified-on { margin-top: 0.75rem; font-size: 0.8125rem; color: #9ca3af; }
     </style>
 </head>
 <body>
@@ -54,6 +56,8 @@
             <span class="badge badge--valid">VALID</span>
             <div class="detail">
                 <div class="detail-label">Certificate Number</div>
+                <div class="detail-value">{{ $data['certificate_number'] }}</div>
+                <div class="detail-label" style="margin-top: 0.5rem;">Verification ID</div>
                 <div class="detail-value">{{ $data['certificate_number'] }}</div>
             </div>
             <div class="detail">
@@ -66,8 +70,10 @@
             </div>
             <div class="detail">
                 <div class="detail-label">Issued Date</div>
-                <div class="detail-value">{{ $data['issued_at'] ? date('d M Y', strtotime($data['issued_at'])) : '—' }}</div>
+                <div class="detail-value">{{ $data['issued_at'] ? \Carbon\Carbon::parse($data['issued_at'])->format('d F Y') : '—' }}</div>
             </div>
+            <div class="verified-on">Verified on: {{ now()->format('d F Y, H:i') }}</div>
+            <div class="issued-by">This certificate is officially issued and verified by Niat Murni Academy</div>
         @else
             <h1 class="title">Certificate Not Found</h1>
             <span class="badge badge--invalid">INVALID</span>
