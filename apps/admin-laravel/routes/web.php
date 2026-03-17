@@ -5,10 +5,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/certificate/verify/{token}', [CertificateVerificationPageController::class, 'show']);
 
-Route::get('/', function () {
-    return response()->json(['message' => 'Niat Murni API', 'docs' => '/api'], 200);
-});
-
 Route::get('/up', function () {
     return 'ok';
 });

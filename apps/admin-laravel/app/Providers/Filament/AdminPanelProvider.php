@@ -20,11 +20,11 @@ class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
-        // Admin UI is at /admin on the main domain (e.g. https://niatmurniacademy.com/admin). No subdomain.
+        // Panel at root of admin subdomain: https://admin.niatmurniacademy.com
         return $panel
             ->default()
             ->id('admin')
-            ->path('admin')
+            ->path('')
             ->login()
             ->colors([
                 'primary' => Color::Amber,
