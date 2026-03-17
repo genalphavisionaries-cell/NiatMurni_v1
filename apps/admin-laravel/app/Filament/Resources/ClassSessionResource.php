@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Pages\ManageClassAttendance;
 use App\Filament\Resources\ClassSessionResource\Pages;
 use App\Models\ClassSession;
 use App\Services\ZoomService;
@@ -82,6 +83,10 @@ class ClassSessionResource extends Resource
                     ->options(['online' => 'Online', 'physical' => 'Physical']),
             ])
             ->actions([
+                Tables\Actions\Action::make('manage_attendance')
+                    ->label('Manage Attendance')
+                    ->icon('heroicon-o-clipboard-document-check')
+                    ->url(fn (ClassSession $record): string => ManageClassAttendance::getUrl() . '?class_session_id=' . $record->id),
                 Tables\Actions\Action::make('regenerate_zoom')
                     ->label('Regenerate meeting link')
                     ->icon('heroicon-o-link')
