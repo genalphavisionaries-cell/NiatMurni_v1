@@ -20,6 +20,7 @@ class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
+        // Admin UI is at /admin on the main domain (e.g. https://niatmurniacademy.com/admin). No subdomain.
         return $panel
             ->default()
             ->id('admin')

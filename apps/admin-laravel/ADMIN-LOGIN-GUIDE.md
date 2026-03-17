@@ -6,7 +6,7 @@
 
 ## Your login details
 
-- **Website address:** Your admin URL (e.g. `https://your-admin.onrender.com/admin` or your custom domain)
+- **Website address:** **https://niatmurniacademy.com/admin** (admin is path-based on the main domain; do not use admin.niatmurniacademy.com for the admin UI)
 - **Email:** `admin@niatmurniacademy.com`
 - **Password:** `NiatMurniAdmin!`
 
@@ -44,7 +44,7 @@ Do these two things. You only need to do them once (or again if login breaks aft
 
 ### Step 3: Try logging in again
 
-1. Open your admin URL in the browser (e.g. `https://your-admin.onrender.com/admin`).
+1. Open your admin URL in the browser: **https://niatmurniacademy.com/admin**
 2. Enter:
    - **Email:** `admin@niatmurniacademy.com`
    - **Password:** `NiatMurniAdmin!`

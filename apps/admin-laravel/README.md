@@ -2,6 +2,8 @@
 
 Ops Admin + Finance/Compliance Admin UI. Thin client to Go Core.
 
+**Canonical admin URL:** `https://niatmurniacademy.com/admin` (path-based on the main domain). Do not use `admin.niatmurniacademy.com` for the admin UI.
+
 **Can’t log in or not sure how to set up?** → See **[ADMIN-LOGIN-GUIDE.md](./ADMIN-LOGIN-GUIDE.md)** for step-by-step instructions (including Render and local testing).
 
 ## Run (local)
