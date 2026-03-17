@@ -3,6 +3,10 @@
 use App\Http\Controllers\Web\CertificateVerificationPageController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/', function () {
+    return redirect('/admin');
+});
+
 Route::get('/certificate/verify/{token}', [CertificateVerificationPageController::class, 'show']);
 
 Route::get('/up', function () {

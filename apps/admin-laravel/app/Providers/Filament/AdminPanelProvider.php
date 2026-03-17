@@ -20,11 +20,11 @@ class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
-        // Panel at root of admin subdomain: https://admin.niatmurniacademy.com
+        // Panel at /admin: https://admin.niatmurniacademy.com/admin (root redirects here)
         return $panel
             ->default()
             ->id('admin')
-            ->path('')
+            ->path('admin')
             ->login()
             ->colors([
                 'primary' => Color::Amber,
