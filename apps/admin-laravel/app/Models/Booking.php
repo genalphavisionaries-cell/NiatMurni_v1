@@ -26,6 +26,8 @@ class Booking extends Model
         'completed_at',
         'certified_at',
         'cancelled_at',
+        'attendance_status',
+        'exam_passed',
     ];
 
     protected function casts(): array
@@ -36,6 +38,7 @@ class Booking extends Model
             'completed_at' => 'datetime',
             'certified_at' => 'datetime',
             'cancelled_at' => 'datetime',
+            'exam_passed' => 'boolean',
         ];
     }
 

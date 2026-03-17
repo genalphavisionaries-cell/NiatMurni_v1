@@ -23,6 +23,18 @@ class AdminBookingCompletionController extends Controller
             ]);
         }
 
+        if ($booking->attendance_status !== 'present') {
+            return response()->json([
+                'message' => 'Cannot complete booking: attendance or exam not satisfied',
+            ], 400);
+        }
+
+        if ($booking->exam_passed !== true) {
+            return response()->json([
+                'message' => 'Cannot complete booking: attendance or exam not satisfied',
+            ], 400);
+        }
+
         $booking->status = 'completed';
         $booking->save();
 
