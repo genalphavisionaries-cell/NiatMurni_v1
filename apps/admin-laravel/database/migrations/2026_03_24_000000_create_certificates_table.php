@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasTable('certificates')) {
+            return;
+        }
+
         Schema::create('certificates', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('booking_id')
-                ->constrained('bookings')
-                ->cascadeOnDelete();
-            $table->string('certificate_number')->unique();
+            $table->unsignedBigInteger('booking_id');
+            $table->string('certificate_number');
             $table->timestamp('issued_at')->nullable();
             $table->string('qr_code')->nullable();
             $table->string('verification_token')->unique();
