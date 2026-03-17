@@ -10,6 +10,7 @@ class Tutor extends Model
 {
     protected $fillable = [
         'user_id',
+        'registration_number',
         'bio',
         'hourly_rate_cents',
         'default_share_percent',

@@ -9,6 +9,8 @@ class Certificate extends Model
 {
     protected $fillable = [
         'booking_id',
+        'certificate_template_id',
+        'template_name_snapshot',
         'certificate_number',
         'issued_at',
         'qr_code',
@@ -29,5 +31,10 @@ class Certificate extends Model
     public function booking(): BelongsTo
     {
         return $this->belongsTo(Booking::class);
+    }
+
+    public function certificateTemplate(): BelongsTo
+    {
+        return $this->belongsTo(CertificateTemplate::class);
     }
 }
