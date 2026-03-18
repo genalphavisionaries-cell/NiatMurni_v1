@@ -315,19 +315,21 @@ function UpcomingClassCard({
   const topLine = `${dateText} • ${item.day}`;
 
   return (
-    <div className="rounded-md border border-slate-200 bg-white p-2 shadow-sm transition hover:shadow-md">
+    <div className="rounded-md border border-slate-200 bg-white p-1.5 shadow-sm transition hover:shadow-md">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-xs font-semibold text-[#0F172A] truncate">{topLine}</p>
+          <p className="text-[10px] font-semibold text-[#0F172A] leading-none truncate">
+            {topLine}
+          </p>
         </div>
       </div>
 
-      <div className="mt-1 space-y-1 text-[10px] text-[#64748B]">
+      <div className="mt-0.5 space-y-0.5 text-[10px] text-[#64748B]">
         <div className="flex items-center gap-2">
           <span className="font-semibold">Masa:</span>
           <span className="font-semibold text-[#0F172A]">{timeText}</span>
         </div>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-0">
           <span className="font-semibold">Bahasa:</span>
           <span className="font-semibold text-[#0F172A]">
             {languageLabel(item.language)}
@@ -339,12 +341,12 @@ function UpcomingClassCard({
         </div>
       </div>
 
-      <div className="mt-1 flex items-center justify-between gap-2 rounded-md bg-[#F8FAFC] px-2 py-1">
+      <div className="mt-0.5 flex items-center justify-between gap-2 rounded-md bg-[#F8FAFC] px-1.5 py-0.5">
         <span className="text-[10px] font-semibold text-[#64748B]">
           Kekosongan:
         </span>
         <span
-          className={`text-[12px] font-extrabold leading-none ${
+          className={`text-[11px] font-extrabold leading-none ${
             seatsLeft <= 10 ? "text-[#DC2626]" : "text-[#0F172A]"
           }`}
         >
@@ -352,8 +354,8 @@ function UpcomingClassCard({
         </span>
       </div>
 
-      <div className="mt-1 flex items-center justify-between gap-2">
-        <div className="shrink-0 scale-[0.92] origin-left">
+      <div className="mt-0.5 flex items-center justify-between gap-2">
+        <div className="shrink-0 scale-[0.85] origin-left">
           <QuantitySelector
             compact
             min={1}
@@ -370,7 +372,7 @@ function UpcomingClassCard({
             if (disabled) return;
             onAddToCart(qty);
           }}
-          className={`flex-1 rounded-md px-2 py-1 text-[10px] font-semibold shadow-sm transition ${
+          className={`flex-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold leading-none shadow-sm transition ${
             disabled ? "bg-slate-300 cursor-not-allowed" : "bg-[#2563EB] hover:bg-[#1D4ED8]"
           }`}
         >
