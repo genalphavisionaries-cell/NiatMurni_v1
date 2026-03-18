@@ -62,7 +62,8 @@ function toHeroItem(c: ClassSession): HeroClassItem {
 }
 
 const DEMO_CLASSES = MOCK_HERO_CLASSES;
-const MAX_CLASSES = 20;
+// Desktop requirement: 3 columns x 10 rows = 30 total maximum shown.
+const MAX_CLASSES = 30;
 const MOBILE_INITIAL_LIMIT = 2;
 
 export default function UpcomingClassesSection() {
@@ -103,11 +104,11 @@ export default function UpcomingClassesSection() {
   }, [displayList, useDemo]);
 
   const desktopColumns = useMemo(() => {
-    const cols: HeroClassItem[][] = [[], [], []];
-    displayList.forEach((c, idx) => {
-      cols[idx % 3].push(c);
-    });
-    return cols;
+    return [
+      displayList.slice(0, 10),
+      displayList.slice(10, 20),
+      displayList.slice(20, 30),
+    ];
   }, [displayList]);
 
   const mobileVisible = mobileExpanded

@@ -67,7 +67,7 @@ Fallback behavior:
   - Explicit labels: `Tarikh:`, `Hari:`, `Masa:`, `Bahasa:`, `Mod Kelas:`, `Kekosongan:`
   - Seat quantity selector (compact) + `Daftar` button (still opens the cart popup)
   - Mobile shows **first 2 items**, then **Load More** (up to the same max set by the component)
-  - Desktop shows the full list in **3 explicit vertical columns** (each column is a stacked list)
+  - Desktop shows the available list in **3 explicit vertical columns**, with up to **10 items per column** (max 30)
 
 Interactive behavior added:
 - Quantity selection per card
