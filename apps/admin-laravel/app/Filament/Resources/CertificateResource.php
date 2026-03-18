@@ -4,12 +4,13 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\CertificateResource\Pages;
 use App\Models\Certificate;
-use App\Services\CertificatePdfService;
+use App\Services\CertificateLifecycleService;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Validation\ValidationException;
 
 class CertificateResource extends Resource
 {
@@ -62,12 +63,11 @@ class CertificateResource extends Resource
                     ->icon('heroicon-o-no-symbol')
                     ->color('danger')
                     ->requiresConfirmation()
+                    ->modalHeading('Revoke this certificate?')
+                    ->modalDescription('The certificate will be marked as revoked. The record and PDF are kept for audit.')
                     ->visible(fn (Certificate $record): bool => ($record->status ?? 'issued') !== 'revoked')
-                    ->action(function (Certificate $record): void {
-                        $record->update([
-                            'status' => 'revoked',
-                            'revoked_at' => now(),
-                        ]);
+                    ->action(function (Certificate $record, CertificateLifecycleService $lifecycle): void {
+                        $lifecycle->revokeCertificate($record);
                         \Filament\Notifications\Notification::make()
                             ->title('Certificate revoked.')
                             ->success()
@@ -76,13 +76,24 @@ class CertificateResource extends Resource
                 Tables\Actions\Action::make('reissue')
                     ->label('Reissue Certificate')
                     ->icon('heroicon-o-arrow-path')
+                    ->requiresConfirmation()
+                    ->modalHeading('Reissue certificate?')
+                    ->modalDescription('This certificate will be revoked and a new one created with a new number and verification link.')
                     ->visible(fn (Certificate $record): bool => ($record->status ?? 'issued') !== 'revoked')
-                    ->action(function (Certificate $record, CertificatePdfService $pdfService): void {
-                        $pdfService->generatePdf($record->fresh());
-                        \Filament\Notifications\Notification::make()
-                            ->title('Certificate PDF regenerated.')
-                            ->success()
-                            ->send();
+                    ->action(function (Certificate $record, CertificateLifecycleService $lifecycle): void {
+                        try {
+                            $cert = $lifecycle->reissueCertificate($record);
+                            \Filament\Notifications\Notification::make()
+                                ->title('Certificate reissued.')
+                                ->body("New certificate number: {$cert->certificate_number}")
+                                ->success()
+                                ->send();
+                        } catch (ValidationException $e) {
+                            \Filament\Notifications\Notification::make()
+                                ->title($e->getMessage() ?: 'Reissue failed.')
+                                ->danger()
+                                ->send();
+                        }
                     }),
                 Tables\Actions\EditAction::make(),
             ])

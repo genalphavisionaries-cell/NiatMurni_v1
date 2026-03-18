@@ -5,12 +5,13 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Setting;
-use App\Services\CertificateService;
+use App\Services\CertificateLifecycleService;
+use Illuminate\Validation\ValidationException;
 
 class AdminBookingCompletionController extends Controller
 {
     public function __construct(
-        protected CertificateService $certificateService
+        protected CertificateLifecycleService $certificateLifecycleService
     ) {}
 
     public function complete(int $bookingId)
@@ -42,12 +43,19 @@ class AdminBookingCompletionController extends Controller
         $booking->status = 'completed';
         $booking->save();
 
-        $certificate = $this->certificateService->issueCertificate($booking->id);
-
-        return response()->json([
-            'status' => 'completed',
-            'certificate_number' => $certificate->certificate_number,
-        ]);
+        try {
+            $certificate = $this->certificateLifecycleService->issueCertificateForBooking($booking->id);
+            return response()->json([
+                'status' => 'completed',
+                'certificate_number' => $certificate->certificate_number,
+            ]);
+        } catch (ValidationException $e) {
+            $booking->refresh();
+            return response()->json([
+                'status' => 'completed',
+                'certificate_number' => optional($booking->certificate)->certificate_number,
+            ]);
+        }
     }
 
     private function settingAsBool(string $key): bool

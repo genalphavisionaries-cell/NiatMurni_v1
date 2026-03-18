@@ -77,9 +77,18 @@ class Booking extends Model
         return $this->hasOne(VerificationRecord::class);
     }
 
+    /** All certificate records for this booking (including revoked, for history). */
+    public function certificates(): HasMany
+    {
+        return $this->hasMany(Certificate::class);
+    }
+
+    /** The current active (non-revoked) certificate, if any. */
     public function certificate(): HasOne
     {
-        return $this->hasOne(Certificate::class);
+        return $this->hasOne(Certificate::class)
+            ->where('status', '!=', 'revoked')
+            ->latestOfMany('id');
     }
 
     public function tutorEarnings(): HasMany

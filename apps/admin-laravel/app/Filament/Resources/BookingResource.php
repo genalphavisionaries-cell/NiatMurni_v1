@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\BookingResource\Pages;
 use App\Models\AuditLog;
 use App\Models\Booking;
+use App\Services\CertificateLifecycleService;
 use App\Services\StripeService;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -12,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Validation\ValidationException;
 
 class BookingResource extends Resource
 {
@@ -57,6 +59,12 @@ class BookingResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('id')->sortable(),
                 Tables\Columns\TextColumn::make('participant.full_name')->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('participant.user_id')
+                    ->label('Portal')
+                    ->badge()
+                    ->formatStateUsing(fn ($state): string => $state ? 'Yes' : '—')
+                    ->color(fn ($state): string => $state ? 'success' : 'gray')
+                    ->placeholder('—'),
                 Tables\Columns\TextColumn::make('classSession.program.name')->label('Program'),
                 Tables\Columns\TextColumn::make('classSession.starts_at')->dateTime()->sortable(),
                 Tables\Columns\TextColumn::make('status')->badge(),
@@ -77,6 +85,57 @@ class BookingResource extends Resource
                     ]),
             ])
             ->actions([
+                Tables\Actions\Action::make('issue_certificate')
+                    ->label('Issue Certificate')
+                    ->icon('heroicon-o-document-check')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalHeading('Issue certificate for this booking?')
+                    ->modalDescription(fn (Booking $record) => $record->participant?->full_name
+                        ? "A certificate will be issued for {$record->participant->full_name}."
+                        : 'A certificate will be issued for this booking.')
+                    ->visible(fn (Booking $record, CertificateLifecycleService $lifecycle): bool => $lifecycle->isEligibleForCertificate($record) && ! $lifecycle->getActiveCertificateForBooking($record))
+                    ->action(function (Booking $record, CertificateLifecycleService $lifecycle): void {
+                        try {
+                            $cert = $lifecycle->issueCertificateForBooking($record->id);
+                            \Filament\Notifications\Notification::make()
+                                ->title('Certificate issued.')
+                                ->body("Certificate number: {$cert->certificate_number}")
+                                ->success()
+                                ->send();
+                        } catch (ValidationException $e) {
+                            \Filament\Notifications\Notification::make()
+                                ->title($e->getMessage() ?: 'Cannot issue certificate.')
+                                ->danger()
+                                ->send();
+                        }
+                    }),
+                Tables\Actions\Action::make('reissue_certificate')
+                    ->label('Reissue Certificate')
+                    ->icon('heroicon-o-arrow-path')
+                    ->requiresConfirmation()
+                    ->modalHeading('Reissue certificate?')
+                    ->modalDescription('The current certificate will be revoked and a new one will be created with a new number and verification link.')
+                    ->visible(fn (Booking $record, CertificateLifecycleService $lifecycle): bool => $lifecycle->getActiveCertificateForBooking($record) !== null)
+                    ->action(function (Booking $record, CertificateLifecycleService $lifecycle): void {
+                        try {
+                            $current = $lifecycle->getActiveCertificateForBooking($record);
+                            if (! $current) {
+                                return;
+                            }
+                            $cert = $lifecycle->reissueCertificate($current);
+                            \Filament\Notifications\Notification::make()
+                                ->title('Certificate reissued.')
+                                ->body("New certificate number: {$cert->certificate_number}")
+                                ->success()
+                                ->send();
+                        } catch (ValidationException $e) {
+                            \Filament\Notifications\Notification::make()
+                                ->title($e->getMessage() ?: 'Reissue failed.')
+                                ->danger()
+                                ->send();
+                        }
+                    }),
                 Tables\Actions\Action::make('override_status')
                     ->label('Override status')
                     ->icon('heroicon-o-pencil-square')

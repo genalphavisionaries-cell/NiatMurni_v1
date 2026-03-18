@@ -14,18 +14,21 @@ class CertificateService
     ) {}
 
     /**
-     * Issue a certificate for a completed booking. Returns existing certificate if one already exists.
+     * Create and generate a new certificate for a booking.
+     * Caller is responsible for eligibility and duplicate checks.
+     *
+     * @param  int  $bookingId
+     * @param  int|null  $certificateTemplateId  Active template ID for snapshot (optional)
+     * @param  string|null  $templateNameSnapshot  Template name at issue time (optional)
      */
-    public function issueCertificate(int $bookingId): Certificate
-    {
+    public function issueCertificate(
+        int $bookingId,
+        ?int $certificateTemplateId = null,
+        ?string $templateNameSnapshot = null
+    ): Certificate {
         $booking = Booking::with('participant')->findOrFail($bookingId);
 
-        $existing = Certificate::where('booking_id', $bookingId)->first();
-        if ($existing) {
-            return $existing;
-        }
-
-        return DB::transaction(function () use ($booking) {
+        return DB::transaction(function () use ($booking, $certificateTemplateId, $templateNameSnapshot) {
             $nextId = (Certificate::max('id') ?? 0) + 1;
             $certificateNumber = 'NM-' . date('Y') . '-' . str_pad((string) $nextId, 4, '0', STR_PAD_LEFT);
 
@@ -34,10 +37,13 @@ class CertificateService
 
             $certificate = Certificate::create([
                 'booking_id' => $booking->id,
+                'certificate_template_id' => $certificateTemplateId,
+                'template_name_snapshot' => $templateNameSnapshot,
                 'certificate_number' => $certificateNumber,
                 'verification_token' => $verificationToken,
                 'qr_code' => $qrCode,
                 'issued_at' => now(),
+                'status' => 'issued',
             ]);
 
             return $this->certificatePdfService->generatePdf($certificate);

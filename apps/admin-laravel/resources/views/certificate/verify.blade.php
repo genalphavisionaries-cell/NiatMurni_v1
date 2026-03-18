@@ -60,6 +60,26 @@
                 <div class="detail-label">Certificate Number</div>
                 <div class="detail-value">{{ $data['certificate_number'] }}</div>
             </div>
+            <div class="detail">
+                <div class="detail-label">Participant Name</div>
+                <div class="detail-value">{{ $data['participant_name'] ?? '—' }}</div>
+            </div>
+            <div class="detail">
+                <div class="detail-label">Program</div>
+                <div class="detail-value">{{ $data['program_name'] ?? '—' }}</div>
+            </div>
+            @if(!empty($data['revoked_at']))
+            <div class="detail">
+                <div class="detail-label">Revoked On</div>
+                <div class="detail-value">{{ \Carbon\Carbon::parse($data['revoked_at'])->format('d F Y') }}</div>
+            </div>
+            @endif
+            @if(!empty($data['revoked_reason']))
+            <div class="detail">
+                <div class="detail-label">Reason</div>
+                <div class="detail-value">{{ $data['revoked_reason'] }}</div>
+            </div>
+            @endif
             <div class="issued-by">This certificate was officially issued by Niat Murni Academy but has since been revoked.</div>
         @elseif($valid)
             <h1 class="title">Certificate Verified</h1>
@@ -67,20 +87,38 @@
             <div class="detail">
                 <div class="detail-label">Certificate Number</div>
                 <div class="detail-value">{{ $data['certificate_number'] }}</div>
-                <div class="detail-label" style="margin-top: 0.5rem;">Verification ID</div>
-                <div class="detail-value">{{ $data['certificate_number'] }}</div>
             </div>
             <div class="detail">
                 <div class="detail-label">Participant Name</div>
-                <div class="detail-value">{{ $data['participant_name'] }}</div>
+                <div class="detail-value">{{ $data['participant_name'] ?? '—' }}</div>
             </div>
             <div class="detail">
-                <div class="detail-label">Course Name</div>
-                <div class="detail-value">{{ $data['course_name'] }}</div>
+                <div class="detail-label">NRIC / Passport</div>
+                <div class="detail-value">{{ $data['participant_identity_no'] ?? '—' }}</div>
             </div>
             <div class="detail">
-                <div class="detail-label">Issued Date</div>
-                <div class="detail-value">{{ $data['issued_at'] ? \Carbon\Carbon::parse($data['issued_at'])->format('d F Y') : '—' }}</div>
+                <div class="detail-label">Program</div>
+                <div class="detail-value">{{ $data['program_name'] ?? $data['course_name'] ?? '—' }}</div>
+            </div>
+            <div class="detail">
+                <div class="detail-label">Attendance Date</div>
+                <div class="detail-value">{{ isset($data['attendance_date']) && $data['attendance_date'] !== '—' ? \Carbon\Carbon::parse($data['attendance_date'])->format('d F Y') : '—' }}</div>
+            </div>
+            <div class="detail">
+                <div class="detail-label">Completion Status</div>
+                <div class="detail-value">{{ $data['completion_status'] ?? 'Attended & Passed' }}</div>
+            </div>
+            <div class="detail">
+                <div class="detail-label">Tutor Name</div>
+                <div class="detail-value">{{ $data['tutor_name'] ?? '—' }}</div>
+            </div>
+            <div class="detail">
+                <div class="detail-label">Tutor Registration Number</div>
+                <div class="detail-value">{{ $data['tutor_registration_number'] ?? '—' }}</div>
+            </div>
+            <div class="detail">
+                <div class="detail-label">Issue Date</div>
+                <div class="detail-value">{{ $data['issue_date'] ?? ($data['issued_at'] ? \Carbon\Carbon::parse($data['issued_at'])->format('d F Y') : '—') }}</div>
             </div>
             <div class="verified-on">Verified on: {{ now()->format('d F Y, H:i') }}</div>
             <div class="issued-by">This certificate is officially issued and verified by Niat Murni Academy</div>

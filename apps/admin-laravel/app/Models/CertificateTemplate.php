@@ -34,6 +34,7 @@ class CertificateTemplate extends Model
         'left_signature_image_path',
         'right_signature_image_path',
         'organization_name',
+        'organization_registration_no',
         'organization_details',
         'left_signatory_name',
         'left_signatory_title',
@@ -60,6 +61,15 @@ class CertificateTemplate extends Model
             'content_top_offset' => 'integer',
             'content_bottom_offset' => 'integer',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (CertificateTemplate $template): void {
+            if ($template->is_active) {
+                static::where('id', '!=', $template->id)->update(['is_active' => false]);
+            }
+        });
     }
 
     public function certificates(): HasMany

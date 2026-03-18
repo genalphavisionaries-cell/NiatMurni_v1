@@ -33,6 +33,15 @@ Route::get('/admin/finance/tutor-payout-timeline', [AdminFinanceReportController
 
 // Admin API auth (Sanctum token in HttpOnly cookie)
 Route::post('/admin/login', [App\Http\Controllers\Api\AdminAuthController::class, 'login'])->name('api.admin.login');
+
+// Participant portal auth and certificate access
+Route::post('/participant/login', [App\Http\Controllers\Api\ParticipantAuthController::class, 'login'])->name('api.participant.login');
+Route::middleware('auth:sanctum')->prefix('participant')->name('api.participant.')->group(function () {
+    Route::post('/logout', [App\Http\Controllers\Api\ParticipantAuthController::class, 'logout'])->name('logout');
+    Route::get('/me', [App\Http\Controllers\Api\ParticipantAuthController::class, 'me'])->name('me');
+    Route::get('/certificates', [App\Http\Controllers\Api\ParticipantCertificatesController::class, 'index'])->name('certificates.index');
+});
+
 Route::middleware('auth:sanctum')->prefix('admin')->name('api.admin.')->group(function () {
     Route::post('/logout', [App\Http\Controllers\Api\AdminAuthController::class, 'logout'])->name('logout');
     Route::get('/me', [App\Http\Controllers\Api\AdminAuthController::class, 'me'])->name('me');
