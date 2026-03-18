@@ -4,15 +4,26 @@ import { useState } from "react";
 import HeroHeader from "./HeroHeader";
 import HeroSlider from "./HeroSlider";
 import BookingBannerPanel from "./BookingBannerPanel";
+import type { NavLink } from "@/lib/homepage-settings";
+import type { PublicCmsNavItem } from "@/lib/public-cms";
 
 type HeroLayoutProps = {
   siteName?: string;
   logoUrl?: string | null;
+  navTree?: PublicCmsNavItem[] | null;
+  fallbackNav?: NavLink[];
+  primaryCta?: { label: string; url: string };
 };
 
 const HERO_HEIGHT = 720;
 
-export default function HeroLayout({ siteName, logoUrl }: HeroLayoutProps) {
+export default function HeroLayout({
+  siteName,
+  logoUrl,
+  navTree,
+  fallbackNav,
+  primaryCta,
+}: HeroLayoutProps) {
   const [panelCollapsed, setPanelCollapsed] = useState(false);
 
   return (
@@ -36,7 +47,13 @@ export default function HeroLayout({ siteName, logoUrl }: HeroLayoutProps) {
         />
 
         {/* Header: on top of hero, z-index 20 */}
-        <HeroHeader siteName={siteName} logoUrl={logoUrl} />
+        <HeroHeader
+          siteName={siteName}
+          logoUrl={logoUrl}
+          navTree={navTree}
+          fallbackNav={fallbackNav}
+          primaryCta={primaryCta}
+        />
 
         {/* Floating booking panel (desktop/tablet): overlay left side, z-index 10 */}
         <div

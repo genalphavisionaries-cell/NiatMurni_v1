@@ -30,4 +30,25 @@ class HomepageSection extends Model
             'extra_data' => 'array',
         ];
     }
+
+    /**
+     * @param  array<string, mixed>|null  $extra
+     * @return array<string, string>|null
+     */
+    public static function normalizeExtraData(?array $extra): ?array
+    {
+        if ($extra === null || $extra === []) {
+            return null;
+        }
+        $out = [];
+        foreach ($extra as $k => $v) {
+            $k = trim((string) $k);
+            if ($k === '') {
+                continue;
+            }
+            $out[$k] = is_scalar($v) ? (string) $v : json_encode($v);
+        }
+
+        return $out === [] ? null : $out;
+    }
 }

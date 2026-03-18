@@ -34,6 +34,22 @@ final class FrontendCmsSettingKeys
     public const SEO_DEFAULT_TITLE = 'cms_seo_default_title';
     public const SEO_DEFAULT_DESCRIPTION = 'cms_seo_default_description';
 
+    // D. Footer & global contact (public site)
+    public const FOOTER_DESCRIPTION = 'cms_footer_description';
+    public const FOOTER_BOTTOM_TEXT = 'cms_footer_bottom_text';
+    public const CONTACT_EMAIL = 'cms_contact_email';
+    public const CONTACT_PHONE = 'cms_contact_phone';
+    public const CONTACT_ADDRESS = 'cms_contact_address';
+    public const SOCIAL_FACEBOOK_URL = 'cms_social_facebook_url';
+    public const SOCIAL_INSTAGRAM_URL = 'cms_social_instagram_url';
+    public const SOCIAL_LINKEDIN_URL = 'cms_social_linkedin_url';
+
+    // E. Footer trust / payment card (legacy 4-column footer + optional CmsFooter strip)
+    public const FOOTER_SHOW_PAYMENT_CARD = 'cms_footer_show_payment_card';
+    public const FOOTER_PAYMENT_HEADLINE = 'cms_footer_payment_headline';
+    public const FOOTER_SSL_BADGE_URL = 'cms_footer_ssl_badge_url';
+    public const FOOTER_SSL_CAPTION = 'cms_footer_ssl_caption';
+
     /**
      * @return array<string, string> key => human label
      */
@@ -58,6 +74,18 @@ final class FrontendCmsSettingKeys
             self::SEO_HOMEPAGE_OG_IMAGE_URL => 'Homepage OG image URL',
             self::SEO_DEFAULT_TITLE => 'Default site SEO title',
             self::SEO_DEFAULT_DESCRIPTION => 'Default site meta description',
+            self::FOOTER_DESCRIPTION => 'Footer intro text',
+            self::FOOTER_BOTTOM_TEXT => 'Footer copyright / bottom line',
+            self::CONTACT_EMAIL => 'Contact email',
+            self::CONTACT_PHONE => 'Contact phone',
+            self::CONTACT_ADDRESS => 'Contact address',
+            self::SOCIAL_FACEBOOK_URL => 'Facebook URL',
+            self::SOCIAL_INSTAGRAM_URL => 'Instagram URL',
+            self::SOCIAL_LINKEDIN_URL => 'LinkedIn URL',
+            self::FOOTER_SHOW_PAYMENT_CARD => 'Show payment & trust card',
+            self::FOOTER_PAYMENT_HEADLINE => 'Payment card headline',
+            self::FOOTER_SSL_BADGE_URL => 'SSL / trust badge image URL',
+            self::FOOTER_SSL_CAPTION => 'SSL caption under badge',
         ];
     }
 }

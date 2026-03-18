@@ -12,3 +12,6 @@ export { default as ProgramsSection } from "./ProgramsSection";
 export { default as ContactSection } from "./ContactSection";
 export { default as WhyChooseSection } from "./WhyChooseSection";
 export { default as SocialProofSection } from "./SocialProofSection";
+export { default as CmsHomepageRenderer } from "./cms/CmsHomepageRenderer";
+export { default as CmsHeader } from "./cms/CmsHeader";
+export { default as CmsFooter } from "./cms/CmsFooter";
