@@ -62,7 +62,7 @@ function toHeroItem(c: ClassSession): HeroClassItem {
 }
 
 const DEMO_CLASSES = MOCK_HERO_CLASSES;
-const DISPLAY_LIMIT = 6;
+const MAX_CLASSES = 20;
 const MOBILE_INITIAL_LIMIT = 2;
 
 export default function UpcomingClassesSection() {
@@ -92,7 +92,7 @@ export default function UpcomingClassesSection() {
 
   const displayList: HeroClassItem[] = useMemo(() => {
     const base = useDemo ? DEMO_CLASSES : apiClasses.map(toHeroItem);
-    return base.slice(0, DISPLAY_LIMIT);
+    return base.slice(0, MAX_CLASSES);
   }, [apiClasses, useDemo]);
 
   const firstRecommendedId = useMemo(() => {
@@ -128,27 +128,55 @@ export default function UpcomingClassesSection() {
           ) : (
             <>
               {displayList.length ? (
-                <div className="grid gap-5 lg:grid-cols-3">
-                  {mobileVisible.map((c) => (
-                    <UpcomingClassCard
-                      key={c.id}
-                      item={c}
-                      isNext={firstRecommendedId === c.id}
-                      onAddToCart={(qty) => {
-                        setCart((prev) => {
-                          const existing = prev.find((p) => p.classId === c.id);
-                          if (existing) {
-                            return prev.map((p) =>
-                              p.classId === c.id ? { ...p, qty: p.qty + qty } : p
-                            );
-                          }
-                          return [...prev, { classId: c.id, qty }];
-                        });
-                        setCartOpen(true);
-                      }}
-                    />
-                  ))}
-                </div>
+                <>
+                  {/* Mobile: limited list + load more */}
+                  <div className="space-y-3 md:hidden">
+                    {mobileVisible.map((c) => (
+                      <UpcomingClassCard
+                        key={c.id}
+                        item={c}
+                        isNext={firstRecommendedId === c.id}
+                        onAddToCart={(qty) => {
+                          setCart((prev) => {
+                            const existing = prev.find((p) => p.classId === c.id);
+                            if (existing) {
+                              return prev.map((p) =>
+                                p.classId === c.id ? { ...p, qty: p.qty + qty } : p
+                              );
+                            }
+                            return [...prev, { classId: c.id, qty }];
+                          });
+                          setCartOpen(true);
+                        }}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Desktop: show more rows */}
+                  <div className="hidden md:block">
+                    <div className="space-y-3">
+                      {displayList.map((c) => (
+                        <UpcomingClassCard
+                          key={c.id}
+                          item={c}
+                          isNext={firstRecommendedId === c.id}
+                          onAddToCart={(qty) => {
+                            setCart((prev) => {
+                              const existing = prev.find((p) => p.classId === c.id);
+                              if (existing) {
+                                return prev.map((p) =>
+                                  p.classId === c.id ? { ...p, qty: p.qty + qty } : p
+                                );
+                              }
+                              return [...prev, { classId: c.id, qty }];
+                            });
+                            setCartOpen(true);
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </>
               ) : null}
 
               {/* Mobile load more */}
@@ -265,66 +293,73 @@ function UpcomingClassCard({
   const max = Math.max(1, Math.min(10, seatsLeft));
   const disabled = seatsLeft <= 0;
   const { dayNumber, month, year } = formatClassDate(item.date);
+  const dateText = `${dayNumber}${month ? ` ${month}` : ""}${year ? `, ${year}` : ""}`;
+  const timeText = item.time.replace(/\s*–\s*/g, " – ");
 
   return (
-    <div className="group rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md">
-      <div className="flex items-start justify-between gap-4">
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md">
+      <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-[#0F172A]">
-            {dayNumber}
-            {month ? <span className="font-normal text-[#64748B]"> {month}</span> : null}
-            {year ? <span className="font-normal text-[#64748B]">, {year}</span> : null}
-          </p>
-          <p className="mt-1 text-xs font-medium text-[#64748B]">
-            {item.day} • {item.time.replace(/\s*–\s*/g, " – ")}
-          </p>
+          <p className="text-sm font-semibold text-[#0F172A] truncate">{dateText}</p>
+          <p className="mt-1 text-xs font-medium text-[#64748B]">{item.day}</p>
         </div>
-
         {isNext ? (
-          <span className="inline-flex items-center rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-semibold text-[#1D4ED8]">
-            Next Available
+          <span className="inline-flex items-center rounded-full bg-[#DBEAFE] px-3 py-1 text-[11px] font-semibold text-[#1D4ED8]">
+            Next
           </span>
         ) : null}
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-2">
-        <span className="rounded-full bg-[#F1F5F9] px-3 py-1 text-xs font-semibold text-[#334155]">
-          Mod: {modeLabel(item.mode)}
-        </span>
-        <span className="rounded-full bg-[#F1F5F9] px-3 py-1 text-xs font-semibold text-[#334155]">
-          Bahasa: {languageLabel(item.language)}
-        </span>
+      <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+        <div className="min-w-0">
+          <span className="font-semibold text-[#64748B]">Tarikh:</span>{" "}
+          <span className="font-semibold text-[#0F172A]">{dateText}</span>
+        </div>
+        <div className="min-w-0">
+          <span className="font-semibold text-[#64748B]">Masa:</span>{" "}
+          <span className="font-semibold text-[#0F172A]">{timeText}</span>
+        </div>
+        <div className="min-w-0">
+          <span className="font-semibold text-[#64748B]">Bahasa:</span>{" "}
+          <span className="font-semibold text-[#0F172A]">{languageLabel(item.language)}</span>
+        </div>
+        <div className="min-w-0">
+          <span className="font-semibold text-[#64748B]">Mod Kelas:</span>{" "}
+          <span className="font-semibold text-[#0F172A]">{modeLabel(item.mode)}</span>
+        </div>
+        <div className="col-span-2 flex items-center justify-between rounded-xl bg-[#F8FAFC] px-3 py-2">
+          <span className="text-xs font-semibold text-[#64748B]">Kekosongan:</span>
+          <span className={`text-sm font-extrabold ${seatsLeft <= 10 ? "text-[#DC2626]" : "text-[#0F172A]"}`}>
+            {seatsLeft}
+          </span>
+        </div>
       </div>
 
-      <div className="mt-5 flex items-center justify-between gap-4">
-        <div className="min-w-0">
-          <p className="text-xs font-semibold text-[#0F172A]">Seats left</p>
-          <p className="mt-1 text-sm font-bold text-[#0F172A]">
-            {seatsLeft}
-          </p>
+      <div className="mt-4 flex items-center justify-between gap-3">
+        <div className="shrink-0 transform scale-[0.96] origin-left">
+          <QuantitySelector
+            compact
+            min={1}
+            max={max}
+            defaultValue={1}
+            onChange={(n) => setQty(n)}
+          />
         </div>
 
-        <QuantitySelector
-          min={1}
-          max={max}
-          defaultValue={1}
-          onChange={(n) => setQty(n)}
-        />
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => {
+            if (disabled) return;
+            onAddToCart(qty);
+          }}
+          className={`flex-1 rounded-xl px-4 py-2 text-xs font-semibold shadow-sm transition ${
+            disabled ? "bg-slate-300 cursor-not-allowed" : "bg-[#2563EB] hover:bg-[#1D4ED8]"
+          }`}
+        >
+          Daftar
+        </button>
       </div>
-
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={() => {
-          if (disabled) return;
-          onAddToCart(qty);
-        }}
-        className={`mt-5 inline-flex w-full items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold text-white shadow-sm transition ${
-          disabled ? "bg-slate-300 cursor-not-allowed" : "bg-[#2563EB] hover:bg-[#1D4ED8]"
-        }`}
-      >
-        Daftar
-      </button>
     </div>
   );
 }

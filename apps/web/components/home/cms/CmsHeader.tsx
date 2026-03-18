@@ -72,7 +72,7 @@ function renderTree(nodes: PublicCmsNavItem[], linkClass: string, onNavigate?: (
                       href={ch}
                       label={c.label}
                       external={c.open_in_new_tab}
-                      className="block px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
+                      className="block px-4 py-2.5 text-[14px] font-semibold text-slate-700 hover:bg-slate-50"
                       onNavigate={onNavigate}
                     />
                   </li>
@@ -143,7 +143,7 @@ export default function CmsHeader({
             {useTree && navTree
               ? renderTree(
                   navTree.slice(0, 3),
-                  "text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors",
+                  "text-[15px] font-semibold text-slate-700 hover:text-slate-900 transition-colors",
                 ).filter(Boolean)
               : fallbackNav.slice(0, 3).map((i) => {
                   const h = i.href.startsWith("#") ? `/${i.href}` : i.href;
@@ -153,7 +153,7 @@ export default function CmsHeader({
                       href={h}
                       label={i.label}
                       external={i.external}
-                      className="text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors"
+                      className="text-[15px] font-semibold text-slate-700 hover:text-slate-900 transition-colors"
                     />
                   );
                 })}
@@ -233,7 +233,7 @@ export default function CmsHeader({
                           href={h}
                           label={c.label}
                           external={c.open_in_new_tab}
-                          className="text-sm font-medium text-slate-700"
+                          className="text-[15px] font-semibold text-slate-700"
                           onNavigate={() => setMobileOpen(false)}
                         />,
                       );
@@ -247,7 +247,7 @@ export default function CmsHeader({
                           href={h}
                           label={n.label}
                           external={n.open_in_new_tab}
-                          className="text-sm font-medium text-slate-700"
+                          className="text-[15px] font-semibold text-slate-700"
                           onNavigate={() => setMobileOpen(false)}
                         />,
                       );
@@ -263,7 +263,7 @@ export default function CmsHeader({
                       href={h}
                       label={i.label}
                       external={i.external}
-                      className="text-sm font-medium text-slate-700"
+                      className="text-[15px] font-semibold text-slate-700"
                       onNavigate={() => setMobileOpen(false)}
                     />
                   );

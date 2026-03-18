@@ -64,6 +64,16 @@ export default async function HomePage() {
       cmsKeys.has("faq") ||
       cmsKeys.has("cta"));
 
+  // Legacy fallback: build a hero carousel-like section from homepage settings.
+  // This removes the old booking panel and keeps the hero clean & consistent.
+  const legacyHeroBg =
+    settings.hero.backgroundImageUrl ?? "/images/food-handling-hero.jpg";
+  const legacyHeroSlides = [
+    legacyHeroBg,
+    settings.mainBanners?.[0]?.imageUrl ?? legacyHeroBg,
+    settings.mainBanners?.[1]?.imageUrl ?? legacyHeroBg,
+  ].filter((v, idx, arr) => !!v && arr.indexOf(v) === idx);
+
   return (
     <div style={ctx.themeVars as CSSProperties}>
       {useCmsRedesign && cms ? (
@@ -118,6 +128,14 @@ export default async function HomePage() {
               navTree={ctx.headerNavTree}
               fallbackNav={ctx.fallbackHeaderNav}
               primaryCta={ctx.primaryCta}
+              heroTitle={settings.hero.headline}
+              heroSubtitle={settings.hero.subheadline}
+              heroPrimaryLabel={settings.hero.ctaText}
+              heroPrimaryUrl={settings.hero.ctaHref}
+              heroSecondaryLabel={settings.mainBanners?.[0]?.ctaText ?? "Lihat Kelas"}
+              heroSecondaryUrl={settings.mainBanners?.[0]?.ctaHref ?? "#classes"}
+              heroBackgroundUrls={legacyHeroSlides}
+              heroOverlayOpacity={settings.hero.overlayOpacity}
             />
             <WhyChooseSection data={settings.whyChoose} />
             <SocialProofSection data={settings.socialProof} />

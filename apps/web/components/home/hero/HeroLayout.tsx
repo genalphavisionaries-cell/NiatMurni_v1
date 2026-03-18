@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo } from "react";
 import HeroHeader from "./HeroHeader";
 import HeroSlider from "./HeroSlider";
-import BookingBannerPanel from "./BookingBannerPanel";
 import type { NavLink } from "@/lib/homepage-settings";
 import type { PublicCmsNavItem } from "@/lib/public-cms";
+import type { PublicCmsHomepageSection, PublicCmsSite } from "@/lib/public-cms";
+import HeroSection from "../cms/sections/HeroSection";
 
 type HeroLayoutProps = {
   siteName?: string;
@@ -13,6 +14,15 @@ type HeroLayoutProps = {
   navTree?: PublicCmsNavItem[] | null;
   fallbackNav?: NavLink[];
   primaryCta?: { label: string; url: string };
+  /** Legacy hero content for the fallback branch */
+  heroTitle?: string;
+  heroSubtitle?: string;
+  heroPrimaryLabel?: string;
+  heroPrimaryUrl?: string;
+  heroSecondaryLabel?: string;
+  heroSecondaryUrl?: string;
+  heroBackgroundUrls?: string[];
+  heroOverlayOpacity?: number;
 };
 
 const HERO_HEIGHT = 720;
@@ -23,61 +33,92 @@ export default function HeroLayout({
   navTree,
   fallbackNav,
   primaryCta,
+  heroTitle,
+  heroSubtitle,
+  heroPrimaryLabel,
+  heroPrimaryUrl,
+  heroSecondaryLabel,
+  heroSecondaryUrl,
+  heroBackgroundUrls,
+  heroOverlayOpacity,
 }: HeroLayoutProps) {
-  const [panelCollapsed, setPanelCollapsed] = useState(false);
+  const slides = useMemo(() => {
+    const fallback = heroBackgroundUrls?.filter(Boolean) ?? [];
+    if (fallback.length) return fallback;
+    return ["/images/food-handling-hero.jpg"];
+  }, [heroBackgroundUrls]);
+
+  const heroSection: PublicCmsHomepageSection = useMemo(() => {
+    const primaryUrl = heroPrimaryUrl ?? primaryCta?.url ?? "/#classes";
+    const primaryLabel = heroPrimaryLabel ?? primaryCta?.label ?? "Register";
+    const secondaryUrl = heroSecondaryUrl ?? "/#classes";
+    const secondaryLabel = heroSecondaryLabel ?? "Lihat Kelas";
+
+    const bg = slides[0] ?? "/images/food-handling-hero.jpg";
+    const extra = {
+      overlay_opacity: String(heroOverlayOpacity ?? 0.25),
+      slides_json: JSON.stringify(
+        slides.slice(0, 3).map((img) => ({
+          desktop_image_url: img,
+          mobile_image_url: img,
+        }))
+      ),
+    };
+
+    return {
+      section_key: "hero",
+      name: "Hero",
+      sort_order: 0,
+      title: heroTitle ?? siteName ?? "Niat Murni Academy",
+      subtitle: heroSubtitle ?? "KKM-recognised training for food handlers — online or in person.",
+      description: null,
+      image_url: bg,
+      button_primary_label: primaryLabel,
+      button_primary_url: primaryUrl,
+      button_secondary_label: secondaryLabel,
+      button_secondary_url: secondaryUrl,
+      extra_data: extra,
+    };
+  }, [
+    heroPrimaryLabel,
+    heroPrimaryUrl,
+    heroSecondaryLabel,
+    heroSecondaryUrl,
+    heroOverlayOpacity,
+    heroSubtitle,
+    heroTitle,
+    primaryCta?.label,
+    primaryCta?.url,
+    siteName,
+    slides,
+  ]);
+
+  const heroSite: PublicCmsSite = useMemo(() => {
+    return {
+      site_name: siteName ?? "Niat Murni Academy",
+      site_tagline: heroSubtitle ?? "",
+      logo_url: logoUrl ?? "",
+      favicon_url: "",
+      primary_cta_label: heroPrimaryLabel ?? primaryCta?.label ?? "Register",
+      primary_cta_url: heroPrimaryUrl ?? primaryCta?.url ?? "/#classes",
+    };
+  }, [heroPrimaryLabel, heroPrimaryUrl, heroSubtitle, logoUrl, primaryCta?.label, primaryCta?.url, siteName]);
 
   return (
     <div className="relative w-full">
-      {/* Full-width hero section: slider + overlay + header + floating panel (desktop) */}
-      <section
-        className="hero-section relative w-full overflow-hidden"
-        style={{ height: HERO_HEIGHT }}
-        aria-label="Hero"
-      >
-        {/* Slider: full bleed background, z-index 1 */}
-        <div className="absolute inset-0 z-[1]">
-          <HeroSlider />
-        </div>
-
-        {/* Dark overlay */}
-        <div
-          className="hero-overlay absolute inset-0 z-[2]"
-          style={{ background: "rgba(0,0,0,0.25)" }}
-          aria-hidden
-        />
-
-        {/* Header: on top of hero, z-index 20 */}
-        <HeroHeader
-          siteName={siteName}
-          logoUrl={logoUrl}
-          navTree={navTree}
-          fallbackNav={fallbackNav}
-          primaryCta={primaryCta}
-        />
-
-        {/* Floating booking panel (desktop/tablet): overlay left side, z-index 10 */}
-        <div
-          className="absolute top-[140px] z-10 hidden lg:block"
-          style={{
-            left: 80,
-            width: panelCollapsed ? 56 : undefined,
-          }}
-        >
-          <div className={panelCollapsed ? "w-[56px]" : "w-[420px] md:w-[380px]"}>
-            <BookingBannerPanel
-              collapsed={panelCollapsed}
-              onCollapsedChange={setPanelCollapsed}
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Mobile: booking panel as full-width block below hero */}
-      <div className="w-full px-4 py-6 lg:hidden">
-        <BookingBannerPanel
-          collapsed={panelCollapsed}
-          onCollapsedChange={setPanelCollapsed}
-        />
+      {/* Legacy fallback hero: use the same clean hero section UX as CMS */}
+      <HeroSection section={heroSection} site={heroSite} />
+      {/* Header sits on top of the hero background */}
+      <HeroHeader
+        siteName={siteName}
+        logoUrl={logoUrl}
+        navTree={navTree}
+        fallbackNav={fallbackNav}
+        primaryCta={primaryCta}
+      />
+      {/* Keep background slider component import referenced to avoid unused-removal surprises */}
+      <div className="hidden">
+        <HeroSlider />
       </div>
     </div>
   );

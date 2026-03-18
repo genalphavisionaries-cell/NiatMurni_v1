@@ -139,7 +139,7 @@ export default function HeroHeader({
   }, []);
 
   const linkClass =
-    "text-[13px] font-medium text-white/90 transition-colors hover:text-white whitespace-nowrap";
+    "text-[15px] font-semibold text-white/95 transition-colors hover:text-white whitespace-nowrap";
   const useTree = navTree && navTree.length > 0;
 
   return (
@@ -217,7 +217,7 @@ export default function HeroHeader({
         type="button"
         aria-label={menuOpen ? "Close menu" : "Menu"}
         aria-expanded={menuOpen}
-        className="flex h-10 w-10 items-center justify-center rounded-lg text-white/90 transition-colors hover:bg-white/10 focus:outline focus:outline-2 focus:outline-white focus:outline-offset-2 lg:hidden"
+        className="flex h-10 w-10 items-center justify-center rounded-lg text-white/90 transition-colors hover:bg-white/10 focus:outline focus:outline-2 focus:outline-white focus:outline-offset-2"
         onClick={() => setMenuOpen((o) => !o)}
       >
         <span className="relative h-6 w-6">

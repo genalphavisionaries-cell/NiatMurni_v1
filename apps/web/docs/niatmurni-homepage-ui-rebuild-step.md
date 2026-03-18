@@ -1,4 +1,4 @@
-# Niat Murni Homepage UI Rebuild (Step 1)
+# Niat Murni Homepage UI Rebuild (Correction Pass)
 
 This step rebuilds the **public homepage UI** (marketing layout) to match the finalized NiATmurni homepage structure, using the existing CMS/public API plumbing.
 
@@ -8,8 +8,9 @@ Admin CMS UX rebuilding is intentionally **not** included here; this frontend is
 
 ### Header
 - Updated `apps/web/components/home/cms/CmsHeader.tsx`
-- Adds a simple **language selector dropdown** (`BM`/`EN`) and ensures the **hamburger icon** is visible alongside the desktop menu.
+- Adds/ensures a simple **language selector dropdown** (`BM`/`EN`) and the **hamburger icon** is visible on both desktop and mobile.
 - Desktop menu shows **up to 3 top-level items** (with submenu support via existing navigation tree children rendering).
+- Increased main menu typography for readability.
 
 ### Hero
 - Updated `apps/web/components/home/cms/sections/HeroSection.tsx`
@@ -18,6 +19,10 @@ Admin CMS UX rebuilding is intentionally **not** included here; this frontend is
   - Auto-slide + manual arrows + dots
   - Overlay title/description + 2 CTA buttons
 - **No booking popup** is included in this hero.
+
+Additionally, corrected legacy fallback:
+- Updated `apps/web/components/home/hero/HeroLayout.tsx` to remove the old booking/registration panel entirely.
+- The legacy fallback hero now reuses the same clean CMS-style hero section UX (carousel + overlay + 2 CTAs) built from homepage settings.
 
 Expected CMS shape (optional, best-effort):
 - `homepage_sections[hero].extra_data.slides_json` (array of slides)
@@ -38,6 +43,8 @@ Fallback behavior:
   - `/#why_choose_us`
   - `/#testimonials`
   - `/#promotions`
+Legacy correction:
+- Removed the left vertical “booking rail” by removing the booking panel from the legacy `HeroLayout` fallback.
 
 ### Why Us
 - Updated `apps/web/components/home/cms/sections/WhyChooseUsSection.tsx`
@@ -56,13 +63,11 @@ Fallback behavior:
 ### Upcoming Classes (conversion-focused)
 - Updated `apps/web/components/home/UpcomingClassesSection.tsx`
 - Uses **live session data** (`fetchUpcomingClasses`) with demo fallback.
-- New card UI:
-  - Emphasized date/time
-  - Clear labels for language and delivery mode
-  - Seat quantity selector
-  - `Daftar` button adds to a lightweight in-memory cart and opens a **cart popup modal**
-  - Mobile shows **first 2 items**, then a **Load More** button
-  - Desktop uses a **3-column grid**
+- New compact listing UI (denser, suitable for many upcoming classes):
+  - Explicit labels: `Tarikh:`, `Masa:`, `Bahasa:`, `Mod Kelas:`, `Kekosongan:`
+  - Seat quantity selector (compact) + `Daftar` button (still opens the cart popup)
+  - Mobile shows **first 2 items**, then **Load More** (up to the same max set by the component)
+  - Desktop shows a fuller list (no mobile-only limitation)
 
 Interactive behavior added:
 - Quantity selection per card
