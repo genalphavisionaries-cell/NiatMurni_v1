@@ -1,3 +1,4 @@
+import { PublicSiteShell } from "@/components/public";
 import BookingClient from "./BookingClient";
 
 type Props = {
@@ -10,5 +11,9 @@ export function generateStaticParams() {
 
 export default async function BookingPage({ params }: Props) {
   const { id } = await params;
-  return <BookingClient id={id} />;
+  return (
+    <PublicSiteShell>
+      <BookingClient id={id} />
+    </PublicSiteShell>
+  );
 }

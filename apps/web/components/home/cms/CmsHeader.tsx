@@ -108,6 +108,7 @@ export default function CmsHeader({
   primaryCta,
 }: CmsHeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [lang, setLang] = useState<"BM" | "EN">("BM");
 
   const useTree = useMemo(() => {
     return !!(navTree?.length && navTree.some((n) => cmsString(n.label)));
@@ -137,57 +138,75 @@ export default function CmsHeader({
           )}
         </Link>
 
-        <nav className="ml-auto hidden items-center gap-5 lg:flex" aria-label="Main">
-          {useTree && navTree
-            ? renderTree(
-                navTree,
-                "text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors",
-              ).filter(Boolean)
-            : fallbackNav.map((i) => {
-                const h = i.href.startsWith("#") ? `/${i.href}` : i.href;
-                return (
-                  <LinkEl
-                    key={i.label + i.href}
-                    href={h}
-                    label={i.label}
-                    external={i.external}
-                    className="text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors"
-                  />
-                );
-              })}
+        <div className="ml-auto flex items-center gap-3">
+          <nav className="hidden items-center gap-5 lg:flex" aria-label="Main">
+            {useTree && navTree
+              ? renderTree(
+                  navTree.slice(0, 3),
+                  "text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors",
+                ).filter(Boolean)
+              : fallbackNav.slice(0, 3).map((i) => {
+                  const h = i.href.startsWith("#") ? `/${i.href}` : i.href;
+                  return (
+                    <LinkEl
+                      key={i.label + i.href}
+                      href={h}
+                      label={i.label}
+                      external={i.external}
+                      className="text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors"
+                    />
+                  );
+                })}
 
-          <LinkEl
-            href={primaryCta.url.startsWith("#") ? `/${primaryCta.url}` : primaryCta.url}
-            label={primaryCta.label}
-            external={primaryCta.url.startsWith("http")}
-            className="rounded-full px-4 py-2 text-sm font-semibold text-white shadow-sm"
-            onNavigate={() => setMobileOpen(false)}
-          />
-          <style jsx>{`
-            a.rounded-full {
-              background: ${ctaBg};
-            }
-            a.rounded-full:hover {
-              filter: brightness(0.95);
-            }
-          `}</style>
-        </nav>
+            <LinkEl
+              href={primaryCta.url.startsWith("#") ? `/${primaryCta.url}` : primaryCta.url}
+              label={primaryCta.label}
+              external={primaryCta.url.startsWith("http")}
+              className="rounded-full px-4 py-2 text-sm font-semibold text-white shadow-sm"
+              onNavigate={() => setMobileOpen(false)}
+            />
+            <style jsx>{`
+              a.rounded-full {
+                background: ${ctaBg};
+              }
+              a.rounded-full:hover {
+                filter: brightness(0.95);
+              }
+            `}</style>
+          </nav>
 
-        <button
-          type="button"
-          className="ml-auto inline-flex rounded-lg p-2 text-slate-700 hover:bg-slate-100 lg:hidden"
-          onClick={() => setMobileOpen((v) => !v)}
-          aria-expanded={mobileOpen}
-          aria-label="Toggle menu"
-        >
-          <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            {mobileOpen ? (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            )}
-          </svg>
-        </button>
+          <div>
+            <label className="sr-only" htmlFor="lang-select">
+              Language
+            </label>
+            <select
+              id="lang-select"
+              value={lang}
+              onChange={(e) => setLang(e.target.value as "BM" | "EN")}
+              className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm outline-none focus:ring-2 focus:ring-[#2563EB]"
+              aria-label="Language"
+            >
+              <option value="BM">BM</option>
+              <option value="EN">EN</option>
+            </select>
+          </div>
+
+          <button
+            type="button"
+            className="inline-flex rounded-lg p-2 text-slate-700 hover:bg-slate-100"
+            onClick={() => setMobileOpen((v) => !v)}
+            aria-expanded={mobileOpen}
+            aria-label="Toggle menu"
+          >
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              {mobileOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              )}
+            </svg>
+          </button>
+        </div>
       </div>
 
       {mobileOpen ? (

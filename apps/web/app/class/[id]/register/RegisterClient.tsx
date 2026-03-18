@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useParams } from "next/navigation";
 import Link from "next/link";
 import { registerForClass } from "@/lib/api";
 
@@ -40,7 +39,7 @@ export default function RegisterClient({ id }: Props) {
   };
 
   return (
-    <main className="min-h-screen bg-stone-50">
+    <div>
       <header className="border-b border-stone-200 bg-white px-6 py-4">
         <Link
           href={`/class/${id}`}
@@ -139,6 +138,6 @@ export default function RegisterClient({ id }: Props) {
           </button>
         </form>
       </section>
-    </main>
+    </div>
   );
 }

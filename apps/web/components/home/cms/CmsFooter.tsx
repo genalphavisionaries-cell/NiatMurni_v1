@@ -37,6 +37,13 @@ const DEFAULT_LOGIN = [
   { label: "Log Masuk Tutor", href: "/login/tutor" },
 ] as const;
 
+const DEFAULT_QUICK_LINKS = [
+  { label: "Kursus", href: "/#classes" },
+  { label: "Kenapa Kami", href: "/#why_choose_us" },
+  { label: "Ulasan", href: "/#testimonials" },
+  { label: "Promosi", href: "/#promotions" },
+] as const;
+
 const DEFAULT_INTRO =
   "Penyedia latihan kursus pengendalian makanan untuk pengusaha makanan di seluruh Malaysia.";
 
@@ -73,28 +80,20 @@ export default function CmsFooter({
   const year = new Date().getFullYear();
   const bg = footerBackgroundColor?.trim() || "var(--cms-footer-bg, #0f172a)";
 
+  // Contact + social are still available for legacy/custom layouts; homepage footer UI
+  // intentionally focuses on conversion and legal/payment blocks for now.
+  void cmsContact;
+  void cmsSocial;
+
   const desc =
     cmsString(cmsFooter.description) ??
     cmsString(legacyFooterDescription) ??
     DEFAULT_INTRO;
 
-  const fromCmsDesc = !!cmsString(cmsFooter.description);
-
   const bottomLine =
     cmsString(cmsFooter.bottom_text) ??
     cmsString(legacyFooterBottom) ??
     `© ${year} ${siteName}. All rights reserved.`;
-
-  const email = cmsString(cmsContact.email);
-  const phone = cmsString(cmsContact.phone);
-  const address = cmsString(cmsContact.address);
-  const hasContact = !!(email || phone || address);
-
-  const socials = [
-    { label: "Facebook", url: cmsString(cmsSocial.facebook_url) },
-    { label: "Instagram", url: cmsString(cmsSocial.instagram_url) },
-    { label: "LinkedIn", url: cmsString(cmsSocial.linkedin_url) },
-  ].filter((x) => x.url);
 
   const legal: NavLink[] = legalFromCms.length
     ? legalFromCms
@@ -115,55 +114,23 @@ export default function CmsFooter({
           <div className="lg:col-span-4">
             <div className="flex items-center gap-3">
               {logoUrl ? (
-                <img
-                  src={logoUrl}
-                  alt={siteName}
-                  className="h-10 w-auto max-w-[220px] object-contain"
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                  }}
-                />
+                <>
+                  <img
+                    src={logoUrl}
+                    alt={siteName}
+                    className="h-10 w-auto max-w-[220px] object-contain"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                  <p className="text-lg font-semibold text-white">{siteName}</p>
+                </>
               ) : (
                 <p className="text-lg font-semibold text-white">{siteName}</p>
               )}
             </div>
             <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-white/75">{desc}</p>
-            {!fromCmsDesc ? (
-              <p className="mt-2 text-xs text-white/60">Berdaftar di Malaysia</p>
-            ) : null}
-
-            {hasContact ? (
-              <div className="mt-6 space-y-2 border-t border-white/10 pt-6 text-sm text-white/80">
-                <p className="text-xs font-semibold uppercase tracking-wider text-white/70">Contact</p>
-                {email ? (
-                  <a href={`mailto:${email}`} className="block hover:text-white">
-                    {email}
-                  </a>
-                ) : null}
-                {phone ? (
-                  <a href={`tel:${phone.replace(/\s/g, "")}`} className="block hover:text-white">
-                    {phone}
-                  </a>
-                ) : null}
-                {address ? <p className="whitespace-pre-line leading-relaxed">{address}</p> : null}
-              </div>
-            ) : null}
-
-            {socials.length ? (
-              <div className="mt-4 flex flex-wrap gap-3">
-                {socials.map((s) => (
-                  <a
-                    key={s.label}
-                    href={s.url!}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm font-medium text-white/80 underline-offset-2 hover:text-white hover:underline"
-                  >
-                    {s.label}
-                  </a>
-                ))}
-              </div>
-            ) : null}
+            <p className="mt-2 text-xs text-white/60">Berdaftar di Malaysia</p>
           </div>
 
           <div className="lg:col-span-8">
@@ -187,7 +154,10 @@ export default function CmsFooter({
                               {l.label}
                             </a>
                           ) : (
-                            <Link href={l.href} className="text-sm text-white/80 hover:text-white">
+                            <Link
+                              href={l.href}
+                              className="text-sm text-white/80 hover:text-white"
+                            >
                               {l.label}
                             </Link>
                           )}
@@ -197,7 +167,24 @@ export default function CmsFooter({
                   </div>
                 ))}
               </div>
-            ) : null}
+            ) : (
+              <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
+                <div>
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-white">
+                    Quick Links
+                  </h3>
+                  <ul className="mt-4 space-y-2">
+                    {DEFAULT_QUICK_LINKS.map((l) => (
+                      <li key={l.href + l.label}>
+                        <Link href={l.href} className="text-sm text-white/80 hover:text-white">
+                          {l.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
 
             <div
               className={`mt-10 grid gap-6 ${showPayment ? "lg:grid-cols-2" : ""}`}

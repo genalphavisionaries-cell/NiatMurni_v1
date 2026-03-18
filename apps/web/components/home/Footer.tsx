@@ -25,10 +25,10 @@ type FooterProps = {
 };
 
 const QUICK_LINKS = [
-  { label: "Kursus", href: "/#programs" },
-  { label: "Jadual Kelas", href: "/#classes" },
-  { label: "FAQ", href: "/#faq" },
-  { label: "Contact", href: "/#contact" },
+  { label: "Kursus", href: "/#classes" },
+  { label: "Kenapa Kami", href: "/#why_choose_us" },
+  { label: "Ulasan", href: "/#testimonials" },
+  { label: "Promosi", href: "/#promotions" },
 ] as const;
 
 const LOGIN_LINKS = [
@@ -70,20 +70,6 @@ export default function Footer({
 
   const intro =
     cmsString(cmsGlobal?.footer.description) ?? footerDescription;
-  const cmsIntro = !!cmsString(cmsGlobal?.footer.description);
-
-  const email = cmsString(cmsGlobal?.contact.email);
-  const phone = cmsString(cmsGlobal?.contact.phone);
-  const address = cmsString(cmsGlobal?.contact.address);
-  const hasContact = !!(email || phone || address);
-
-  const socials = cmsGlobal
-    ? [
-        { label: "Facebook", url: cmsString(cmsGlobal.social.facebook_url) },
-        { label: "Instagram", url: cmsString(cmsGlobal.social.instagram_url) },
-        { label: "LinkedIn", url: cmsString(cmsGlobal.social.linkedin_url) },
-      ].filter((x) => x.url)
-    : [];
 
   const bottomLine =
     cmsString(cmsGlobal?.footer.bottom_text) ??
@@ -130,7 +116,7 @@ export default function Footer({
                       if (next instanceof HTMLElement) next.style.display = "block";
                     }}
                   />
-                  <p className="text-lg font-bold text-white" style={{ display: "none" }}>
+                  <p className="text-lg font-bold text-white">
                     {siteName}
                   </p>
                 </>
@@ -139,38 +125,7 @@ export default function Footer({
               )}
             </div>
             <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-white/90">{intro}</p>
-            {!cmsIntro ? <p className="mt-2 text-xs text-white/70">Berdaftar di Malaysia</p> : null}
-            {hasContact ? (
-              <div className="mt-4 space-y-1.5 border-t border-white/10 pt-4 text-sm text-white/85">
-                <p className="text-xs font-semibold uppercase tracking-wider text-white/60">Contact</p>
-                {email ? (
-                  <a href={`mailto:${email}`} className="block hover:text-white">
-                    {email}
-                  </a>
-                ) : null}
-                {phone ? (
-                  <a href={`tel:${phone.replace(/\s/g, "")}`} className="block hover:text-white">
-                    {phone}
-                  </a>
-                ) : null}
-                {address ? <p className="whitespace-pre-line text-white/80">{address}</p> : null}
-              </div>
-            ) : null}
-            {socials.length ? (
-              <div className="mt-3 flex flex-wrap gap-3">
-                {socials.map((s) => (
-                  <a
-                    key={s.label}
-                    href={s.url!}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs font-medium text-white/80 hover:text-white hover:underline"
-                  >
-                    {s.label}
-                  </a>
-                ))}
-              </div>
-            ) : null}
+            <p className="mt-2 text-xs text-white/70">Berdaftar di Malaysia</p>
           </div>
 
           {/* Column 2: CMS footer nav or Quick Links */}

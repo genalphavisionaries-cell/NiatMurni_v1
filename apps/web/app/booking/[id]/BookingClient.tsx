@@ -42,7 +42,7 @@ export default function BookingClient({ id }: Props) {
   }, [id]);
 
   return (
-    <main className="min-h-screen bg-stone-50">
+    <div>
       <header className="border-b border-stone-200 bg-white px-6 py-4">
         <Link href="/" className="text-sm text-amber-600 hover:underline">
           ← Home
@@ -95,6 +95,6 @@ export default function BookingClient({ id }: Props) {
           </div>
         )}
       </section>
-    </main>
+    </div>
   );
 }

@@ -1,4 +1,4 @@
-import { CertificatesClient } from "./certificates/CertificatesClient";
+import { CertificatesClient } from "./CertificatesClient";
 
 export const metadata = {
   title: "Certificates | Participant | Niat Murni",

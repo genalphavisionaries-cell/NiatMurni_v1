@@ -4,11 +4,11 @@ import type { PublicCmsPayload, PublicCmsHomepageSection } from "@/lib/public-cm
 import HeroSection from "./sections/HeroSection";
 import WhyChooseUsSection from "./sections/WhyChooseUsSection";
 import TestimonialsSection from "./sections/TestimonialsSection";
-import FaqSection from "./sections/FaqSection";
-import CtaSection from "./sections/CtaSection";
+import PromotionsSection from "./sections/PromotionsSection";
 
 import UpcomingClassesSection from "../UpcomingClassesSection";
 import ContactSection from "../ContactSection";
+import FloatingQuickMenu from "./FloatingQuickMenu";
 
 export type SupportedCmsSectionKey =
   | "hero"
@@ -69,7 +69,6 @@ export default function CmsHomepageRenderer({
   const hero = first("hero");
   const why = first("why_choose_us") ?? first("features");
   const testimonials = first("testimonials");
-  const faq = first("faq");
   const cta = first("cta");
   const programs = first("programs");
   const contactSection = first("contact");
@@ -78,7 +77,6 @@ export default function CmsHomepageRenderer({
     !!hero ||
     !!why ||
     !!testimonials ||
-    !!faq ||
     !!cta ||
     !!programs ||
     !!contactSection;
@@ -87,6 +85,7 @@ export default function CmsHomepageRenderer({
 
   return (
     <>
+      <FloatingQuickMenu promotionsHref={cta ? "/#promotions" : "/#classes"} />
       {hero ? <HeroSection section={hero} site={cms.site} /> : null}
       {why ? <WhyChooseUsSection section={why} /> : null}
 
@@ -94,8 +93,7 @@ export default function CmsHomepageRenderer({
       {programs ? <UpcomingClassesSection /> : null}
 
       {testimonials ? <TestimonialsSection section={testimonials} /> : null}
-      {faq ? <FaqSection section={faq} /> : null}
-      {cta ? <CtaSection section={cta} /> : null}
+      {cta ? <PromotionsSection section={cta} /> : null}
 
       {/* Controlled integration: "contact" key can render the existing contact block for now */}
       {contactSection ? (

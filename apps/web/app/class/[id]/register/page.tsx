@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { PublicSiteShell } from "@/components/public";
 import RegisterClient from "./RegisterClient";
 
 type Props = {
@@ -11,5 +11,9 @@ export function generateStaticParams() {
 
 export default async function RegisterPage({ params }: Props) {
   const { id } = await params;
-  return <RegisterClient id={id} />;
+  return (
+    <PublicSiteShell>
+      <RegisterClient id={id} />
+    </PublicSiteShell>
+  );
 }

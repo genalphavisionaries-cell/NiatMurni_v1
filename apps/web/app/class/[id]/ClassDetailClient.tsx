@@ -28,20 +28,20 @@ export default function ClassDetailClient({ id }: Props) {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-stone-50 p-8">
+      <div className="p-8">
         <p className="text-stone-500">Loading…</p>
-      </main>
+      </div>
     );
   }
 
   if (!classSession) {
     return (
-      <main className="min-h-screen bg-stone-50 p-8">
+      <div className="p-8">
         <p className="text-stone-500">Class not found.</p>
         <Link href="/" className="text-amber-600 hover:underline mt-2 inline-block">
           ← Back to home
         </Link>
-      </main>
+      </div>
     );
   }
 
@@ -49,7 +49,7 @@ export default function ClassDetailClient({ id }: Props) {
   const end = new Date(classSession.ends_at);
 
   return (
-    <main className="min-h-screen bg-stone-50">
+    <div>
       <header className="border-b border-stone-200 bg-white px-6 py-4">
         <Link
           href="/"
@@ -108,6 +108,6 @@ export default function ClassDetailClient({ id }: Props) {
           </Link>
         </div>
       </section>
-    </main>
+    </div>
   );
 }
