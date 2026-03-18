@@ -325,60 +325,67 @@ function UpcomingClassCard({
   const isSellingFast = seatsLeft > 0 && seatsLeft <= 14;
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-1.5 shadow-sm transition hover:shadow-md">
-      <div className="flex items-start justify-between gap-2">
+    <div className="rounded-xl border border-[#E5E7EB] bg-white px-3 py-1.5 shadow-[0_1px_2px_rgba(15,23,42,0.06)] transition hover:shadow-[0_2px_10px_rgba(15,23,42,0.08)]">
+      <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <span className="sr-only">Tarikh</span>
           <span className="sr-only">Hari</span>
-          <p className="truncate text-[20px] font-extrabold leading-none text-[#0F172A] uppercase tracking-normal">
+          <p className="truncate text-[16px] font-extrabold leading-none text-[#0F172A] uppercase tracking-wide">
             {dateLineUpper}
           </p>
-          <div className="mt-0.5 flex items-center gap-2 text-[13px] font-semibold text-[#64748B]">
+          <div className="mt-0.5 flex items-center gap-2 text-[12px] font-semibold text-[#64748B] leading-tight">
             <span className="sr-only">Masa</span>
             <span>{timeText}</span>
           </div>
         </div>
 
-        <div className="flex flex-col items-end gap-0.5 shrink-0">
-          <span className="text-[12px] font-semibold text-[#64748B]">Remaining Seats</span>
+        <div className="flex flex-col items-end gap-0.5 shrink-0 text-right">
+          <span className="text-[11px] font-semibold text-[#64748B]">
+            Remaining Seats
+          </span>
           <span
-            className={`text-[18px] font-extrabold leading-none ${
+            className={`text-[20px] font-extrabold leading-none ${
               isSellingFast ? "text-[#DC2626]" : "text-[#0F172A]"
             }`}
           >
             {seatsLeft}
           </span>
           {isSellingFast ? (
-            <span className="rounded-md bg-[#FEF3C7] px-2 py-0.5 text-[12px] font-extrabold text-[#92400E] whitespace-nowrap">
+            <span className="rounded-lg bg-[#FEF3C7] px-2 py-[5px] text-[11px] font-extrabold leading-none text-[#92400E] whitespace-nowrap">
               Selling Fast!
             </span>
           ) : null}
         </div>
       </div>
 
-      <div className="mt-1 flex items-center justify-between gap-1">
-        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+      <div className="mt-0.5 flex items-center justify-between gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           <span
-            className={`inline-flex items-center gap-1 rounded-full bg-[#DBEAFE] px-2 py-0.5 text-[12px] font-semibold text-[#1D4ED8] whitespace-nowrap`}
+            className={`inline-flex items-center gap-1 rounded-full bg-[#DBEAFE] px-2 py-[6px] text-[11px] font-semibold leading-none text-[#1D4ED8] whitespace-nowrap`}
           >
             {isOnline ? (
-              <span className="inline-flex h-[8px] w-[8px] rounded-full bg-[#2563EB]" aria-hidden />
+              <span
+                className="inline-flex h-[6px] w-[6px] rounded-full bg-[#2563EB]"
+                aria-hidden
+              />
             ) : null}
             {modePill}
           </span>
-          <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[12px] font-semibold text-[#334155] whitespace-nowrap">
+          <span className="rounded-full bg-[#F1F5F9] px-2 py-[6px] text-[11px] font-semibold leading-none text-[#334155] whitespace-nowrap">
             {languagePill}
           </span>
         </div>
 
-        <div className="flex items-center gap-1 shrink-0">
-          <QuantitySelector
-            compact
-            min={1}
-            max={max}
-            defaultValue={1}
-            onChange={(n) => setQty(n)}
-          />
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="origin-right scale-[0.95]">
+            <QuantitySelector
+              compact
+              min={1}
+              max={max}
+              defaultValue={1}
+              onChange={(n) => setQty(n)}
+            />
+          </div>
           <button
             type="button"
             disabled={disabled}
@@ -386,7 +393,7 @@ function UpcomingClassCard({
               if (disabled) return;
               onAddToCart(qty);
             }}
-            className={`rounded-md px-2 py-0.5 text-[12px] font-semibold leading-none shadow-sm transition ${
+            className={`rounded-lg px-3 py-[7px] text-[12px] font-semibold leading-none shadow-sm transition whitespace-nowrap ${
               disabled ? "bg-slate-300 cursor-not-allowed" : "bg-[#0F3B7B] hover:bg-[#0b2e5f]"
             }`}
           >

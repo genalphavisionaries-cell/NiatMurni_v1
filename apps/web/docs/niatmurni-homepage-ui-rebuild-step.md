@@ -64,10 +64,16 @@ Fallback behavior:
 - Updated `apps/web/components/home/UpcomingClassesSection.tsx`
 - Uses **live session data** (`fetchUpcomingClasses`) with demo fallback.
 - New compact listing UI (denser, suitable for many upcoming classes):
-  - Compact listing labels: `Masa:`, `Bahasa:`, `Mod Kelas:`, `Kekosongan:` (date + Hari are shown together on the top line; `Tarikh:` label is not repeated)
-  - Seat quantity selector (compact) + `Daftar` button (still opens the cart popup)
+  - Compact listing layout: date/time on the left, chips (mode + language) in the middle, seats info + optional “Selling Fast!” badge on the right, and a compact quantity selector + `Daftar / Book` action
+  - Seat quantity selector (compact) + `Daftar` button (still opens the cart popup; no cart logic changes)
   - Mobile shows **first 2 items**, then **Load More** (up to the same max set by the component)
   - Desktop shows the available list in **3 explicit vertical columns**, with up to **10 items per column** (max 30)
+
+Visual refinement pass (premium mini booking strip):
+- Reduced row “boxiness” by switching to a subtler border + soft shadow and tighter padding/gaps.
+- Refined typography hierarchy (date prominent but not oversized; time line muted; seats label muted; seat count emphasized).
+- Slimmed chip pills (smaller height/padding; blue tone + dot for Online; neutral tone for language).
+- Balanced action area sizing (scaled compact quantity selector wrapper + more premium `Daftar / Book` button sizing).
 
 Interactive behavior added:
 - Quantity selection per card
