@@ -72,11 +72,11 @@ Fallback behavior:
   - Mobile shows **first 2 items**, then **Load More** (up to the same max set by the component)
   - Desktop shows the available list in **3 explicit vertical columns**, with up to **10 items per column** (max 30)
 
-Visual refinement pass (compact premium row):
-- Replaced the previous multi-block card composition with a strict 3-zone horizontal strip to reduce perceived bulk/height.
-- Refined typography hierarchy (smaller bold date, muted day/time, emphasized seat count).
-- Refined chip styling (smaller, tighter pills; mode blue-toned with dot for Online; language neutral-toned).
-- Refined action alignment (quantity selector scaled slightly; `Daftar` button compact and aligned with selector).
+Visual refinement pass (2-row premium booking card):
+- Rebuilt each class item into a compact **2-row** layout:
+  - Row 1: full `date + day` on the left, compact seat info (`Kekosongan`, count, optional `Hampir Penuh`) on the right.
+  - Row 2: time on the left, only two compact chips (mode + language) in the middle, and quantity selector + compact `Daftar` button on the right.
+- Removed truncation-based typography in favor of wrap-safe text sizes so date/day/time remain fully visible.
 
 Interactive behavior added:
 - Quantity selection per card

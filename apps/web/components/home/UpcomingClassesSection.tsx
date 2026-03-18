@@ -336,8 +336,7 @@ function UpcomingClassCard({
   const dateLine = `${dayNumber}${monthShort ? ` ${monthShort}` : ""}${
     year ? ` ${year}` : ""
   }`.trim();
-
-  const dayTimeLine = `${item.day} • ${timeText}`.replace(/\s+/g, " ").trim();
+  const dateAndDayLine = `${dateLine}, ${item.day}`.replace(/\s+/g, " ").trim();
 
   const isOnline = item.mode === "Online";
   const modePill = isOnline ? "Online" : "Bersemuka";
@@ -346,19 +345,40 @@ function UpcomingClassCard({
 
   return (
     <div className="rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 shadow-[0_1px_2px_rgba(15,23,42,0.05)] transition hover:shadow-[0_2px_10px_rgba(15,23,42,0.07)]">
-      <div className="flex items-center justify-between gap-3">
-        {/* LEFT ZONE: Date + Day/Time */}
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[15px] font-extrabold leading-none text-[#0F172A]">
-            {dateLine}
-          </p>
-          <p className="mt-0.5 truncate text-[12px] font-semibold leading-tight text-[#64748B]">
-            {dayTimeLine}
+      {/* ROW 1: date + day (left), seats info (right) */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 pr-2">
+          <p className="text-[14px] font-extrabold leading-tight text-[#0F172A] whitespace-normal break-words">
+            {dateAndDayLine}
           </p>
         </div>
 
-        {/* MIDDLE ZONE: Chips */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex shrink-0 flex-col items-end leading-tight">
+          <span className="text-[11px] font-semibold text-[#64748B]">
+            Kekosongan
+          </span>
+          <span
+            className={`text-[20px] font-extrabold ${
+              showNearFull ? "text-[#DC2626]" : "text-[#0F172A]"
+            }`}
+          >
+            {seatsLeft}
+          </span>
+          {showNearFull ? (
+            <span className="mt-0.5 rounded-full bg-[#FEF3C7] px-2 py-[4px] text-[11px] font-extrabold leading-none text-[#92400E] whitespace-nowrap">
+              Hampir Penuh
+            </span>
+          ) : null}
+        </div>
+      </div>
+
+      {/* ROW 2: time (left), chips (middle), quantity + Daftar (right) */}
+      <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+        <p className="text-[12px] font-semibold leading-tight text-[#64748B] whitespace-normal break-words">
+          {timeText}
+        </p>
+
+        <div className="flex items-center gap-2">
           <span className="rounded-full bg-[#DBEAFE] px-2 py-1 text-[11px] font-semibold leading-none text-[#1D4ED8] whitespace-nowrap inline-flex items-center gap-1">
             {isOnline ? (
               <span
@@ -373,52 +393,31 @@ function UpcomingClassCard({
           </span>
         </div>
 
-        {/* RIGHT ZONE: Seat + Action */}
-        <div className="flex shrink-0 flex-col items-end">
-          <div className="flex flex-col items-end leading-tight">
-            <span className="text-[11px] font-semibold text-[#64748B]">
-              Kekosongan
-            </span>
-            <span
-              className={`text-[20px] font-extrabold ${
-                showNearFull ? "text-[#DC2626]" : "text-[#0F172A]"
-              }`}
-            >
-              {seatsLeft}
-            </span>
-            {showNearFull ? (
-              <span className="mt-0.5 rounded-full bg-[#FEF3C7] px-2 py-[4px] text-[11px] font-extrabold text-[#92400E] whitespace-nowrap">
-                Hampir Penuh
-              </span>
-            ) : null}
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="origin-right scale-[0.92]">
+            <QuantitySelector
+              compact
+              min={1}
+              max={max}
+              defaultValue={1}
+              onChange={(n) => setQty(n)}
+            />
           </div>
-
-          <div className="mt-1 flex items-center gap-2">
-            <div className="origin-right scale-[0.92]">
-              <QuantitySelector
-                compact
-                min={1}
-                max={max}
-                defaultValue={1}
-                onChange={(n) => setQty(n)}
-              />
-            </div>
-            <button
-              type="button"
-              disabled={disabled}
-              onClick={() => {
-                if (disabled) return;
-                onAddToCart(qty);
-              }}
-              className={`rounded-lg px-3 py-[7px] text-[12px] font-extrabold leading-none shadow-sm transition whitespace-nowrap ${
-                disabled
-                  ? "bg-slate-300 cursor-not-allowed text-[#0F172A]"
-                  : "bg-[#0F3B7B] hover:bg-[#0b2e5f] text-white"
-              }`}
-            >
-              Daftar
-            </button>
-          </div>
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => {
+              if (disabled) return;
+              onAddToCart(qty);
+            }}
+            className={`rounded-lg px-3 py-[7px] text-[12px] font-extrabold leading-none shadow-sm transition whitespace-nowrap ${
+              disabled
+                ? "bg-slate-300 cursor-not-allowed text-[#0F172A]"
+                : "bg-[#0F3B7B] hover:bg-[#0b2e5f] text-white"
+            }`}
+          >
+            Daftar
+          </button>
         </div>
       </div>
     </div>
