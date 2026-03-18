@@ -64,7 +64,7 @@ Fallback behavior:
 - Updated `apps/web/components/home/UpcomingClassesSection.tsx`
 - Uses **live session data** (`fetchUpcomingClasses`) with demo fallback.
 - New compact listing UI (denser, suitable for many upcoming classes):
-  - Explicit labels: `Tarikh:`, `Hari:`, `Masa:`, `Bahasa:`, `Mod Kelas:`, `Kekosongan:`
+  - Compact listing labels: `Masa:`, `Bahasa:`, `Mod Kelas:`, `Kekosongan:` (date + Hari are shown together on the top line; `Tarikh:` label is not repeated)
   - Seat quantity selector (compact) + `Daftar` button (still opens the cart popup)
   - Mobile shows **first 2 items**, then **Load More** (up to the same max set by the component)
   - Desktop shows the available list in **3 explicit vertical columns**, with up to **10 items per column** (max 30)
