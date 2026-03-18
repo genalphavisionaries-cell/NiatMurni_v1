@@ -312,11 +312,15 @@ function UpcomingClassCard({
   const { dayNumber, month, year } = formatClassDate(item.date);
   const dateText = `${dayNumber}${month ? ` ${month}` : ""}${year ? `, ${year}` : ""}`;
   const timeText = item.time.replace(/\s*–\s*/g, " – ");
-  const dateLineUpper = `${dayNumber} ${(month ?? "").toString().toUpperCase()} ${year ? `, ${year}` : ""}, ${item.day}`
-    .replace(/\s+/g, " ")
-    .trim();
+  const monthUpper = (month ?? "").toString().toUpperCase();
+  const dayUpper = (item.day ?? "").toString().toUpperCase();
+  const dateLineUpper = `${dayNumber}${monthUpper ? ` ${monthUpper},` : ""} ${year ? `${year},` : ""} ${dayUpper}`.replace(
+    /\s+/g,
+    " "
+  ).trim();
 
-  const modePill = item.mode === "Online" ? "Online Class" : "Physical Class";
+  const isOnline = item.mode === "Online";
+  const modePill = isOnline ? "Online Class" : "Physical Class";
   const languagePill = languageLabel(item.language);
   const isSellingFast = seatsLeft > 0 && seatsLeft <= 14;
 
@@ -326,26 +330,26 @@ function UpcomingClassCard({
         <div className="min-w-0">
           <span className="sr-only">Tarikh</span>
           <span className="sr-only">Hari</span>
-          <p className="truncate text-[12px] font-extrabold leading-none text-[#0F172A] uppercase tracking-wide">
+          <p className="truncate text-[20px] font-extrabold leading-none text-[#0F172A] uppercase tracking-normal">
             {dateLineUpper}
           </p>
-          <div className="mt-0.5 flex items-center gap-2 text-[10px] font-semibold text-[#64748B]">
+          <div className="mt-0.5 flex items-center gap-2 text-[13px] font-semibold text-[#64748B]">
             <span className="sr-only">Masa</span>
             <span>{timeText}</span>
           </div>
         </div>
 
         <div className="flex flex-col items-end gap-0.5 shrink-0">
-          <span className="text-[9px] font-semibold text-[#64748B]">Remaining Seats</span>
+          <span className="text-[12px] font-semibold text-[#64748B]">Remaining Seats</span>
           <span
-            className={`text-[14px] font-extrabold leading-none ${
+            className={`text-[18px] font-extrabold leading-none ${
               isSellingFast ? "text-[#DC2626]" : "text-[#0F172A]"
             }`}
           >
             {seatsLeft}
           </span>
           {isSellingFast ? (
-            <span className="rounded-md bg-[#FEF3C7] px-2 py-0.5 text-[9px] font-extrabold text-[#92400E] whitespace-nowrap">
+            <span className="rounded-md bg-[#FEF3C7] px-2 py-0.5 text-[12px] font-extrabold text-[#92400E] whitespace-nowrap">
               Selling Fast!
             </span>
           ) : null}
@@ -354,10 +358,15 @@ function UpcomingClassCard({
 
       <div className="mt-1 flex items-center justify-between gap-1">
         <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-          <span className="rounded-full bg-[#DBEAFE] px-2 py-0.5 text-[10px] font-semibold text-[#1D4ED8] whitespace-nowrap">
+          <span
+            className={`inline-flex items-center gap-1 rounded-full bg-[#DBEAFE] px-2 py-0.5 text-[12px] font-semibold text-[#1D4ED8] whitespace-nowrap`}
+          >
+            {isOnline ? (
+              <span className="inline-flex h-[8px] w-[8px] rounded-full bg-[#2563EB]" aria-hidden />
+            ) : null}
             {modePill}
           </span>
-          <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[10px] font-semibold text-[#334155] whitespace-nowrap">
+          <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[12px] font-semibold text-[#334155] whitespace-nowrap">
             {languagePill}
           </span>
         </div>
@@ -377,7 +386,7 @@ function UpcomingClassCard({
               if (disabled) return;
               onAddToCart(qty);
             }}
-            className={`rounded-md px-2 py-0.5 text-[10px] font-semibold leading-none shadow-sm transition ${
+            className={`rounded-md px-2 py-0.5 text-[12px] font-semibold leading-none shadow-sm transition ${
               disabled ? "bg-slate-300 cursor-not-allowed" : "bg-[#0F3B7B] hover:bg-[#0b2e5f]"
             }`}
           >
