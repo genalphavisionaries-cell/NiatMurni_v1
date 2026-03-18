@@ -102,6 +102,14 @@ export default function UpcomingClassesSection() {
     return displayList[0]?.id;
   }, [displayList, useDemo]);
 
+  const desktopColumns = useMemo(() => {
+    const cols: HeroClassItem[][] = [[], [], []];
+    displayList.forEach((c, idx) => {
+      cols[idx % 3].push(c);
+    });
+    return cols;
+  }, [displayList]);
+
   const mobileVisible = mobileExpanded
     ? displayList
     : displayList.slice(0, MOBILE_INITIAL_LIMIT);
@@ -154,25 +162,33 @@ export default function UpcomingClassesSection() {
 
                   {/* Desktop: show more rows */}
                   <div className="hidden md:block">
-                    <div className="space-y-3">
-                      {displayList.map((c) => (
-                        <UpcomingClassCard
-                          key={c.id}
-                          item={c}
-                          isNext={firstRecommendedId === c.id}
-                          onAddToCart={(qty) => {
-                            setCart((prev) => {
-                              const existing = prev.find((p) => p.classId === c.id);
-                              if (existing) {
-                                return prev.map((p) =>
-                                  p.classId === c.id ? { ...p, qty: p.qty + qty } : p
-                                );
-                              }
-                              return [...prev, { classId: c.id, qty }];
-                            });
-                            setCartOpen(true);
-                          }}
-                        />
+                    <div className="grid grid-cols-3 gap-6">
+                      {desktopColumns.map((col, colIdx) => (
+                        <div key={colIdx} className="space-y-3">
+                          {col.map((c) => (
+                            <UpcomingClassCard
+                              key={c.id}
+                              item={c}
+                              isNext={firstRecommendedId === c.id}
+                              onAddToCart={(qty) => {
+                                setCart((prev) => {
+                                  const existing = prev.find(
+                                    (p) => p.classId === c.id
+                                  );
+                                  if (existing) {
+                                    return prev.map((p) =>
+                                      p.classId === c.id
+                                        ? { ...p, qty: p.qty + qty }
+                                        : p
+                                    );
+                                  }
+                                  return [...prev, { classId: c.id, qty }];
+                                });
+                                setCartOpen(true);
+                              }}
+                            />
+                          ))}
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -297,11 +313,10 @@ function UpcomingClassCard({
   const timeText = item.time.replace(/\s*–\s*/g, " – ");
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md">
-      <div className="flex items-start justify-between gap-3">
+    <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:shadow-md">
+      <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-[#0F172A] truncate">{dateText}</p>
-          <p className="mt-1 text-xs font-medium text-[#64748B]">{item.day}</p>
         </div>
         {isNext ? (
           <span className="inline-flex items-center rounded-full bg-[#DBEAFE] px-3 py-1 text-[11px] font-semibold text-[#1D4ED8]">
@@ -310,10 +325,14 @@ function UpcomingClassCard({
         ) : null}
       </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+      <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px]">
         <div className="min-w-0">
           <span className="font-semibold text-[#64748B]">Tarikh:</span>{" "}
           <span className="font-semibold text-[#0F172A]">{dateText}</span>
+        </div>
+        <div className="min-w-0">
+          <span className="font-semibold text-[#64748B]">Hari:</span>{" "}
+          <span className="font-semibold text-[#0F172A]">{item.day}</span>
         </div>
         <div className="min-w-0">
           <span className="font-semibold text-[#64748B]">Masa:</span>{" "}
@@ -323,7 +342,7 @@ function UpcomingClassCard({
           <span className="font-semibold text-[#64748B]">Bahasa:</span>{" "}
           <span className="font-semibold text-[#0F172A]">{languageLabel(item.language)}</span>
         </div>
-        <div className="min-w-0">
+        <div className="col-span-2 min-w-0">
           <span className="font-semibold text-[#64748B]">Mod Kelas:</span>{" "}
           <span className="font-semibold text-[#0F172A]">{modeLabel(item.mode)}</span>
         </div>
@@ -335,8 +354,8 @@ function UpcomingClassCard({
         </div>
       </div>
 
-      <div className="mt-4 flex items-center justify-between gap-3">
-        <div className="shrink-0 transform scale-[0.96] origin-left">
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <div className="shrink-0">
           <QuantitySelector
             compact
             min={1}
