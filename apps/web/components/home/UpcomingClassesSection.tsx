@@ -40,6 +40,27 @@ function modeLabel(mode: string) {
   return mode;
 }
 
+function toMalayMonthShort(month: string) {
+  const m = month.trim().toLowerCase();
+  const map: Record<string, string> = {
+    jan: "Jan",
+    feb: "Feb",
+    mar: "Mac",
+    apr: "Apr",
+    may: "Mei",
+    jun: "Jun",
+    jul: "Jul",
+    aug: "Ogos",
+    sep: "Sep",
+    oct: "Okt",
+    nov: "Nov",
+    dec: "Dis",
+  };
+
+  const key = m.slice(0, 3);
+  return map[key] ?? month;
+}
+
 /** Map API class to hero-style item for ClassCard */
 function toHeroItem(c: ClassSession): HeroClassItem {
   const starts = new Date(c.starts_at);
@@ -310,59 +331,35 @@ function UpcomingClassCard({
   const max = Math.max(1, Math.min(10, seatsLeft));
   const disabled = seatsLeft <= 0;
   const { dayNumber, month, year } = formatClassDate(item.date);
-  const dateText = `${dayNumber}${month ? ` ${month}` : ""}${year ? `, ${year}` : ""}`;
   const timeText = item.time.replace(/\s*–\s*/g, " – ");
-  const monthUpper = (month ?? "").toString().toUpperCase();
-  const dayUpper = (item.day ?? "").toString().toUpperCase();
-  const dateLineUpper = `${dayNumber}${monthUpper ? ` ${monthUpper},` : ""} ${year ? `${year},` : ""} ${dayUpper}`.replace(
-    /\s+/g,
-    " "
-  ).trim();
+  const monthShort = month ? toMalayMonthShort(month) : "";
+  const dateLine = `${dayNumber}${monthShort ? ` ${monthShort}` : ""}${
+    year ? ` ${year}` : ""
+  }`.trim();
+
+  const dayTimeLine = `${item.day} • ${timeText}`.replace(/\s+/g, " ").trim();
 
   const isOnline = item.mode === "Online";
-  const modePill = isOnline ? "Online Class" : "Physical Class";
+  const modePill = isOnline ? "Online" : "Bersemuka";
   const languagePill = languageLabel(item.language);
-  const isSellingFast = seatsLeft > 0 && seatsLeft <= 14;
+  const showNearFull = seatsLeft > 0 && seatsLeft <= 14;
 
   return (
-    <div className="rounded-xl border border-[#E5E7EB] bg-white px-3 py-1.5 shadow-[0_1px_2px_rgba(15,23,42,0.06)] transition hover:shadow-[0_2px_10px_rgba(15,23,42,0.08)]">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <span className="sr-only">Tarikh</span>
-          <span className="sr-only">Hari</span>
-          <p className="truncate text-[16px] font-extrabold leading-none text-[#0F172A] uppercase tracking-wide">
-            {dateLineUpper}
+    <div className="rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 shadow-[0_1px_2px_rgba(15,23,42,0.05)] transition hover:shadow-[0_2px_10px_rgba(15,23,42,0.07)]">
+      <div className="flex items-center justify-between gap-3">
+        {/* LEFT ZONE: Date + Day/Time */}
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[15px] font-extrabold leading-none text-[#0F172A]">
+            {dateLine}
           </p>
-          <div className="mt-0.5 flex items-center gap-2 text-[12px] font-semibold text-[#64748B] leading-tight">
-            <span className="sr-only">Masa</span>
-            <span>{timeText}</span>
-          </div>
+          <p className="mt-0.5 truncate text-[12px] font-semibold leading-tight text-[#64748B]">
+            {dayTimeLine}
+          </p>
         </div>
 
-        <div className="flex flex-col items-end gap-0.5 shrink-0 text-right">
-          <span className="text-[11px] font-semibold text-[#64748B]">
-            Remaining Seats
-          </span>
-          <span
-            className={`text-[20px] font-extrabold leading-none ${
-              isSellingFast ? "text-[#DC2626]" : "text-[#0F172A]"
-            }`}
-          >
-            {seatsLeft}
-          </span>
-          {isSellingFast ? (
-            <span className="rounded-lg bg-[#FEF3C7] px-2 py-[5px] text-[11px] font-extrabold leading-none text-[#92400E] whitespace-nowrap">
-              Selling Fast!
-            </span>
-          ) : null}
-        </div>
-      </div>
-
-      <div className="mt-0.5 flex items-center justify-between gap-2">
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <span
-            className={`inline-flex items-center gap-1 rounded-full bg-[#DBEAFE] px-2 py-[6px] text-[11px] font-semibold leading-none text-[#1D4ED8] whitespace-nowrap`}
-          >
+        {/* MIDDLE ZONE: Chips */}
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="rounded-full bg-[#DBEAFE] px-2 py-1 text-[11px] font-semibold leading-none text-[#1D4ED8] whitespace-nowrap inline-flex items-center gap-1">
             {isOnline ? (
               <span
                 className="inline-flex h-[6px] w-[6px] rounded-full bg-[#2563EB]"
@@ -371,34 +368,57 @@ function UpcomingClassCard({
             ) : null}
             {modePill}
           </span>
-          <span className="rounded-full bg-[#F1F5F9] px-2 py-[6px] text-[11px] font-semibold leading-none text-[#334155] whitespace-nowrap">
+          <span className="rounded-full bg-[#F1F5F9] px-2 py-1 text-[11px] font-semibold leading-none text-[#334155] whitespace-nowrap">
             {languagePill}
           </span>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          <div className="origin-right scale-[0.95]">
-            <QuantitySelector
-              compact
-              min={1}
-              max={max}
-              defaultValue={1}
-              onChange={(n) => setQty(n)}
-            />
+        {/* RIGHT ZONE: Seat + Action */}
+        <div className="flex shrink-0 flex-col items-end">
+          <div className="flex flex-col items-end leading-tight">
+            <span className="text-[11px] font-semibold text-[#64748B]">
+              Kekosongan
+            </span>
+            <span
+              className={`text-[20px] font-extrabold ${
+                showNearFull ? "text-[#DC2626]" : "text-[#0F172A]"
+              }`}
+            >
+              {seatsLeft}
+            </span>
+            {showNearFull ? (
+              <span className="mt-0.5 rounded-full bg-[#FEF3C7] px-2 py-[4px] text-[11px] font-extrabold text-[#92400E] whitespace-nowrap">
+                Hampir Penuh
+              </span>
+            ) : null}
           </div>
-          <button
-            type="button"
-            disabled={disabled}
-            onClick={() => {
-              if (disabled) return;
-              onAddToCart(qty);
-            }}
-            className={`rounded-lg px-3 py-[7px] text-[12px] font-semibold leading-none shadow-sm transition whitespace-nowrap ${
-              disabled ? "bg-slate-300 cursor-not-allowed" : "bg-[#0F3B7B] hover:bg-[#0b2e5f]"
-            }`}
-          >
-            Daftar / Book
-          </button>
+
+          <div className="mt-1 flex items-center gap-2">
+            <div className="origin-right scale-[0.92]">
+              <QuantitySelector
+                compact
+                min={1}
+                max={max}
+                defaultValue={1}
+                onChange={(n) => setQty(n)}
+              />
+            </div>
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() => {
+                if (disabled) return;
+                onAddToCart(qty);
+              }}
+              className={`rounded-lg px-3 py-[7px] text-[12px] font-extrabold leading-none shadow-sm transition whitespace-nowrap ${
+                disabled
+                  ? "bg-slate-300 cursor-not-allowed text-[#0F172A]"
+                  : "bg-[#0F3B7B] hover:bg-[#0b2e5f] text-white"
+              }`}
+            >
+              Daftar
+            </button>
+          </div>
         </div>
       </div>
     </div>

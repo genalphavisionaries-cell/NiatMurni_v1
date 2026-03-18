@@ -64,16 +64,19 @@ Fallback behavior:
 - Updated `apps/web/components/home/UpcomingClassesSection.tsx`
 - Uses **live session data** (`fetchUpcomingClasses`) with demo fallback.
 - New compact listing UI (denser, suitable for many upcoming classes):
-  - Compact listing layout: date/time on the left, chips (mode + language) in the middle, seats info + optional “Selling Fast!” badge on the right, and a compact quantity selector + `Daftar / Book` action
+  - Each class item is rebuilt into a single premium horizontal booking strip:
+    - LEFT: date (small bold) + day/time (muted)
+    - MIDDLE: compact chips only (mode + language)
+    - RIGHT: seat count with label `Kekosongan`, optional warm `Hampir Penuh` badge when seats are low, and action row (compact quantity selector + `Daftar`)
   - Seat quantity selector (compact) + `Daftar` button (still opens the cart popup; no cart logic changes)
   - Mobile shows **first 2 items**, then **Load More** (up to the same max set by the component)
   - Desktop shows the available list in **3 explicit vertical columns**, with up to **10 items per column** (max 30)
 
-Visual refinement pass (premium mini booking strip):
-- Reduced row “boxiness” by switching to a subtler border + soft shadow and tighter padding/gaps.
-- Refined typography hierarchy (date prominent but not oversized; time line muted; seats label muted; seat count emphasized).
-- Slimmed chip pills (smaller height/padding; blue tone + dot for Online; neutral tone for language).
-- Balanced action area sizing (scaled compact quantity selector wrapper + more premium `Daftar / Book` button sizing).
+Visual refinement pass (compact premium row):
+- Replaced the previous multi-block card composition with a strict 3-zone horizontal strip to reduce perceived bulk/height.
+- Refined typography hierarchy (smaller bold date, muted day/time, emphasized seat count).
+- Refined chip styling (smaller, tighter pills; mode blue-toned with dot for Online; language neutral-toned).
+- Refined action alignment (quantity selector scaled slightly; `Daftar` button compact and aligned with selector).
 
 Interactive behavior added:
 - Quantity selection per card
