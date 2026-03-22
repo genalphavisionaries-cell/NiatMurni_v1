@@ -28,11 +28,42 @@ function formatClassDate(dateStr: string) {
   return { dayNumber: dateStr, month: "", year: "" };
 }
 
-function languageLabel(lang: string) {
-  if (lang === "B. Melayu") return "Bahasa Melayu";
-  if (lang === "Chinese") return "Mandarin";
-  if (lang === "English") return "English";
-  return lang;
+/**
+ * Canonical display labels for language.
+ * Official values: English, Bahasa Melayu, Chinese, Tamil
+ * Maps legacy/stored values safely — old DB records are not broken.
+ */
+function languageLabel(lang: string): string {
+  const map: Record<string, string> = {
+    // canonical (new)
+    English: "English",
+    "Bahasa Melayu": "Bahasa Melayu",
+    Chinese: "Chinese",
+    Tamil: "Tamil",
+    // legacy aliases (backward-safe)
+    "B. Melayu": "Bahasa Melayu",
+    Malay: "Bahasa Melayu",
+    Mandarin: "Chinese",
+  };
+  return map[lang] ?? lang;
+}
+
+/**
+ * Canonical display labels for mode of delivery.
+ * Official values: Online (Zoom), Physical (Classroom)
+ * Maps legacy stored values safely.
+ */
+function modeLabel(mode: string): string {
+  const map: Record<string, string> = {
+    // canonical (new)
+    "online": "Online (Zoom)",
+    "physical": "Physical (Classroom)",
+    // legacy display values (backward-safe)
+    Online: "Online (Zoom)",
+    Physical: "Physical (Classroom)",
+    Bersemuka: "Physical (Classroom)",
+  };
+  return map[mode] ?? mode;
 }
 
 function toMalayMonthShort(month: string) {
@@ -72,7 +103,7 @@ function toHeroItem(c: ClassSession): HeroClassItem {
     day: dayNames[starts.getDay()],
     time: timeStr,
     slots: c.capacity ?? 15,
-    mode: c.mode === "online" ? "Online" : "Physical",
+    mode: c.mode ?? "online", // pass raw value; modeLabel() normalises on display
     language: c.language ?? "B. Melayu",
   };
 }
@@ -80,8 +111,8 @@ function toHeroItem(c: ClassSession): HeroClassItem {
 // TEMP: UI stress testing with mock classes — replace DEMO_CLASSES with 24 varied items
 // when live API returns no data. Real API data is still used when available.
 const _DAYS = ["Ahad", "Isnin", "Selasa", "Rabu", "Khamis", "Jumaat", "Sabtu"] as const;
-const _LANGS = ["B. Melayu", "Chinese", "English"] as const;
-const _MODES = ["Online", "Physical"] as const;
+const _LANGS = ["Bahasa Melayu", "Chinese", "English", "Tamil"] as const;
+const _MODES = ["online", "physical"] as const; // raw canonical values — modeLabel() resolves to display
 const _TIMES = [
   "12.30pm – 4.00pm",
   "7.30pm – 10.30pm",
@@ -254,7 +285,7 @@ export default function UpcomingClassesSection() {
 
               {/* Mobile Load More */}
               {!loading && mobileList.length < displayList.length ? (
-                <div className="mt-4 flex justify-center md:hidden">
+                <div className="mt-5 flex justify-center md:hidden">
                   <button
                     type="button"
                     onClick={() =>
@@ -262,16 +293,19 @@ export default function UpcomingClassesSection() {
                         Math.min(v + MOBILE_INCREMENT, displayList.length)
                       )
                     }
-                    className="rounded-xl border border-[#E2E8F0] bg-white px-5 py-2.5 text-sm font-semibold text-[#0F172A] shadow-sm transition hover:bg-[#F8FAFC]"
+                    className="inline-flex items-center gap-2 rounded-full border border-[#CBD5E1] bg-white px-6 py-2.5 text-sm font-semibold text-[#0F172A] shadow-sm transition hover:border-[#2563EB] hover:bg-[#EFF6FF] hover:text-[#2563EB] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#2563EB]"
                   >
-                    Load More
+                    <span>Load More</span>
+                    <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                      <path d="M8 3v10M3 8l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
                   </button>
                 </div>
               ) : null}
 
               {/* Desktop Load More */}
               {!loading && desktopList.length < displayList.length ? (
-                <div className="mt-5 hidden justify-center md:flex">
+                <div className="mt-6 hidden justify-center md:flex">
                   <button
                     type="button"
                     onClick={() =>
@@ -279,9 +313,12 @@ export default function UpcomingClassesSection() {
                         Math.min(v + DESKTOP_INCREMENT, displayList.length)
                       )
                     }
-                    className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-2.5 text-sm font-semibold text-[#0F172A] shadow-sm transition hover:bg-[#F8FAFC]"
+                    className="inline-flex items-center gap-2 rounded-full border border-[#CBD5E1] bg-white px-7 py-2.5 text-sm font-semibold text-[#0F172A] shadow-sm transition hover:border-[#2563EB] hover:bg-[#EFF6FF] hover:text-[#2563EB] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#2563EB]"
                   >
-                    Load More
+                    <span>Load More</span>
+                    <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                      <path d="M8 3v10M3 8l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
                   </button>
                 </div>
               ) : null}
@@ -392,8 +429,9 @@ function UpcomingClassCard({
   }`.trim();
   const dateAndDayLine = `${dateLine}, ${item.day}`.replace(/\s+/g, " ").trim();
 
-  const isOnline = item.mode === "Online";
-  const modePill = isOnline ? "Online" : "Bersemuka";
+  const resolvedMode = modeLabel(item.mode);
+  const isOnline = resolvedMode === "Online (Zoom)";
+  const modePill = resolvedMode;
   const languagePill = languageLabel(item.language);
   const showNearFull = seatsLeft > 0 && seatsLeft <= 14;
 
@@ -444,7 +482,7 @@ function UpcomingClassCard({
 
           {/* Seat block — toned-down label, strong number */}
           <div className="flex flex-col items-end">
-            <span className="text-[9px] font-normal uppercase tracking-widest text-gray-300">
+            <span className="text-[9px] font-medium uppercase tracking-wider text-slate-400">
               Kekosongan
             </span>
             <span className={`text-[16px] font-bold leading-none tabular-nums ${seatColor}`}>

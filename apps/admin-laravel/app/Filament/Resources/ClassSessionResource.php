@@ -37,9 +37,19 @@ class ClassSessionResource extends Resource
                 Forms\Components\DateTimePicker::make('starts_at')->required(),
                 Forms\Components\DateTimePicker::make('ends_at')->required(),
                 Forms\Components\Select::make('mode')
-                    ->options(['online' => 'Online', 'physical' => 'Physical'])
+                    ->options([
+                        'online'   => 'Online (Zoom)',
+                        'physical' => 'Physical (Classroom)',
+                    ])
                     ->required(),
-                Forms\Components\TextInput::make('language')->maxLength(100),
+                Forms\Components\Select::make('language')
+                    ->options([
+                        'English'       => 'English',
+                        'Bahasa Melayu' => 'Bahasa Melayu',
+                        'Chinese'       => 'Chinese',
+                        'Tamil'         => 'Tamil',
+                    ])
+                    ->searchable(),
                 Forms\Components\TextInput::make('venue')->maxLength(255),
                 Forms\Components\TextInput::make('location')->maxLength(200),
                 Forms\Components\TextInput::make('capacity')->numeric()->default(30)->minValue(1),
@@ -80,7 +90,10 @@ class ClassSessionResource extends Resource
                         'archived' => 'Archived',
                     ]),
                 Tables\Filters\SelectFilter::make('mode')
-                    ->options(['online' => 'Online', 'physical' => 'Physical']),
+                    ->options([
+                        'online'   => 'Online (Zoom)',
+                        'physical' => 'Physical (Classroom)',
+                    ]),
             ])
             ->actions([
                 Tables\Actions\Action::make('manage_attendance')
