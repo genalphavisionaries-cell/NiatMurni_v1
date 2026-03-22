@@ -107,14 +107,20 @@ const STRESS_DEMO_CLASSES: HeroClassItem[] = Array.from({ length: 24 }).map((_, 
 }));
 
 const DEMO_CLASSES = STRESS_DEMO_CLASSES.length > 0 ? STRESS_DEMO_CLASSES : MOCK_HERO_CLASSES;
-// Desktop requirement: 3 columns x 10 rows = 30 total maximum shown.
 const MAX_CLASSES = 30;
-const MOBILE_INITIAL_LIMIT = 2;
+// Desktop: 7 rows × 3 columns = 21 initial, then +10 per Load More
+const DESKTOP_INITIAL = 21;
+const DESKTOP_INCREMENT = 10;
+// Mobile: 10 initial, then +6 per Load More
+const MOBILE_INITIAL = 10;
+const MOBILE_INCREMENT = 6;
 
 export default function UpcomingClassesSection() {
   const [apiClasses, setApiClasses] = useState<ClassSession[]>([]);
   const [loading, setLoading] = useState(true);
-  const [mobileExpanded, setMobileExpanded] = useState(false);
+  // separate visible-count state for mobile and desktop
+  const [mobileVisible, setMobileVisible] = useState(MOBILE_INITIAL);
+  const [desktopVisible, setDesktopVisible] = useState(DESKTOP_INITIAL);
 
   const [cartOpen, setCartOpen] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -148,17 +154,22 @@ export default function UpcomingClassesSection() {
     return displayList[0]?.id;
   }, [displayList, useDemo]);
 
+  // Slice the full list by the current visible counts
+  const desktopList = useMemo(
+    () => displayList.slice(0, desktopVisible),
+    [displayList, desktopVisible]
+  );
   const desktopColumns = useMemo(() => {
-    return [
-      displayList.slice(0, 10),
-      displayList.slice(10, 20),
-      displayList.slice(20, 30),
-    ];
-  }, [displayList]);
+    // round-robin distribution into 3 columns
+    const cols: [HeroClassItem[], HeroClassItem[], HeroClassItem[]] = [[], [], []];
+    desktopList.forEach((item, i) => cols[i % 3].push(item));
+    return cols;
+  }, [desktopList]);
 
-  const mobileVisible = mobileExpanded
-    ? displayList
-    : displayList.slice(0, MOBILE_INITIAL_LIMIT);
+  const mobileList = useMemo(
+    () => displayList.slice(0, mobileVisible),
+    [displayList, mobileVisible]
+  );
 
   const cartCount = cart.reduce((sum, it) => sum + it.qty, 0);
 
@@ -183,9 +194,9 @@ export default function UpcomingClassesSection() {
             <>
               {displayList.length ? (
                 <>
-                  {/* Mobile: limited list + load more */}
+                  {/* Mobile list */}
                   <div className="space-y-1.5 md:hidden">
-                    {mobileVisible.map((c) => (
+                    {mobileList.map((c) => (
                       <UpcomingClassCard
                         key={c.id}
                         item={c}
@@ -206,7 +217,7 @@ export default function UpcomingClassesSection() {
                     ))}
                   </div>
 
-                  {/* Desktop: show more rows */}
+                  {/* Desktop 3-column grid */}
                   <div className="hidden md:block">
                     <div className="grid grid-cols-3 gap-4">
                       {desktopColumns.map((col, colIdx) => (
@@ -241,18 +252,37 @@ export default function UpcomingClassesSection() {
                 </>
               ) : null}
 
-              {/* Mobile load more */}
-              {!loading && displayList.length > MOBILE_INITIAL_LIMIT ? (
-                <div className="mt-6 flex justify-center md:hidden">
-                  {mobileExpanded ? null : (
-                    <button
-                      type="button"
-                      onClick={() => setMobileExpanded(true)}
-                      className="rounded-xl border border-[#E2E8F0] bg-white px-5 py-3 text-sm font-semibold text-[#0F172A] shadow-sm transition hover:bg-[#F8FAFC]"
-                    >
-                      Load More
-                    </button>
-                  )}
+              {/* Mobile Load More */}
+              {!loading && mobileList.length < displayList.length ? (
+                <div className="mt-4 flex justify-center md:hidden">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setMobileVisible((v) =>
+                        Math.min(v + MOBILE_INCREMENT, displayList.length)
+                      )
+                    }
+                    className="rounded-xl border border-[#E2E8F0] bg-white px-5 py-2.5 text-sm font-semibold text-[#0F172A] shadow-sm transition hover:bg-[#F8FAFC]"
+                  >
+                    Load More
+                  </button>
+                </div>
+              ) : null}
+
+              {/* Desktop Load More */}
+              {!loading && desktopList.length < displayList.length ? (
+                <div className="mt-5 hidden justify-center md:flex">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setDesktopVisible((v) =>
+                        Math.min(v + DESKTOP_INCREMENT, displayList.length)
+                      )
+                    }
+                    className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-2.5 text-sm font-semibold text-[#0F172A] shadow-sm transition hover:bg-[#F8FAFC]"
+                  >
+                    Load More
+                  </button>
                 </div>
               ) : null}
 
@@ -393,17 +423,17 @@ function UpcomingClassCard({
           </div>
 
           {/* CHIPS — below the date anchor */}
-          <div className="flex flex-wrap items-center gap-1">
-            <span className="inline-flex items-center gap-0.5 rounded-full bg-[#EFF6FF] px-2 py-0.5 text-[10px] font-semibold leading-none text-[#3B82F6]">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#EFF6FF] px-2.5 py-1 text-[11px] font-semibold leading-none text-[#3B82F6]">
               {isOnline ? (
                 <span
-                  className="inline-block h-1 w-1 shrink-0 rounded-full bg-[#3B82F6]"
+                  className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-[#3B82F6]"
                   aria-hidden
                 />
               ) : null}
               {modePill}
             </span>
-            <span className="rounded-full bg-[#F3F4F6] px-2 py-0.5 text-[10px] font-medium leading-none text-[#6B7280]">
+            <span className="rounded-full bg-[#F3F4F6] px-2.5 py-1 text-[11px] font-medium leading-none text-[#6B7280]">
               {languagePill}
             </span>
           </div>
