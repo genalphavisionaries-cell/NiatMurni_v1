@@ -338,42 +338,46 @@ function UpcomingClassCard({
   const languagePill = languageLabel(item.language);
   const showNearFull = seatsLeft > 0 && seatsLeft <= 14;
 
+  const seatColor =
+    seatsLeft <= 10
+      ? "text-red-500"
+      : seatsLeft <= 20
+      ? "text-orange-500"
+      : "text-gray-800";
+
   return (
-    <div className="rounded-xl border border-[#E5E7EB] bg-white px-3 py-1.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:shadow-[0_2px_8px_rgba(15,23,42,0.06)]">
+    <div className="rounded-xl border border-[#E5E7EB] bg-white px-2.5 py-1 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:shadow-[0_2px_8px_rgba(15,23,42,0.06)]">
       {/* ROW 1: date + day | seat block */}
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-start justify-between gap-2">
         <p className="min-w-0 flex-1 text-[15px] font-extrabold leading-snug text-[#0B1F3B] break-words">
           {dateAndDayLine}
         </p>
 
-        <div className="flex shrink-0 flex-col items-end text-right leading-tight">
-          <span className="text-[10px] font-semibold text-[#64748B]">
+        {/* Seat indicator — modern grouped block */}
+        <div className="flex shrink-0 flex-col items-end text-right">
+          <span className="text-[9px] font-medium uppercase tracking-wide text-gray-400">
             Kekosongan
           </span>
-          <span
-            className={`text-[16px] font-extrabold leading-none tabular-nums ${
-              showNearFull ? "text-[#DC2626]" : "text-[#0B1F3B]"
-            }`}
-          >
+          <span className={`text-[16px] font-bold leading-none tabular-nums ${seatColor}`}>
             {seatsLeft}
           </span>
           {showNearFull ? (
-            <span className="mt-0.5 rounded bg-[#FEF3C7] px-1.5 py-px text-[9px] font-bold leading-none text-[#92400E]">
-              Hampir Penuh
+            <span className="mt-0.5 rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-medium leading-none text-orange-600">
+              Almost Full
             </span>
           ) : null}
         </div>
       </div>
 
-      {/* ROW 2: time (full width) */}
+      {/* ROW 2: time */}
       <p className="mt-0.5 text-[11px] font-semibold leading-tight text-[#64748B] break-words">
         {timeText}
       </p>
 
       {/* ROW 3: chips (left) | qty + Daftar (right) */}
-      <div className="mt-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
-        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-          <span className="inline-flex items-center gap-0.5 rounded-md bg-[#DBEAFE] px-1.5 py-0.5 text-[10px] font-semibold leading-none text-[#1D4ED8]">
+      <div className="mt-1 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+        <div className="flex min-w-0 flex-wrap items-center gap-1">
+          <span className="inline-flex items-center gap-0.5 rounded-full bg-[#DBEAFE] px-2 py-0.5 text-[10px] font-semibold leading-none text-[#1D4ED8]">
             {isOnline ? (
               <span
                 className="inline-block h-1 w-1 shrink-0 rounded-full bg-[#2563EB]"
@@ -382,19 +386,21 @@ function UpcomingClassCard({
             ) : null}
             {modePill}
           </span>
-          <span className="rounded-md bg-[#F1F5F9] px-1.5 py-0.5 text-[10px] font-semibold leading-none text-[#334155]">
+          <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[10px] font-semibold leading-none text-[#334155]">
             {languagePill}
           </span>
         </div>
 
-        <div className="ml-auto flex shrink-0 items-center gap-2">
-          <QuantitySelector
-            compact
-            min={1}
-            max={max}
-            defaultValue={1}
-            onChange={(n) => setQty(n)}
-          />
+        <div className="ml-auto flex shrink-0 items-center gap-1.5">
+          <div className="scale-[0.88] origin-right">
+            <QuantitySelector
+              compact
+              min={1}
+              max={max}
+              defaultValue={1}
+              onChange={(n) => setQty(n)}
+            />
+          </div>
           <button
             type="button"
             disabled={disabled}
@@ -402,7 +408,7 @@ function UpcomingClassCard({
               if (disabled) return;
               onAddToCart(qty);
             }}
-            className={`inline-flex h-7 min-w-[4.25rem] shrink-0 items-center justify-center rounded-md px-2.5 text-[11px] font-bold leading-none shadow-sm transition ${
+            className={`inline-flex h-[26px] min-w-[3.75rem] shrink-0 items-center justify-center rounded-md px-2 text-[11px] font-bold leading-none shadow-sm transition ${
               disabled
                 ? "cursor-not-allowed bg-slate-300 text-[#0F172A]"
                 : "bg-[#0F3B7B] text-white hover:bg-[#0b2e5f]"
