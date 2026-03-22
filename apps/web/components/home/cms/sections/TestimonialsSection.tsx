@@ -210,10 +210,6 @@ export default function TestimonialsSection({ section }: { section: PublicCmsHom
                     &ldquo;{t.review}&rdquo;
                   </p>
 
-                  {/* Row 4: source — pure HTML badge, zero overlap */}
-                  <div className="mt-4 border-t border-slate-100 pt-3">
-                    <GoogleBadge variant="card" />
-                  </div>
                 </div>
               );
             })}
