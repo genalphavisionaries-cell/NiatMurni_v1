@@ -339,10 +339,10 @@ function UpcomingClassCard({
   const showNearFull = seatsLeft > 0 && seatsLeft <= 14;
 
   return (
-    <div className="rounded-xl border border-[#E5E7EB] bg-white px-3 py-2 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:shadow-[0_2px_8px_rgba(15,23,42,0.06)]">
+    <div className="rounded-xl border border-[#E5E7EB] bg-white px-3 py-1.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:shadow-[0_2px_8px_rgba(15,23,42,0.06)]">
       {/* ROW 1: date + day | seat block */}
       <div className="flex items-start justify-between gap-3">
-        <p className="min-w-0 flex-1 text-[13px] font-bold leading-snug text-[#0B1F3B] break-words">
+        <p className="min-w-0 flex-1 text-[15px] font-extrabold leading-snug text-[#0B1F3B] break-words">
           {dateAndDayLine}
         </p>
 
@@ -366,12 +366,12 @@ function UpcomingClassCard({
       </div>
 
       {/* ROW 2: time (full width) */}
-      <p className="mt-1 text-[11px] font-semibold leading-tight text-[#64748B] break-words">
+      <p className="mt-0.5 text-[11px] font-semibold leading-tight text-[#64748B] break-words">
         {timeText}
       </p>
 
       {/* ROW 3: chips (left) | qty + Daftar (right) */}
-      <div className="mt-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+      <div className="mt-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
         <div className="flex min-w-0 flex-wrap items-center gap-1.5">
           <span className="inline-flex items-center gap-0.5 rounded-md bg-[#DBEAFE] px-1.5 py-0.5 text-[10px] font-semibold leading-none text-[#1D4ED8]">
             {isOnline ? (
