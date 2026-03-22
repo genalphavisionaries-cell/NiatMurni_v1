@@ -61,7 +61,6 @@ export default async function HomePage() {
       cmsKeys.has("why_choose_us") ||
       cmsKeys.has("features") ||
       cmsKeys.has("testimonials") ||
-      cmsKeys.has("faq") ||
       cmsKeys.has("cta"));
 
   // Legacy fallback: build a hero carousel-like section from homepage settings.

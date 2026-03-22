@@ -3,13 +3,18 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { fetchUpcomingClasses, type ClassSession } from "@/lib/api";
-import {
-  MOCK_HERO_CLASSES,
-  getRecommendedClasses,
-  type HeroClassItem,
-  type LanguageFilter,
-} from "@/components/home/hero/hero-classes";
-import QuantitySelector from "@/components/home/hero/QuantitySelector";
+import QuantitySelector from "@/components/home/QuantitySelector";
+
+type HeroClassItem = {
+  id: string;
+  date: string;
+  dateSort: string;
+  day: string;
+  time: string;
+  slots: number;
+  mode: string;
+  language: string;
+};
 
 type CartItem = {
   classId: string;
@@ -108,36 +113,6 @@ function toHeroItem(c: ClassSession): HeroClassItem {
   };
 }
 
-// TEMP: UI stress testing with mock classes — replace DEMO_CLASSES with 24 varied items
-// when live API returns no data. Real API data is still used when available.
-const _DAYS = ["Ahad", "Isnin", "Selasa", "Rabu", "Khamis", "Jumaat", "Sabtu"] as const;
-const _LANGS = ["Bahasa Melayu", "Chinese", "English", "Tamil"] as const;
-const _MODES = ["online", "physical"] as const; // raw canonical values — modeLabel() resolves to display
-const _TIMES = [
-  "12.30pm – 4.00pm",
-  "7.30pm – 10.30pm",
-  "9.00am – 1.00pm",
-  "2.00pm – 6.00pm",
-  "10.00am – 1.00pm",
-  "8.00pm – 10.00pm",
-] as const;
-const _SEATS = [5, 8, 12, 14, 20, 25, 30, 10, 7, 3] as const;
-const _MONTHS = [
-  "Mac", "Apr", "Mei", "Jun", "Jul", "Ogos",
-] as const;
-
-const STRESS_DEMO_CLASSES: HeroClassItem[] = Array.from({ length: 24 }).map((_, i) => ({
-  id: String(100 + i),
-  date: `${10 + (i % 20)} ${_MONTHS[i % _MONTHS.length]} 2026`,
-  dateSort: `2026-0${3 + Math.floor(i / 8)}-${String(10 + (i % 20)).padStart(2, "0")}`,
-  day: _DAYS[i % _DAYS.length],
-  time: _TIMES[i % _TIMES.length],
-  slots: _SEATS[i % _SEATS.length],
-  mode: _MODES[i % _MODES.length],
-  language: _LANGS[i % _LANGS.length],
-}));
-
-const DEMO_CLASSES = STRESS_DEMO_CLASSES.length > 0 ? STRESS_DEMO_CLASSES : MOCK_HERO_CLASSES;
 const MAX_CLASSES = 30;
 // Desktop: 7 rows × 3 columns = 21 initial, then +10 per Load More
 const DESKTOP_INITIAL = 21;
@@ -171,19 +146,11 @@ export default function UpcomingClassesSection() {
     };
   }, []);
 
-  const useDemo = !loading && apiClasses.length === 0;
-
   const displayList: HeroClassItem[] = useMemo(() => {
-    const base = useDemo ? DEMO_CLASSES : apiClasses.map(toHeroItem);
-    return base.slice(0, MAX_CLASSES);
-  }, [apiClasses, useDemo]);
+    return apiClasses.map(toHeroItem).slice(0, MAX_CLASSES);
+  }, [apiClasses]);
 
-  const firstRecommendedId = useMemo(() => {
-    if (useDemo) {
-      return getRecommendedClasses(DEMO_CLASSES, "" as LanguageFilter, 1)[0]?.id;
-    }
-    return displayList[0]?.id;
-  }, [displayList, useDemo]);
+  const firstRecommendedId = displayList[0]?.id;
 
   // Slice the full list by the current visible counts
   const desktopList = useMemo(
@@ -223,7 +190,15 @@ export default function UpcomingClassesSection() {
             </div>
           ) : (
             <>
-              {displayList.length ? (
+              {displayList.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <svg className="mb-4 h-12 w-12 text-[#CBD5E1]" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <p className="text-base font-semibold text-[#0F172A]">Tiada kelas dijadualkan buat masa ini.</p>
+                  <p className="mt-1 text-sm text-[#64748B]">Sila semak semula kemudian atau hubungi kami untuk maklumat lanjut.</p>
+                </div>
+              ) : (
                 <>
                   {/* Mobile list */}
                   <div className="space-y-1.5 md:hidden">
@@ -281,7 +256,7 @@ export default function UpcomingClassesSection() {
                     </div>
                   </div>
                 </>
-              ) : null}
+              )}
 
               {/* Mobile Load More */}
               {!loading && mobileList.length < displayList.length ? (
@@ -336,11 +311,6 @@ export default function UpcomingClassesSection() {
                 </div>
               </div>
 
-              {useDemo ? (
-                <p className="mt-6 text-center text-sm text-[#64748B]">
-                  Demo content. Data live belum tersedia buat masa ini.
-                </p>
-              ) : null}
             </>
           )}
         </div>
