@@ -23,18 +23,6 @@ function StarRating({ rating, size = "md" }: { rating: number; size?: "md" | "lg
   );
 }
 
-function GoogleGIcon({ className = "h-4 w-4" }: { className?: string }) {
-  return (
-    <span className={`inline-flex items-center ${className}`} aria-hidden>
-      <span className="text-sm font-medium" style={{ color: "#4285F4" }}>G</span>
-      <span className="text-sm" style={{ color: "#EA4335" }}>o</span>
-      <span className="text-sm" style={{ color: "#FBBC04" }}>o</span>
-      <span className="text-sm" style={{ color: "#4285F4" }}>g</span>
-      <span className="text-sm" style={{ color: "#34A853" }}>l</span>
-      <span className="text-sm" style={{ color: "#EA4335" }}>e</span>
-    </span>
-  );
-}
 
 /** Single Google "G" mark for rating bar — avoids overlapping "Google" text */
 function GoogleGMark({ className = "h-5 w-5" }: { className?: string }) {
@@ -229,10 +217,6 @@ function TestimonialCard({
           Read more
         </button>
       )}
-      <div className="mt-4 flex items-center gap-1.5 text-[12px] text-[#64748B]">
-        <GoogleGIcon className="h-3.5 w-3.5" />
-        <span>Posted on Google</span>
-      </div>
     </div>
   );
 }
