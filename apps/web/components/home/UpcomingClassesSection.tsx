@@ -35,11 +35,6 @@ function languageLabel(lang: string) {
   return lang;
 }
 
-function modeLabel(mode: string) {
-  if (mode === "Physical") return "Bersemuka";
-  return mode;
-}
-
 function toMalayMonthShort(month: string) {
   const m = month.trim().toLowerCase();
   const map: Record<string, string> = {
@@ -345,20 +340,20 @@ function UpcomingClassCard({
 
   return (
     <div className="rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 shadow-[0_1px_2px_rgba(15,23,42,0.05)] transition hover:shadow-[0_2px_10px_rgba(15,23,42,0.07)]">
-      {/* ROW 1: date + day (left), seats info (right) */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 pr-2">
-          <p className="text-[14px] font-extrabold leading-tight text-[#0F172A] whitespace-normal break-words">
+      {/* ROW 1: full date + day (left, grows), seat block (right, fixed width) */}
+      <div className="flex items-start gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-[14px] font-extrabold leading-snug text-[#0F172A] break-words">
             {dateAndDayLine}
           </p>
         </div>
 
-        <div className="flex shrink-0 flex-col items-end leading-tight">
+        <div className="flex w-[5.25rem] shrink-0 flex-col items-end">
           <span className="text-[11px] font-semibold text-[#64748B]">
             Kekosongan
           </span>
           <span
-            className={`text-[20px] font-extrabold ${
+            className={`text-[20px] font-extrabold leading-none ${
               showNearFull ? "text-[#DC2626]" : "text-[#0F172A]"
             }`}
           >
@@ -372,14 +367,14 @@ function UpcomingClassCard({
         </div>
       </div>
 
-      {/* ROW 2: time (left), chips (middle), quantity + Daftar (right) */}
-      <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
-        <p className="text-[12px] font-semibold leading-tight text-[#64748B] whitespace-normal break-words">
+      {/* ROW 2: time | chips | qty + Daftar — grid on sm+ keeps one row; stacks on xs */}
+      <div className="mt-1.5 grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center sm:gap-x-2">
+        <p className="min-w-0 text-[12px] font-semibold leading-snug text-[#64748B] break-words">
           {timeText}
         </p>
 
-        <div className="flex items-center gap-2">
-          <span className="rounded-full bg-[#DBEAFE] px-2 py-1 text-[11px] font-semibold leading-none text-[#1D4ED8] whitespace-nowrap inline-flex items-center gap-1">
+        <div className="flex flex-wrap items-center gap-1.5 sm:justify-start">
+          <span className="inline-flex items-center gap-1 rounded-full bg-[#DBEAFE] px-2 py-0.5 text-[11px] font-semibold leading-none text-[#1D4ED8] whitespace-nowrap">
             {isOnline ? (
               <span
                 className="inline-flex h-[6px] w-[6px] rounded-full bg-[#2563EB]"
@@ -388,12 +383,12 @@ function UpcomingClassCard({
             ) : null}
             {modePill}
           </span>
-          <span className="rounded-full bg-[#F1F5F9] px-2 py-1 text-[11px] font-semibold leading-none text-[#334155] whitespace-nowrap">
+          <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[11px] font-semibold leading-none text-[#334155] whitespace-nowrap">
             {languagePill}
           </span>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center justify-between gap-2 sm:justify-end">
           <div className="origin-right scale-[0.92]">
             <QuantitySelector
               compact

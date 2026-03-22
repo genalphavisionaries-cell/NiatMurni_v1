@@ -77,6 +77,8 @@ Visual refinement pass (2-row premium booking card):
   - Row 1: full `date + day` on the left, compact seat info (`Kekosongan`, count, optional `Hampir Penuh`) on the right.
   - Row 2: time on the left, only two compact chips (mode + language) in the middle, and quantity selector + compact `Daftar` button on the right.
 - Removed truncation-based typography in favor of wrap-safe text sizes so date/day/time remain fully visible.
+- Row 1 left column uses `flex-1 min-w-0` so the date/day line gets the width; seat block is a fixed `shrink-0` column.
+- Row 2 uses a responsive `grid` (`1fr` + `auto` + `auto` from `sm:`) so time, chips, and actions stay aligned instead of collapsing in a single `flex-wrap` row.
 
 Interactive behavior added:
 - Quantity selection per card
