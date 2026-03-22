@@ -205,7 +205,7 @@ export default function UpcomingClassesSection() {
   const cartCount = cart.reduce((sum, it) => sum + it.qty, 0);
 
   return (
-    <section id="classes" className="scroll-mt-20 bg-gradient-to-b from-[#F8FAFC] to-white py-16 sm:py-20">
+    <section id="classes" className="scroll-mt-20 bg-[#EFF6FF] py-16 sm:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <h2 className="text-3xl font-bold tracking-tight text-[#0F172A] sm:text-4xl">

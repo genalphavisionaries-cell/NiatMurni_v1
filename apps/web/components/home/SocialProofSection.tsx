@@ -58,7 +58,7 @@ export default function SocialProofSection({ data }: SocialProofSectionProps) {
 
   return (
     <section
-      className="bg-white py-20"
+      className="bg-[#F8FAFC] py-20"
       style={{ paddingTop: 80, paddingBottom: 80 }}
       aria-labelledby="social-proof-heading"
     >

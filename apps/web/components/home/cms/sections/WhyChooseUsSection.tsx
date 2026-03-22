@@ -69,7 +69,7 @@ export default function WhyChooseUsSection({ section }: { section: PublicCmsHome
   if (!cmsString(title) && !visibleItems.length && !bannerImages.length) return null;
 
   return (
-    <section id="why_choose_us" className="bg-surface py-16 sm:py-20">
+    <section id="why_choose_us" className="bg-white py-16 sm:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid items-start gap-10 lg:grid-cols-2">
           <div>

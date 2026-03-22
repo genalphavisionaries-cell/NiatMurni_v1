@@ -84,7 +84,7 @@ export default function TestimonialsSection({ section }: { section: PublicCmsHom
   if (!cmsString(title) && !subtitle && !visible.length) return null;
 
   return (
-    <section id="testimonials" className="bg-[#F8FAFC] py-16 sm:py-20">
+    <section id="testimonials" className="bg-white py-16 sm:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
         {/* ── Section heading ── */}
