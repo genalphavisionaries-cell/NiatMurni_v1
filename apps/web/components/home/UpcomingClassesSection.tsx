@@ -346,77 +346,86 @@ function UpcomingClassCard({
       : "text-gray-800";
 
   return (
-    <div className="rounded-xl border border-[#E5E7EB] bg-white px-2.5 py-1 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:shadow-[0_2px_8px_rgba(15,23,42,0.06)]">
-      {/* ROW 1: date + day | seat block */}
-      <div className="flex items-start justify-between gap-2">
-        <p className="min-w-0 flex-1 text-[15px] font-extrabold leading-snug text-[#0B1F3B] break-words">
-          {dateAndDayLine}
-        </p>
+    <div className="rounded-xl border border-[#E5E7EB] bg-white px-2.5 py-2 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:shadow-[0_2px_8px_rgba(15,23,42,0.06)]">
+      {/*
+        2-COLUMN LAYOUT — left: date/time/chips stacked | right: seat + action stacked
+        Uses horizontal space to remove the need for a separate full-width time row
+        and a separate full-width chip+action row, saving overall card height.
+      */}
+      <div className="flex items-stretch gap-3">
 
-        {/* Seat indicator — modern grouped block */}
-        <div className="flex shrink-0 flex-col items-end text-right">
-          <span className="text-[9px] font-medium uppercase tracking-wide text-gray-400">
-            Kekosongan
-          </span>
-          <span className={`text-[16px] font-bold leading-none tabular-nums ${seatColor}`}>
-            {seatsLeft}
-          </span>
-          {showNearFull ? (
-            <span className="mt-0.5 rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-medium leading-none text-orange-600">
-              Almost Full
+        {/* LEFT COLUMN: date → time (tight) → chips */}
+        <div className="flex min-w-0 flex-1 flex-col justify-between gap-0.5">
+          <p className="text-[15px] font-extrabold leading-snug text-[#0B1F3B] break-words">
+            {dateAndDayLine}
+          </p>
+          <p className="text-[11px] font-semibold leading-tight text-[#64748B]">
+            {timeText}
+          </p>
+          <div className="flex flex-wrap items-center gap-1 pt-0.5">
+            <span className="inline-flex items-center gap-0.5 rounded-full bg-[#DBEAFE] px-2 py-0.5 text-[10px] font-semibold leading-none text-[#1D4ED8]">
+              {isOnline ? (
+                <span
+                  className="inline-block h-1 w-1 shrink-0 rounded-full bg-[#2563EB]"
+                  aria-hidden
+                />
+              ) : null}
+              {modePill}
             </span>
-          ) : null}
-        </div>
-      </div>
-
-      {/* ROW 2: time */}
-      <p className="mt-0.5 text-[11px] font-semibold leading-tight text-[#64748B] break-words">
-        {timeText}
-      </p>
-
-      {/* ROW 3: chips (left) | qty + Daftar (right) */}
-      <div className="mt-1 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
-        <div className="flex min-w-0 flex-wrap items-center gap-1">
-          <span className="inline-flex items-center gap-0.5 rounded-full bg-[#DBEAFE] px-2 py-0.5 text-[10px] font-semibold leading-none text-[#1D4ED8]">
-            {isOnline ? (
-              <span
-                className="inline-block h-1 w-1 shrink-0 rounded-full bg-[#2563EB]"
-                aria-hidden
-              />
-            ) : null}
-            {modePill}
-          </span>
-          <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[10px] font-semibold leading-none text-[#334155]">
-            {languagePill}
-          </span>
-        </div>
-
-        <div className="ml-auto flex shrink-0 items-center gap-1.5">
-          <div className="scale-[0.88] origin-right">
-            <QuantitySelector
-              compact
-              min={1}
-              max={max}
-              defaultValue={1}
-              onChange={(n) => setQty(n)}
-            />
+            <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[10px] font-semibold leading-none text-[#334155]">
+              {languagePill}
+            </span>
           </div>
-          <button
-            type="button"
-            disabled={disabled}
-            onClick={() => {
-              if (disabled) return;
-              onAddToCart(qty);
-            }}
-            className={`inline-flex h-[26px] min-w-[3.75rem] shrink-0 items-center justify-center rounded-md px-2 text-[11px] font-bold leading-none shadow-sm transition ${
-              disabled
-                ? "cursor-not-allowed bg-slate-300 text-[#0F172A]"
-                : "bg-[#0F3B7B] text-white hover:bg-[#0b2e5f]"
-            }`}
-          >
-            Daftar
-          </button>
         </div>
+
+        {/* RIGHT COLUMN: seat block (top) + action row (bottom) */}
+        <div className="flex shrink-0 flex-col items-end justify-between gap-1.5">
+          {/* Seat block: label + number inline, badge tightly below */}
+          <div className="flex flex-col items-end">
+            <div className="flex items-baseline gap-1">
+              <span className="text-[9px] font-medium uppercase tracking-wide text-gray-400">
+                Kekosongan
+              </span>
+              <span className={`text-[16px] font-bold leading-none tabular-nums ${seatColor}`}>
+                {seatsLeft}
+              </span>
+            </div>
+            {showNearFull ? (
+              <span className="mt-0.5 rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-medium leading-none text-orange-600">
+                Almost Full
+              </span>
+            ) : null}
+          </div>
+
+          {/* Action: qty + Daftar on one line, aligned to the right */}
+          <div className="flex items-center gap-1.5">
+            <div className="scale-[0.88] origin-right">
+              <QuantitySelector
+                compact
+                min={1}
+                max={max}
+                defaultValue={1}
+                onChange={(n) => setQty(n)}
+              />
+            </div>
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() => {
+                if (disabled) return;
+                onAddToCart(qty);
+              }}
+              className={`inline-flex h-[26px] min-w-[3.75rem] shrink-0 items-center justify-center rounded-md px-2 text-[11px] font-bold leading-none shadow-sm transition ${
+                disabled
+                  ? "cursor-not-allowed bg-slate-300 text-[#0F172A]"
+                  : "bg-[#0F3B7B] text-white hover:bg-[#0b2e5f]"
+              }`}
+            >
+              Daftar
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   );
