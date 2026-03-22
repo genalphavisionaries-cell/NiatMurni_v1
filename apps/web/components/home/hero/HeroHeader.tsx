@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect, type ReactNode } from "react";
 import Link from "next/link";
-import LogoBox from "./LogoBox";
 import type { NavLink } from "@/lib/homepage-settings";
 import type { PublicCmsNavItem } from "@/lib/public-cms";
 
@@ -150,7 +149,13 @@ export default function HeroHeader({
         padding: "0 40px",
       }}
     >
-      <LogoBox logoUrl={logoUrl} alt={siteName} />
+      <div className="mr-auto flex shrink-0 items-center gap-2">
+        {logoUrl ? (
+          <img src={logoUrl} alt={siteName} className="h-9 w-auto object-contain" />
+        ) : (
+          <span className="text-base font-bold text-white">{siteName}</span>
+        )}
+      </div>
       <nav
         className="ml-auto hidden items-center gap-4 lg:flex"
         aria-label="Main"
