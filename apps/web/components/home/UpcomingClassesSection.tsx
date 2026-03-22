@@ -339,50 +339,41 @@ function UpcomingClassCard({
   const showNearFull = seatsLeft > 0 && seatsLeft <= 14;
 
   return (
-    <div className="rounded-xl border border-[#E5E7EB] bg-white px-2.5 py-1.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:shadow-[0_2px_8px_rgba(15,23,42,0.06)]">
-      {/* ROW 1 — date/day (single line, scroll if needed) | seat block */}
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <p className="whitespace-nowrap text-[13px] font-bold leading-tight text-[#0B1F3B]">
-            {dateAndDayLine}
-          </p>
-        </div>
+    <div className="rounded-xl border border-[#E5E7EB] bg-white px-3 py-2 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:shadow-[0_2px_8px_rgba(15,23,42,0.06)]">
+      {/* ROW 1: date + day | seat block */}
+      <div className="flex items-start justify-between gap-3">
+        <p className="min-w-0 flex-1 text-[13px] font-bold leading-snug text-[#0B1F3B] break-words">
+          {dateAndDayLine}
+        </p>
 
-        <div className="flex w-[4.75rem] shrink-0 flex-col items-end text-right leading-tight">
+        <div className="flex shrink-0 flex-col items-end text-right leading-tight">
           <span className="text-[10px] font-semibold text-[#64748B]">
             Kekosongan
           </span>
           <span
-            className={`text-[17px] font-extrabold leading-none tabular-nums ${
+            className={`text-[16px] font-extrabold leading-none tabular-nums ${
               showNearFull ? "text-[#DC2626]" : "text-[#0B1F3B]"
             }`}
           >
             {seatsLeft}
           </span>
           {showNearFull ? (
-            <span className="mt-0.5 rounded bg-[#FEF3C7] px-1.5 py-px text-[9px] font-bold leading-none text-[#92400E] whitespace-nowrap">
+            <span className="mt-0.5 rounded bg-[#FEF3C7] px-1.5 py-px text-[9px] font-bold leading-none text-[#92400E]">
               Hampir Penuh
             </span>
           ) : null}
         </div>
       </div>
 
-      {/* ROW 2 — strict 4-column grid: time | mode | language | action */}
-      <div className="mt-1 overflow-x-auto [-webkit-overflow-scrolling:touch] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div
-          className="grid w-full min-w-[260px] items-center gap-x-2"
-          style={{
-            gridTemplateColumns:
-              "minmax(9rem, 1.1fr) max-content max-content max-content",
-          }}
-        >
-          <div className="min-w-[9rem]">
-            <p className="whitespace-nowrap text-[11px] font-semibold leading-none text-[#64748B]">
-              {timeText}
-            </p>
-          </div>
+      {/* ROW 2: time (full width) */}
+      <p className="mt-1 text-[11px] font-semibold leading-tight text-[#64748B] break-words">
+        {timeText}
+      </p>
 
-          <span className="inline-flex items-center gap-0.5 justify-self-start rounded-md bg-[#DBEAFE] px-1.5 py-0.5 text-[10px] font-semibold leading-none text-[#1D4ED8] whitespace-nowrap">
+      {/* ROW 3: chips (left) | qty + Daftar (right) */}
+      <div className="mt-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+          <span className="inline-flex items-center gap-0.5 rounded-md bg-[#DBEAFE] px-1.5 py-0.5 text-[10px] font-semibold leading-none text-[#1D4ED8]">
             {isOnline ? (
               <span
                 className="inline-block h-1 w-1 shrink-0 rounded-full bg-[#2563EB]"
@@ -391,37 +382,34 @@ function UpcomingClassCard({
             ) : null}
             {modePill}
           </span>
-
-          <span className="justify-self-start rounded-md bg-[#F1F5F9] px-1.5 py-0.5 text-[10px] font-semibold leading-none text-[#334155] whitespace-nowrap">
+          <span className="rounded-md bg-[#F1F5F9] px-1.5 py-0.5 text-[10px] font-semibold leading-none text-[#334155]">
             {languagePill}
           </span>
+        </div>
 
-          <div className="flex items-center justify-end gap-1.5 justify-self-end">
-            <div className="origin-right scale-[0.88]">
-              <QuantitySelector
-                compact
-                min={1}
-                max={max}
-                defaultValue={1}
-                onChange={(n) => setQty(n)}
-              />
-            </div>
-            <button
-              type="button"
-              disabled={disabled}
-              onClick={() => {
-                if (disabled) return;
-                onAddToCart(qty);
-              }}
-              className={`inline-flex h-7 shrink-0 items-center justify-center rounded-md px-2.5 text-[11px] font-bold leading-none shadow-sm transition ${
-                disabled
-                  ? "cursor-not-allowed bg-slate-300 text-[#0F172A]"
-                  : "bg-[#0F3B7B] text-white hover:bg-[#0b2e5f]"
-              }`}
-            >
-              Daftar
-            </button>
-          </div>
+        <div className="ml-auto flex shrink-0 items-center gap-2">
+          <QuantitySelector
+            compact
+            min={1}
+            max={max}
+            defaultValue={1}
+            onChange={(n) => setQty(n)}
+          />
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => {
+              if (disabled) return;
+              onAddToCart(qty);
+            }}
+            className={`inline-flex h-7 min-w-[4.25rem] shrink-0 items-center justify-center rounded-md px-2.5 text-[11px] font-bold leading-none shadow-sm transition ${
+              disabled
+                ? "cursor-not-allowed bg-slate-300 text-[#0F172A]"
+                : "bg-[#0F3B7B] text-white hover:bg-[#0b2e5f]"
+            }`}
+          >
+            Daftar
+          </button>
         </div>
       </div>
     </div>

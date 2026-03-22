@@ -64,22 +64,14 @@ Fallback behavior:
 - Updated `apps/web/components/home/UpcomingClassesSection.tsx`
 - Uses **live session data** (`fetchUpcomingClasses`) with demo fallback.
 - New compact listing UI (denser, suitable for many upcoming classes):
-  - Each class item is rebuilt into a single premium horizontal booking strip:
-    - LEFT: date (small bold) + day/time (muted)
-    - MIDDLE: compact chips only (mode + language)
-    - RIGHT: seat count with label `Kekosongan`, optional warm `Hampir Penuh` badge when seats are low, and action row (compact quantity selector + `Daftar`)
+  - Each item is a compact **3-row** mini-card (**no** internal `overflow-x` / horizontal scroll):
+    - Row 1: `date + day` (left, wraps naturally) | seat block (`Kekosongan`, count, optional `Hampir Penuh`) on the right.
+    - Row 2: full-width **time** (muted, secondary).
+    - Row 3: `flex justify-between` — mode + language chips on the left; compact quantity selector + `Daftar` on the right (`shrink-0`, `min-w` on button so it is not clipped).
   - Seat quantity selector (compact) + `Daftar` button (still opens the cart popup; no cart logic changes)
   - Mobile shows **first 2 items**, then **Load More** (up to the same max set by the component)
   - Desktop shows the available list in **3 explicit vertical columns**, with up to **10 items per column** (max 30)
-
-Visual refinement pass (2-row premium booking card):
-- Rebuilt each class item into a compact **2-row** layout:
-  - Row 1: full `date + day` on the left, compact seat info (`Kekosongan`, count, optional `Hampir Penuh`) on the right.
-  - Row 2: time on the left, only two compact chips (mode + language) in the middle, and quantity selector + compact `Daftar` button on the right.
-- Removed truncation-based typography in favor of wrap-safe text sizes so date/day/time remain fully visible.
-- Row 1: date + day on ONE line (`whitespace-nowrap`) inside a scrollable container (no ellipsis) so long strings stay visible; compact seat block on the right.
-- Row 2: strict **4-column** CSS grid with inline `gridTemplateColumns: minmax(9rem, 1.1fr) max-content max-content max-content` for time | mode chip | language chip | action (qty + `Daftar`); row can scroll horizontally on very narrow widths.
-- Outer card: `rounded-xl`, tighter padding, softer shadow.
+- Outer card: `rounded-xl`, compact padding, soft shadow.
 
 Interactive behavior added:
 - Quantity selection per card
