@@ -77,7 +77,36 @@ function toHeroItem(c: ClassSession): HeroClassItem {
   };
 }
 
-const DEMO_CLASSES = MOCK_HERO_CLASSES;
+// TEMP: UI stress testing with mock classes — replace DEMO_CLASSES with 24 varied items
+// when live API returns no data. Real API data is still used when available.
+const _DAYS = ["Ahad", "Isnin", "Selasa", "Rabu", "Khamis", "Jumaat", "Sabtu"] as const;
+const _LANGS = ["B. Melayu", "Chinese", "English"] as const;
+const _MODES = ["Online", "Physical"] as const;
+const _TIMES = [
+  "12.30pm – 4.00pm",
+  "7.30pm – 10.30pm",
+  "9.00am – 1.00pm",
+  "2.00pm – 6.00pm",
+  "10.00am – 1.00pm",
+  "8.00pm – 10.00pm",
+] as const;
+const _SEATS = [5, 8, 12, 14, 20, 25, 30, 10, 7, 3] as const;
+const _MONTHS = [
+  "Mac", "Apr", "Mei", "Jun", "Jul", "Ogos",
+] as const;
+
+const STRESS_DEMO_CLASSES: HeroClassItem[] = Array.from({ length: 24 }).map((_, i) => ({
+  id: String(100 + i),
+  date: `${10 + (i % 20)} ${_MONTHS[i % _MONTHS.length]} 2026`,
+  dateSort: `2026-0${3 + Math.floor(i / 8)}-${String(10 + (i % 20)).padStart(2, "0")}`,
+  day: _DAYS[i % _DAYS.length],
+  time: _TIMES[i % _TIMES.length],
+  slots: _SEATS[i % _SEATS.length],
+  mode: _MODES[i % _MODES.length],
+  language: _LANGS[i % _LANGS.length],
+}));
+
+const DEMO_CLASSES = STRESS_DEMO_CLASSES.length > 0 ? STRESS_DEMO_CLASSES : MOCK_HERO_CLASSES;
 // Desktop requirement: 3 columns x 10 rows = 30 total maximum shown.
 const MAX_CLASSES = 30;
 const MOBILE_INITIAL_LIMIT = 2;
