@@ -131,10 +131,10 @@ export default async function HomePage() {
               heroOverlayOpacity={settings.hero.overlayOpacity}
             />
             <WhyChooseSection data={settings.whyChoose} />
+            <UpcomingClassesSection />
             <SocialProofSection data={settings.socialProof} />
             <PromoStrip />
             <PromoGrid />
-            <UpcomingClassesSection />
           </main>
           <Footer
             settings={{
