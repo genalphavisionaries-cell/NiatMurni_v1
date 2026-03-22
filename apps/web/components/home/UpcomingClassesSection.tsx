@@ -184,7 +184,7 @@ export default function UpcomingClassesSection() {
               {displayList.length ? (
                 <>
                   {/* Mobile: limited list + load more */}
-                  <div className="space-y-2 md:hidden">
+                  <div className="space-y-1.5 md:hidden">
                     {mobileVisible.map((c) => (
                       <UpcomingClassCard
                         key={c.id}
@@ -210,7 +210,7 @@ export default function UpcomingClassesSection() {
                   <div className="hidden md:block">
                     <div className="grid grid-cols-3 gap-4">
                       {desktopColumns.map((col, colIdx) => (
-                        <div key={colIdx} className="space-y-2">
+                        <div key={colIdx} className="space-y-1.5">
                           {col.map((c) => (
                             <UpcomingClassCard
                               key={c.id}
@@ -375,58 +375,59 @@ function UpcomingClassCard({
       : "text-gray-800";
 
   return (
-    <div className="rounded-xl border border-[#E5E7EB] bg-white px-2.5 py-2 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:shadow-[0_2px_8px_rgba(15,23,42,0.06)]">
-      {/*
-        2-COLUMN LAYOUT — left: date/time/chips stacked | right: seat + action stacked
-        Uses horizontal space to remove the need for a separate full-width time row
-        and a separate full-width chip+action row, saving overall card height.
-      */}
+    <div className="rounded-xl border border-[#D1D5DB] bg-white px-2.5 py-2 shadow-[0_1px_3px_rgba(15,23,42,0.07)] transition hover:shadow-[0_3px_12px_rgba(15,23,42,0.10)]">
+      {/* 2-COLUMN: left = date anchor + chips | right = seat + action */}
       <div className="flex items-stretch gap-3">
 
-        {/* LEFT COLUMN: date → time (tight) → chips */}
-        <div className="flex min-w-0 flex-1 flex-col justify-between gap-0.5">
-          <p className="text-[15px] font-extrabold leading-snug text-[#0B1F3B] break-words">
-            {dateAndDayLine}
-          </p>
-          <p className="text-[11px] font-semibold leading-tight text-[#64748B]">
-            {timeText}
-          </p>
-          <div className="flex flex-wrap items-center gap-1 pt-0.5">
-            <span className="inline-flex items-center gap-0.5 rounded-full bg-[#DBEAFE] px-2 py-0.5 text-[10px] font-semibold leading-none text-[#1D4ED8]">
+        {/* LEFT COLUMN */}
+        <div className="flex min-w-0 flex-1 flex-col justify-between gap-1">
+
+          {/* DATE/TIME ANCHOR — subtle tinted block with blue left accent */}
+          <div className="rounded-md border-l-[3px] border-[#2563EB] bg-slate-50 px-2 py-1">
+            <p className="text-[15px] font-extrabold leading-snug text-[#0A1628] break-words">
+              {dateAndDayLine}
+            </p>
+            <p className="mt-0.5 text-[11px] font-medium leading-tight text-[#6B7280]">
+              {timeText}
+            </p>
+          </div>
+
+          {/* CHIPS — below the date anchor */}
+          <div className="flex flex-wrap items-center gap-1">
+            <span className="inline-flex items-center gap-0.5 rounded-full bg-[#EFF6FF] px-2 py-0.5 text-[10px] font-semibold leading-none text-[#3B82F6]">
               {isOnline ? (
                 <span
-                  className="inline-block h-1 w-1 shrink-0 rounded-full bg-[#2563EB]"
+                  className="inline-block h-1 w-1 shrink-0 rounded-full bg-[#3B82F6]"
                   aria-hidden
                 />
               ) : null}
               {modePill}
             </span>
-            <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[10px] font-semibold leading-none text-[#334155]">
+            <span className="rounded-full bg-[#F3F4F6] px-2 py-0.5 text-[10px] font-medium leading-none text-[#6B7280]">
               {languagePill}
             </span>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: seat block (top) + action row (bottom) */}
+        {/* RIGHT COLUMN: seat block (top) + action (bottom) */}
         <div className="flex shrink-0 flex-col items-end justify-between gap-1.5">
-          {/* Seat block: label + number inline, badge tightly below */}
+
+          {/* Seat block — toned-down label, strong number */}
           <div className="flex flex-col items-end">
-            <div className="flex items-baseline gap-1">
-              <span className="text-[9px] font-medium uppercase tracking-wide text-gray-400">
-                Kekosongan
-              </span>
-              <span className={`text-[16px] font-bold leading-none tabular-nums ${seatColor}`}>
-                {seatsLeft}
-              </span>
-            </div>
+            <span className="text-[9px] font-normal uppercase tracking-widest text-gray-300">
+              Kekosongan
+            </span>
+            <span className={`text-[16px] font-bold leading-none tabular-nums ${seatColor}`}>
+              {seatsLeft}
+            </span>
             {showNearFull ? (
-              <span className="mt-0.5 rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-medium leading-none text-orange-600">
+              <span className="mt-0.5 rounded px-1.5 py-px text-[9px] font-medium leading-none text-orange-400">
                 Almost Full
               </span>
             ) : null}
           </div>
 
-          {/* Action: qty + Daftar on one line, aligned to the right */}
+          {/* Action: qty + Daftar */}
           <div className="flex items-center gap-1.5">
             <div className="scale-[0.88] origin-right">
               <QuantitySelector
