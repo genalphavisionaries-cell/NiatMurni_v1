@@ -95,13 +95,6 @@ export default async function HomePage() {
             {!cmsKeys.has("testimonials") ? (
               <SocialProofSection data={settings.socialProof} />
             ) : null}
-            {!cmsKeys.has("programs") ? (
-              <>
-                <PromoStrip />
-                <PromoGrid />
-                <UpcomingClassesSection />
-              </>
-            ) : null}
           </main>
           <CmsFooter
             siteName={ctx.siteName}

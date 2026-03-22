@@ -70,7 +70,6 @@ export default function CmsHomepageRenderer({
   const why = first("why_choose_us") ?? first("features");
   const testimonials = first("testimonials");
   const cta = first("cta");
-  const programs = first("programs");
   const contactSection = first("contact");
 
   const hasAny =
@@ -78,7 +77,6 @@ export default function CmsHomepageRenderer({
     !!why ||
     !!testimonials ||
     !!cta ||
-    !!programs ||
     !!contactSection;
 
   if (!hasAny) return null;
@@ -86,16 +84,17 @@ export default function CmsHomepageRenderer({
   return (
     <>
       <FloatingQuickMenu promotionsHref={cta ? "/#promotions" : "/#classes"} />
+      {/* 1. Hero */}
       {hero ? <HeroSection section={hero} site={cms.site} /> : null}
+      {/* 2. Why Us */}
       {why ? <WhyChooseUsSection section={why} /> : null}
-
-      {/* Controlled integration: "programs" key can render the existing classes block for now */}
-      {programs ? <UpcomingClassesSection /> : null}
-
+      {/* 3. Upcoming Classes — always rendered here, between Why Us and Testimonials */}
+      <UpcomingClassesSection />
+      {/* 4. Trust & Reviews */}
       {testimonials ? <TestimonialsSection section={testimonials} /> : null}
+      {/* 5. Promotions */}
       {cta ? <PromotionsSection section={cta} /> : null}
-
-      {/* Controlled integration: "contact" key can render the existing contact block for now */}
+      {/* 6. Contact (if configured) */}
       {contactSection ? (
         <ContactSection email={cms.contact.email} phone={cms.contact.phone} />
       ) : null}
