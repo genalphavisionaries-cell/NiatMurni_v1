@@ -20,30 +20,17 @@ function Stars({ rating, size = "md" }: { rating: number; size?: "sm" | "md" }) 
   );
 }
 
-/** Google source badge — pure HTML, no SVG paths, zero overlap risk */
-function GoogleBadge({ variant = "card" }: { variant?: "card" | "bar" }) {
-  if (variant === "bar") {
-    return (
-      <div className="flex items-center gap-2" aria-label="Google Reviews">
-        <span
-          className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#4285F4] text-[13px] font-bold text-white leading-none select-none"
-          aria-hidden
-        >
-          G
-        </span>
-        <span className="text-sm font-semibold text-[#0F172A]">Google Reviews</span>
-      </div>
-    );
-  }
+/** Rating bar Google badge — bar variant only */
+function GoogleBadge() {
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-2" aria-label="Google Reviews">
       <span
-        className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#4285F4] text-[9px] font-bold text-white leading-none select-none"
+        className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#4285F4] text-[13px] font-bold text-white leading-none select-none"
         aria-hidden
       >
         G
       </span>
-      <span className="text-[11px] text-[#94A3B8]">Posted on Google</span>
+      <span className="text-sm font-semibold text-[#0F172A]">Google Reviews</span>
     </div>
   );
 }
@@ -117,7 +104,7 @@ export default function TestimonialsSection({ section }: { section: PublicCmsHom
           <div className="flex w-full max-w-2xl flex-col items-center gap-4 rounded-2xl border border-slate-200 bg-white px-6 py-5 shadow-sm sm:flex-row sm:gap-6">
 
             {/* Google badge */}
-            <GoogleBadge variant="bar" />
+            <GoogleBadge />
 
             {/* Divider */}
             <div className="hidden h-8 w-px bg-slate-200 sm:block" />
