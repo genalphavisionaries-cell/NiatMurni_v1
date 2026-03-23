@@ -128,9 +128,9 @@ export default function CmsHeader({
             <img
               src={logoUrl}
               alt={siteName}
-              className="h-9 w-auto max-w-[180px] object-contain"
+              className="h-8 w-auto object-contain md:h-10"
               onError={(e) => {
-                e.currentTarget.style.display = "none";
+                (e.currentTarget as HTMLImageElement).style.display = "none";
               }}
             />
           ) : (
