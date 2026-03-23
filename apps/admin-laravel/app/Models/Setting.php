@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Setting extends Model
 {
@@ -11,6 +12,7 @@ class Setting extends Model
         'key',
         'value',
         'is_encrypted',
+        'updated_by',
     ];
 
     protected function casts(): array
@@ -18,5 +20,10 @@ class Setting extends Model
         return [
             'is_encrypted' => 'boolean',
         ];
+    }
+
+    public function updatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 }

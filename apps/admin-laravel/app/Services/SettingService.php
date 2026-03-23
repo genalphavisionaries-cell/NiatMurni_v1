@@ -90,8 +90,10 @@ class SettingService
 
     /**
      * Upsert a setting. When $encrypt is true, value is encrypted at rest and is_encrypted is set.
+     *
+     * @param  int|null  $updatedBy  Authenticated user id when saving from admin
      */
-    public function set(string $group, string $key, mixed $value, bool $encrypt = false): Setting
+    public function set(string $group, string $key, mixed $value, bool $encrypt = false, ?int $updatedBy = null): Setting
     {
         $stored = $encrypt ? Crypt::encryptString($this->serializeValue($value)) : $this->serializeValue($value);
 
@@ -100,6 +102,7 @@ class SettingService
             [
                 'value' => $stored,
                 'is_encrypted' => $encrypt,
+                'updated_by' => $updatedBy,
             ]
         );
 

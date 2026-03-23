@@ -83,6 +83,17 @@ class User extends Authenticatable implements FilamentUser
         return $this->admin_role === 'super_admin';
     }
 
+    public function isFinanceAdmin(): bool
+    {
+        return $this->admin_role === 'finance_admin';
+    }
+
+    /** Super Admin or Finance Admin (payments & finance tab visibility). */
+    public function canAccessPaymentFinanceSettings(): bool
+    {
+        return $this->isSuperAdmin() || $this->isFinanceAdmin();
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // Module access
     // ─────────────────────────────────────────────────────────────────────────
