@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\Setting;
+use App\Support\AdminModules;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Actions\Action;
@@ -12,6 +13,10 @@ use Filament\Pages\Page;
 
 class SystemSettings extends Page implements HasForms
 {
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->hasModuleAccess(AdminModules::SETTINGS) ?? false;
+    }
     use InteractsWithForms;
 
     protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';

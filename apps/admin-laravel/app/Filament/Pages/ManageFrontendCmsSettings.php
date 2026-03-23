@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\Setting;
+use App\Support\AdminModules;
 use App\Support\FrontendCmsSettingKeys;
 use Filament\Actions\Action;
 use Filament\Forms\Components\ColorPicker;
@@ -19,6 +20,11 @@ use Filament\Pages\Page;
 class ManageFrontendCmsSettings extends Page implements HasForms
 {
     use InteractsWithForms;
+
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->hasModuleAccess(AdminModules::CMS) ?? false;
+    }
 
     protected static ?string $navigationIcon = 'heroicon-o-paint-brush';
 

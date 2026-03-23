@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\HomepageSection;
+use App\Support\AdminModules;
 use Filament\Actions\Action;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Fieldset;
@@ -35,6 +36,11 @@ class ManageHomepageSettings extends Page implements HasForms
     protected static ?string $title = 'Homepage Settings';
 
     protected static string $view = 'filament.pages.manage-homepage-settings';
+
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->hasModuleAccess(AdminModules::CMS) ?? false;
+    }
 
     public ?array $data = [];
 
