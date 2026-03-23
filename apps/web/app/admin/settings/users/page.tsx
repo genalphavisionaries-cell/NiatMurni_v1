@@ -1,19 +1,21 @@
 "use client";
 
 import { useEffect } from "react";
-import { getFilamentUsersUrl } from "@/lib/filament-admin-url";
+import { useRouter } from "next/navigation";
 
-/** Legacy path: forward to Filament UserResource (same bridge logic as /admin/users). */
+/** Legacy path: forward to native /admin/users page. */
 export default function AdminSettingsUsersRedirect() {
+  const router = useRouter();
+
   useEffect(() => {
-    window.location.replace(getFilamentUsersUrl());
-  }, []);
+    router.replace("/admin/users");
+  }, [router]);
 
   return (
     <div className="flex min-h-[200px] items-center justify-center">
       <p className="text-sm text-gray-500">
         Redirecting…{" "}
-        <a href={getFilamentUsersUrl()} className="text-blue-600 underline">
+        <a href="/admin/users" className="text-blue-600 underline">
           Open User Management
         </a>
       </p>

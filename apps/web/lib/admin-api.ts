@@ -24,8 +24,37 @@ export type AdminUser = {
   phone?: string | null;
 };
 
+export type ManagedAdminUser = {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  status: "active" | "inactive";
+  created_at: string;
+  updated_at: string;
+};
+
 export type LoginResponse = { user: AdminUser };
-export type MeResponse = { user: AdminUser };
+export type MeResponse = { user?: AdminUser; data?: AdminProfile };
+
+export type AdminProfile = {
+  id: number;
+  name: string;
+  email: string;
+  phone?: string | null;
+  recovery_email?: string | null;
+  role: string;
+  status: "active" | "inactive";
+  last_login_at?: string | null;
+};
+
+export type AdminSystemSettings = {
+  site_name: string;
+  logo_url: string;
+  theme_color: string;
+  support_email: string;
+  support_phone: string;
+};
 
 async function request<T>(
   path: string,
@@ -42,8 +71,8 @@ async function request<T>(
     ...init,
     credentials: "include",
     headers: {
-      "Content-Type": "application/json",
       Accept: "application/json",
+      ...(init.body instanceof FormData ? {} : { "Content-Type": "application/json" }),
       ...init.headers,
     },
   });
@@ -122,8 +151,100 @@ export const adminApi = {
     return request<{ message: string }>("/api/admin/logout", { method: "POST" });
   },
 
-  me(): Promise<MeResponse> {
-    return request<MeResponse>("/api/admin/me");
+  async me(): Promise<MeResponse> {
+    const res = await request<MeResponse>("/api/admin/me");
+    if (res.user) return res;
+    if (res.data) {
+      return {
+        user: {
+          id: res.data.id,
+          name: res.data.name,
+          email: res.data.email,
+          role: res.data.role,
+          phone: res.data.phone,
+        },
+        data: res.data,
+      };
+    }
+    return res;
+  },
+  getMyProfile(): Promise<{ data: AdminProfile }> {
+    return request("/api/admin/me");
+  },
+  updateMyProfile(data: {
+    name: string;
+    email: string;
+    phone?: string;
+    recovery_email?: string;
+  }): Promise<{ data: AdminProfile }> {
+    return request("/api/admin/me", { method: "PUT", body: JSON.stringify(data) });
+  },
+  changeMyPassword(data: {
+    current_password: string;
+    password: string;
+    password_confirmation: string;
+  }): Promise<{ data: { message: string } }> {
+    return request("/api/admin/me/change-password", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+  getSettings(): Promise<{ data: AdminSystemSettings }> {
+    return request("/api/admin/settings");
+  },
+  updateSettings(data: FormData | {
+    site_name: string;
+    logo_url?: string;
+    theme_color?: string;
+    support_email?: string;
+    support_phone?: string;
+  }): Promise<{ data: AdminSystemSettings }> {
+    return request("/api/admin/settings", {
+      method: "PUT",
+      body: data instanceof FormData ? data : JSON.stringify(data),
+    });
+  },
+
+  // Users (native Next admin user management)
+  getUsers(params?: { search?: string; status?: "active" | "inactive"; per_page?: number }): Promise<{
+    data: ManagedAdminUser[];
+    meta: { current_page: number; last_page: number; per_page: number; total: number };
+  }> {
+    const p: Record<string, string> = {};
+    if (params?.search) p.search = params.search;
+    if (params?.status) p.status = params.status;
+    if (params?.per_page != null) p.per_page = String(params.per_page);
+    return request("/api/admin/users", { params: p });
+  },
+  createUser(data: {
+    name: string;
+    email: string;
+    password: string;
+    password_confirmation: string;
+    role: "super_admin" | "operations_admin" | "finance_admin" | "cms_admin" | "accountant";
+    status?: "active" | "inactive";
+  }): Promise<{ data: ManagedAdminUser }> {
+    return request("/api/admin/users", { method: "POST", body: JSON.stringify(data) });
+  },
+  updateUser(
+    id: number,
+    data: Partial<{
+      name: string;
+      email: string;
+      role: "super_admin" | "operations_admin" | "finance_admin" | "cms_admin" | "accountant";
+      status: "active" | "inactive";
+    }>
+  ): Promise<{ data: ManagedAdminUser }> {
+    return request(`/api/admin/users/${id}`, { method: "PUT", body: JSON.stringify(data) });
+  },
+  deleteUser(id: number): Promise<{ data: ManagedAdminUser; message: string }> {
+    return request(`/api/admin/users/${id}`, { method: "DELETE" });
+  },
+  resetUserPassword(
+    id: number,
+    data: { password: string; password_confirmation: string }
+  ): Promise<{ data: ManagedAdminUser; message: string }> {
+    return request(`/api/admin/users/${id}/reset-password`, { method: "POST", body: JSON.stringify(data) });
   },
 
   // CMS

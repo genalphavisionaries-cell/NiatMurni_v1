@@ -52,10 +52,16 @@ Route::middleware('auth:sanctum')->prefix('participant')->name('api.participant.
 
 Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureAdminAccess::class])->prefix('admin')->name('api.admin.')->group(function () {
     Route::post('/logout', [App\Http\Controllers\Api\AdminAuthController::class, 'logout'])->name('logout');
-    Route::get('/me', [App\Http\Controllers\Api\AdminAuthController::class, 'me'])->name('me');
-    Route::post('/change-password', [App\Http\Controllers\Api\AdminAuthController::class, 'changePassword'])
+    Route::get('/me', [App\Http\Controllers\Api\Admin\AdminSettingsController::class, 'me'])->name('me');
+    Route::put('/me', [App\Http\Controllers\Api\Admin\AdminSettingsController::class, 'updateMe'])->name('me.update');
+    Route::post('/me/change-password', [App\Http\Controllers\Api\Admin\AdminSettingsController::class, 'changePassword'])
         ->middleware('throttle:10,1')
-        ->name('change-password');
+        ->name('me.change-password');
+    Route::post('/change-password', [App\Http\Controllers\Api\Admin\AdminSettingsController::class, 'changePassword'])
+        ->middleware('throttle:10,1')
+        ->name('change-password'); // backward-compatible alias
+    Route::get('/settings', [App\Http\Controllers\Api\Admin\AdminSettingsController::class, 'settings'])->name('settings.index');
+    Route::put('/settings', [App\Http\Controllers\Api\Admin\AdminSettingsController::class, 'updateSettings'])->name('settings.update');
 
     // Secured admin operational endpoints.
     Route::post('/bookings/{bookingId}/refund', [AdminRefundController::class, 'refund']);
@@ -91,4 +97,12 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureAdminAccess::class
 
     // Employers (for dropdowns)
     Route::get('/employers', [App\Http\Controllers\Api\Admin\EmployerController::class, 'index'])->name('employers.index');
+
+    // Users (native Next.js admin user management)
+    Route::get('/users', [App\Http\Controllers\Api\Admin\UserController::class, 'index'])->name('users.index');
+    Route::post('/users', [App\Http\Controllers\Api\Admin\UserController::class, 'store'])->name('users.store');
+    Route::put('/users/{user}', [App\Http\Controllers\Api\Admin\UserController::class, 'update'])->name('users.update');
+    Route::delete('/users/{user}', [App\Http\Controllers\Api\Admin\UserController::class, 'destroy'])->name('users.destroy');
+    Route::post('/users/{user}/reset-password', [App\Http\Controllers\Api\Admin\UserController::class, 'resetPassword'])
+        ->name('users.reset-password');
 });
