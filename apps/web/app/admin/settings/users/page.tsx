@@ -1,22 +1,20 @@
 "use client";
 
 import { useEffect } from "react";
+import { getFilamentUsersUrl } from "@/lib/filament-admin-url";
 
-/**
- * User management has moved to the Filament admin resource at /admin/users.
- * This page exists only to redirect any bookmarked or old links.
- */
+/** Legacy path: forward to Filament UserResource (same bridge logic as /admin/users). */
 export default function AdminSettingsUsersRedirect() {
   useEffect(() => {
-    window.location.replace("/admin/users");
+    window.location.replace(getFilamentUsersUrl());
   }, []);
 
   return (
     <div className="flex min-h-[200px] items-center justify-center">
       <p className="text-sm text-gray-500">
-        Redirecting to User Management…{" "}
-        <a href="/admin/users" className="text-blue-600 underline">
-          Click here if not redirected.
+        Redirecting…{" "}
+        <a href={getFilamentUsersUrl()} className="text-blue-600 underline">
+          Open User Management
         </a>
       </p>
     </div>

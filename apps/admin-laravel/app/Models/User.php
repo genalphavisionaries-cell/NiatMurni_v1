@@ -97,6 +97,11 @@ class User extends Authenticatable implements FilamentUser
             return true;
         }
 
+        // Legacy accounts (role=admin) created before admin_role existed: full module access.
+        if ($this->role === 'admin' && ($this->admin_role === null || $this->admin_role === '')) {
+            return true;
+        }
+
         // Explicit overrides stored in module_access column take precedence.
         if (is_array($this->module_access) && $this->module_access !== []) {
             return in_array($module, $this->module_access, true);
@@ -117,6 +122,10 @@ class User extends Authenticatable implements FilamentUser
     public function resolvedModules(): array
     {
         if ($this->isSuperAdmin()) {
+            return array_keys(AdminModules::labels());
+        }
+
+        if ($this->role === 'admin' && ($this->admin_role === null || $this->admin_role === '')) {
             return array_keys(AdminModules::labels());
         }
 

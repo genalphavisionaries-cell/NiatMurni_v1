@@ -1,10 +1,13 @@
 import Link from "next/link";
+import { getFilamentUsersUrl } from "@/lib/filament-admin-url";
 
 export const metadata = {
   title: "Settings | Admin | Niat Murni",
 };
 
 export default function AdminSettingsPage() {
+  const usersHref = getFilamentUsersUrl();
+
   return (
     <div className="space-y-6">
       <div>
@@ -13,7 +16,7 @@ export default function AdminSettingsPage() {
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <a
-          href="/admin/users"
+          href={usersHref}
           className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
         >
           <h2 className="font-semibold text-gray-900">Users</h2>
