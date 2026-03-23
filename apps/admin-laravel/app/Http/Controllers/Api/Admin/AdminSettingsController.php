@@ -115,6 +115,60 @@ class AdminSettingsController extends Controller
         ]);
     }
 
+    public function apiConnections(SettingService $settings): JsonResponse
+    {
+        return response()->json([
+            'data' => [
+                'google_analytics' => [
+                    'measurement_id' => (string) ($settings->get('api_connections', 'google_analytics.measurement_id', '') ?? ''),
+                    'service_account' => (string) ($settings->get('api_connections', 'google_analytics.service_account', '') ?? ''),
+                ],
+                'stripe' => [
+                    'publishable_key' => (string) ($settings->get('api_connections', 'stripe.publishable_key', '') ?? ''),
+                    'secret_key' => (string) ($settings->get('api_connections', 'stripe.secret_key', '') ?? ''),
+                    'webhook_secret' => (string) ($settings->get('api_connections', 'stripe.webhook_secret', '') ?? ''),
+                ],
+            ],
+        ]);
+    }
+
+    public function updateApiConnections(Request $request, SettingService $settings): JsonResponse
+    {
+        $validated = $request->validate([
+            'google_analytics' => ['required', 'array'],
+            'google_analytics.measurement_id' => ['nullable', 'string', 'max:255'],
+            'google_analytics.service_account' => ['nullable', 'string'],
+            'stripe' => ['required', 'array'],
+            'stripe.publishable_key' => ['nullable', 'string', 'max:512'],
+            'stripe.secret_key' => ['nullable', 'string', 'max:512'],
+            'stripe.webhook_secret' => ['nullable', 'string', 'max:512'],
+        ]);
+
+        $googleAnalytics = $validated['google_analytics'] ?? [];
+        $stripe = $validated['stripe'] ?? [];
+        $actorId = (int) ($request->user()?->id ?? 0) ?: null;
+
+        $settings->set('api_connections', 'google_analytics.measurement_id', (string) ($googleAnalytics['measurement_id'] ?? ''), true, $actorId);
+        $settings->set('api_connections', 'google_analytics.service_account', (string) ($googleAnalytics['service_account'] ?? ''), true, $actorId);
+        $settings->set('api_connections', 'stripe.publishable_key', (string) ($stripe['publishable_key'] ?? ''), true, $actorId);
+        $settings->set('api_connections', 'stripe.secret_key', (string) ($stripe['secret_key'] ?? ''), true, $actorId);
+        $settings->set('api_connections', 'stripe.webhook_secret', (string) ($stripe['webhook_secret'] ?? ''), true, $actorId);
+
+        return response()->json([
+            'data' => [
+                'google_analytics' => [
+                    'measurement_id' => (string) ($googleAnalytics['measurement_id'] ?? ''),
+                    'service_account' => (string) ($googleAnalytics['service_account'] ?? ''),
+                ],
+                'stripe' => [
+                    'publishable_key' => (string) ($stripe['publishable_key'] ?? ''),
+                    'secret_key' => (string) ($stripe['secret_key'] ?? ''),
+                    'webhook_secret' => (string) ($stripe['webhook_secret'] ?? ''),
+                ],
+            ],
+        ]);
+    }
+
     private function transformMe(User $user): array
     {
         $role = (string) ($user->admin_role ?: $user->role);

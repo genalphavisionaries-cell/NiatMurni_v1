@@ -59,6 +59,18 @@ export type AdminSystemSettings = {
   support_phone: string;
 };
 
+export type AdminApiConnections = {
+  google_analytics: {
+    measurement_id: string;
+    service_account: string;
+  };
+  stripe: {
+    publishable_key: string;
+    secret_key: string;
+    webhook_secret: string;
+  };
+};
+
 async function request<T>(
   path: string,
   options: RequestInit & { params?: Record<string, string> } = {}
@@ -206,6 +218,15 @@ export const adminApi = {
     return request("/api/admin/settings", {
       method: "PUT",
       body: data instanceof FormData ? data : JSON.stringify(data),
+    });
+  },
+  getApiConnections(): Promise<{ data: AdminApiConnections }> {
+    return request("/api/admin/settings/api-connections");
+  },
+  updateApiConnections(data: AdminApiConnections): Promise<{ data: AdminApiConnections }> {
+    return request("/api/admin/settings/api-connections", {
+      method: "PUT",
+      body: JSON.stringify(data),
     });
   },
 

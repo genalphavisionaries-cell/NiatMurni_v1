@@ -62,6 +62,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureAdminAccess::class
         ->name('change-password'); // backward-compatible alias
     Route::get('/settings', [App\Http\Controllers\Api\Admin\AdminSettingsController::class, 'settings'])->name('settings.index');
     Route::put('/settings', [App\Http\Controllers\Api\Admin\AdminSettingsController::class, 'updateSettings'])->name('settings.update');
+    Route::get('/settings/api-connections', [App\Http\Controllers\Api\Admin\AdminSettingsController::class, 'apiConnections'])->name('settings.api-connections.index');
+    Route::put('/settings/api-connections', [App\Http\Controllers\Api\Admin\AdminSettingsController::class, 'updateApiConnections'])->name('settings.api-connections.update');
 
     // Secured admin operational endpoints.
     Route::post('/bookings/{bookingId}/refund', [AdminRefundController::class, 'refund']);
