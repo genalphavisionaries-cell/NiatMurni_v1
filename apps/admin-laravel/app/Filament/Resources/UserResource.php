@@ -30,6 +30,9 @@ class UserResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Admin Users';
 
+    /** Pin the URL slug so it stays /admin/users regardless of label changes. */
+    protected static ?string $slug = 'users';
+
     // ─────────────────────────────────────────────────────────────────────────
     // Access control — only users with the 'users' module may manage this
     // ─────────────────────────────────────────────────────────────────────────
