@@ -117,15 +117,42 @@ class AdminSettingsController extends Controller
 
     private function transformMe(User $user): array
     {
+        $role = (string) ($user->admin_role ?: $user->role);
+
         return [
             'id' => (int) $user->id,
             'name' => (string) $user->name,
             'email' => (string) $user->email,
             'phone' => $user->phone,
             'recovery_email' => $user->recovery_email,
-            'role' => (string) ($user->admin_role ?: $user->role),
+            'role' => $role,
+            'modules' => $this->modulesForRole($user, $role),
             'status' => $user->is_active ? 'active' : 'inactive',
             'last_login_at' => optional($user->last_login_at)->toIso8601String(),
         ];
+    }
+
+    private function modulesForRole(User $user, string $role): array
+    {
+        if ($role === 'super_admin') {
+            return [
+                'programs', 'classes', 'bookings', 'participants', 'tutors', 'certificates',
+                'finance', 'settings', 'users', 'cms', 'homepage', 'blog',
+            ];
+        }
+
+        if ($role === 'technical_admin') {
+            return ['programs', 'classes', 'bookings', 'participants', 'tutors', 'certificates', 'settings'];
+        }
+
+        if ($role === 'content_admin') {
+            return ['cms', 'homepage', 'blog', 'settings'];
+        }
+
+        if (in_array($role, ['operations_admin', 'finance_admin'], true)) {
+            return $user->userModules()->pluck('module_key')->values()->all();
+        }
+
+        return $user->resolvedModules();
     }
 }

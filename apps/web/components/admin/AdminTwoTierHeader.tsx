@@ -11,25 +11,66 @@ import { adminApi } from "@/lib/admin-api";
 const MAX_VISIBLE_NAV = 6;
 
 type AdminTwoTierHeaderProps = {
-  user: { name: string; email: string; role?: string } | null;
+  user: { name: string; email: string; role?: string; modules?: string[] } | null;
 };
 
 export function AdminTwoTierHeader({ user }: AdminTwoTierHeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
   const adminRole = user?.role ?? "";
-  const navItems = getNavForRole("admin").map((item) => {
-    if (item.label !== "Settings" || !item.children) return item;
-    return {
-      ...item,
-      children: item.children
+  const assignedModules = user?.modules ?? [];
+  const canAccessModule = (module: string) => {
+    if (adminRole === "super_admin") return true;
+    if (adminRole === "technical_admin") return !["finance", "users"].includes(module);
+    if (adminRole === "content_admin" || adminRole === "cms_admin") return ["cms", "homepage", "blog", "settings"].includes(module);
+    if (adminRole === "operations_admin" || adminRole === "finance_admin" || adminRole === "accountant") {
+      return assignedModules.includes(module);
+    }
+    if (assignedModules.length > 0) return assignedModules.includes(module);
+    return true;
+  };
+  const moduleForItem = (item: NavItem): string | null => {
+    switch (item.label) {
+      case "Programs":
+        return "programs";
+      case "Classes":
+        return "classes";
+      case "Bookings":
+        return "bookings";
+      case "Participants":
+        return "participants";
+      case "Tutors":
+        return "tutors";
+      case "Certificates":
+        return "certificates";
+      case "Payments":
+        return "finance";
+      case "CMS":
+        return "cms";
+      case "Settings":
+        return "settings";
+      default:
+        return null;
+    }
+  };
+  const navItems = getNavForRole("admin")
+    .filter((item) => {
+      const module = moduleForItem(item);
+      return module ? canAccessModule(module) : true;
+    })
+    .map((item) => {
+      if (item.label !== "Settings" || !item.children) return item;
+
+      const children = item.children
+        .map((c) => (c.label === "Users" ? { ...c, href: "/admin/users" } : c))
         .filter((c) => {
-          if (c.label !== "Users") return true;
-          return adminRole === "super_admin";
-        })
-        .map((c) => (c.label === "Users" ? { ...c, href: "/admin/users" } : c)),
-    };
-  });
+          if (c.label === "Users") return adminRole === "super_admin" && canAccessModule("users");
+          if (c.label === "System") return canAccessModule("settings");
+          return true;
+        });
+
+      return { ...item, children };
+    });
   const [searchFocused, setSearchFocused] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

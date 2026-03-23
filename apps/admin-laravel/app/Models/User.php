@@ -192,6 +192,8 @@ class User extends Authenticatable implements FilamentUser
     {
         return [
             'super_admin'       => 'Super Admin',
+            'technical_admin'   => 'Technical Admin',
+            'content_admin'     => 'Content Admin',
             'finance_admin'     => 'Finance Admin',
             'operations_admin'  => 'Operations Admin',
             'accountant'        => 'Accountant',

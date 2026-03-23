@@ -22,6 +22,7 @@ export type AdminUser = {
   email: string;
   role: string;
   phone?: string | null;
+  modules?: string[];
 };
 
 export type ManagedAdminUser = {
@@ -45,6 +46,7 @@ export type AdminProfile = {
   phone?: string | null;
   recovery_email?: string | null;
   role: string;
+  modules?: string[];
   status: "active" | "inactive";
   last_login_at?: string | null;
 };
@@ -163,6 +165,7 @@ export const adminApi = {
           email: res.data.email,
           role: res.data.role,
           phone: res.data.phone,
+          modules: res.data.modules ?? [],
         },
         data: res.data,
       };

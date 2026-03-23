@@ -50,7 +50,7 @@ Route::middleware('auth:sanctum')->prefix('participant')->name('api.participant.
     Route::get('/certificates', [App\Http\Controllers\Api\ParticipantCertificatesController::class, 'index'])->name('certificates.index');
 });
 
-Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureAdminAccess::class])->prefix('admin')->name('api.admin.')->group(function () {
+Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureAdminAccess::class, \App\Http\Middleware\CheckModuleAccess::class])->prefix('admin')->name('api.admin.')->group(function () {
     Route::post('/logout', [App\Http\Controllers\Api\AdminAuthController::class, 'logout'])->name('logout');
     Route::get('/me', [App\Http\Controllers\Api\Admin\AdminSettingsController::class, 'me'])->name('me');
     Route::put('/me', [App\Http\Controllers\Api\Admin\AdminSettingsController::class, 'updateMe'])->name('me.update');
