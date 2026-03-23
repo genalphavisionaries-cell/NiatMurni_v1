@@ -3,10 +3,6 @@
 import { useEffect, useState } from "react";
 import { adminApi, type AdminProfile } from "@/lib/admin-api";
 
-export const metadata = {
-  title: "Profile | Settings | Admin | Niat Murni",
-};
-
 export default function AdminSettingsProfilePage() {
   const [profile, setProfile] = useState<AdminProfile | null>(null);
   const [loading, setLoading] = useState(true);

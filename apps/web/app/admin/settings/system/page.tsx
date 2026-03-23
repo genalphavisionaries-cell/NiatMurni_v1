@@ -3,10 +3,6 @@
 import { useEffect, useState } from "react";
 import { adminApi } from "@/lib/admin-api";
 
-export const metadata = {
-  title: "System | Settings | Admin | Niat Murni",
-};
-
 export default function AdminSettingsSystemPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
