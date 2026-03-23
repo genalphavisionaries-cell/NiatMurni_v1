@@ -32,6 +32,7 @@ export type ManagedAdminUser = {
   status: "active" | "inactive";
   created_at: string;
   updated_at: string;
+  modules?: string[];
 };
 
 export type LoginResponse = { user: AdminUser };
@@ -223,6 +224,7 @@ export const adminApi = {
     password_confirmation: string;
     role: "super_admin" | "operations_admin" | "finance_admin" | "cms_admin" | "accountant";
     status?: "active" | "inactive";
+    modules?: string[];
   }): Promise<{ data: ManagedAdminUser }> {
     return request("/api/admin/users", { method: "POST", body: JSON.stringify(data) });
   },
@@ -233,6 +235,7 @@ export const adminApi = {
       email: string;
       role: "super_admin" | "operations_admin" | "finance_admin" | "cms_admin" | "accountant";
       status: "active" | "inactive";
+      modules: string[];
     }>
   ): Promise<{ data: ManagedAdminUser }> {
     return request(`/api/admin/users/${id}`, { method: "PUT", body: JSON.stringify(data) });

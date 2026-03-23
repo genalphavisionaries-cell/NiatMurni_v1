@@ -132,6 +132,15 @@ class User extends Authenticatable implements FilamentUser
             return true;
         }
 
+        if (in_array($this->admin_role, ['operations_admin', 'finance_admin'], true)) {
+            $moduleKeys = $this->relationLoaded('userModules')
+                ? $this->userModules->pluck('module_key')->all()
+                : $this->userModules()->pluck('module_key')->all();
+            if ($moduleKeys !== []) {
+                return in_array($module, $moduleKeys, true);
+            }
+        }
+
         // Explicit overrides stored in module_access column take precedence.
         if (is_array($this->module_access) && $this->module_access !== []) {
             return in_array($module, $this->module_access, true);
@@ -157,6 +166,15 @@ class User extends Authenticatable implements FilamentUser
 
         if ($this->role === 'admin' && ($this->admin_role === null || $this->admin_role === '')) {
             return array_keys(AdminModules::labels());
+        }
+
+        if (in_array($this->admin_role, ['operations_admin', 'finance_admin'], true)) {
+            $moduleKeys = $this->relationLoaded('userModules')
+                ? $this->userModules->pluck('module_key')->all()
+                : $this->userModules()->pluck('module_key')->all();
+            if ($moduleKeys !== []) {
+                return $moduleKeys;
+            }
         }
 
         if (is_array($this->module_access) && $this->module_access !== []) {
@@ -203,6 +221,11 @@ class User extends Authenticatable implements FilamentUser
     public function auditLogs(): HasMany
     {
         return $this->hasMany(AuditLog::class);
+    }
+
+    public function userModules(): HasMany
+    {
+        return $this->hasMany(UserModule::class);
     }
 
     public function sendPasswordResetNotification($token): void

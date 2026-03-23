@@ -7,6 +7,14 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Plus, Pencil, KeyRound, Power, PowerOff } from "lucide-react";
 
 type AdminRole = "super_admin" | "operations_admin" | "finance_admin" | "cms_admin" | "accountant";
+type ModuleKey =
+  | "programs"
+  | "classes"
+  | "bookings"
+  | "participants"
+  | "tutors"
+  | "certificates"
+  | "finance";
 
 const ROLE_OPTIONS: { value: AdminRole; label: string }[] = [
   { value: "super_admin", label: "Super Admin" },
@@ -15,6 +23,20 @@ const ROLE_OPTIONS: { value: AdminRole; label: string }[] = [
   { value: "cms_admin", label: "CMS Admin" },
   { value: "accountant", label: "Accountant" },
 ];
+
+const MODULE_OPTIONS: { value: ModuleKey; label: string }[] = [
+  { value: "programs", label: "Programs" },
+  { value: "classes", label: "Classes" },
+  { value: "bookings", label: "Bookings" },
+  { value: "participants", label: "Participants" },
+  { value: "tutors", label: "Tutors" },
+  { value: "certificates", label: "Certificates" },
+  { value: "finance", label: "Finance" },
+];
+
+function roleSupportsModules(role: AdminRole): boolean {
+  return role === "operations_admin" || role === "finance_admin";
+}
 
 function roleLabel(role: string): string {
   const found = ROLE_OPTIONS.find((r) => r.value === role);
@@ -244,6 +266,9 @@ function UserFormModal({
   const [email, setEmail] = useState(initial?.email ?? "");
   const [role, setRole] = useState<AdminRole>((initial?.role as AdminRole) ?? "operations_admin");
   const [status, setStatus] = useState<"active" | "inactive">(initial?.status ?? "active");
+  const [modules, setModules] = useState<ModuleKey[]>(
+    (initial?.modules?.filter((m): m is ModuleKey => MODULE_OPTIONS.some((opt) => opt.value === m)) ?? [])
+  );
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [saving, setSaving] = useState(false);
@@ -266,14 +291,16 @@ function UserFormModal({
 
     setSaving(true);
     try {
+      const payloadModules = roleSupportsModules(role) ? modules : [];
       if (initial) {
-        await adminApi.updateUser(initial.id, { name, email, role, status });
+        await adminApi.updateUser(initial.id, { name, email, role, status, modules: payloadModules });
       } else {
         await adminApi.createUser({
           name,
           email,
           role,
           status,
+          modules: payloadModules,
           password,
           password_confirmation: passwordConfirmation,
         });
@@ -317,7 +344,13 @@ function UserFormModal({
               <label className="block text-sm font-medium text-gray-700">Role</label>
               <select
                 value={role}
-                onChange={(e) => setRole(e.target.value as AdminRole)}
+                onChange={(e) => {
+                  const nextRole = e.target.value as AdminRole;
+                  setRole(nextRole);
+                  if (!roleSupportsModules(nextRole)) {
+                    setModules([]);
+                  }
+                }}
                 className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
               >
                 {ROLE_OPTIONS.map((option) => (
@@ -339,6 +372,37 @@ function UserFormModal({
               </select>
             </div>
           </div>
+          {roleSupportsModules(role) && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Module Access</label>
+              <p className="mt-1 text-xs text-gray-500">
+                Select modules for this role.
+              </p>
+              <div className="mt-2 grid grid-cols-2 gap-2 rounded-lg border border-gray-200 p-3">
+                {MODULE_OPTIONS.map((option) => {
+                  const checked = modules.includes(option.value);
+                  return (
+                    <label key={option.value} className="inline-flex items-center gap-2 text-sm text-gray-700">
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(e) => {
+                          setModules((prev) => {
+                            if (e.target.checked) {
+                              return Array.from(new Set([...prev, option.value]));
+                            }
+                            return prev.filter((v) => v !== option.value);
+                          });
+                        }}
+                        className="rounded border-gray-300"
+                      />
+                      {option.label}
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          )}
           {!initial && (
             <>
               <div>

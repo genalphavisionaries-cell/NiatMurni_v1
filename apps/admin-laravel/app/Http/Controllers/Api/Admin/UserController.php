@@ -12,9 +12,27 @@ use Illuminate\Validation\Rules\Password;
 
 class UserController extends Controller
 {
+    /** @var string[] */
+    private const ALLOWED_MODULES = [
+        'programs',
+        'classes',
+        'bookings',
+        'participants',
+        'tutors',
+        'certificates',
+        'finance',
+    ];
+
+    /** @var string[] */
+    private const MODULE_SELECTABLE_ROLES = [
+        'operations_admin',
+        'finance_admin',
+    ];
+
     public function index(Request $request): JsonResponse
     {
         $query = User::query()
+            ->with('userModules')
             ->whereIn('role', ['admin', 'staff', 'tutor'])
             ->orderByDesc('created_at');
 
@@ -37,7 +55,7 @@ class UserController extends Controller
         $users = $query->paginate($perPage);
 
         return response()->json([
-            'data' => $users->items(),
+            'data' => array_map(fn (User $u) => $this->transformUser($u), $users->items()),
             'meta' => [
                 'current_page' => $users->currentPage(),
                 'last_page' => $users->lastPage(),
@@ -55,6 +73,8 @@ class UserController extends Controller
             'password' => ['required', 'confirmed', Password::min(12)->letters()->mixedCase()->numbers()->symbols()],
             'role' => ['required', Rule::in(['super_admin', 'operations_admin', 'finance_admin', 'cms_admin', 'accountant'])],
             'status' => ['nullable', Rule::in(['active', 'inactive'])],
+            'modules' => ['sometimes', 'array'],
+            'modules.*' => ['string', Rule::in(self::ALLOWED_MODULES)],
         ]);
 
         $user = User::create([
@@ -65,8 +85,9 @@ class UserController extends Controller
             'admin_role' => $validated['role'],
             'is_active' => ($validated['status'] ?? 'active') === 'active',
         ]);
+        $this->syncUserModules($user, $validated['role'], $validated['modules'] ?? []);
 
-        return response()->json(['data' => $this->transformUser($user)], 201);
+        return response()->json(['data' => $this->transformUser($user->fresh('userModules') ?? $user)], 201);
     }
 
     public function update(Request $request, User $user): JsonResponse
@@ -76,6 +97,8 @@ class UserController extends Controller
             'email' => ['sometimes', 'required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'role' => ['sometimes', 'required', Rule::in(['super_admin', 'operations_admin', 'finance_admin', 'cms_admin', 'accountant'])],
             'status' => ['sometimes', 'required', Rule::in(['active', 'inactive'])],
+            'modules' => ['sometimes', 'array'],
+            'modules.*' => ['string', Rule::in(self::ALLOWED_MODULES)],
         ]);
 
         /** @var User $actor */
@@ -118,8 +141,12 @@ class UserController extends Controller
         }
 
         $user->update($payload);
+        $resolvedRole = $validated['role'] ?? $user->admin_role;
+        if (array_key_exists('role', $validated) || array_key_exists('modules', $validated)) {
+            $this->syncUserModules($user, (string) $resolvedRole, $validated['modules'] ?? []);
+        }
 
-        return response()->json(['data' => $this->transformUser($user->fresh() ?? $user)]);
+        return response()->json(['data' => $this->transformUser($user->fresh('userModules') ?? $user)]);
     }
 
     public function destroy(Request $request, User $user): JsonResponse
@@ -169,6 +196,10 @@ class UserController extends Controller
 
     private function transformUser(User $user): array
     {
+        $modules = $user->relationLoaded('userModules')
+            ? $user->userModules->pluck('module_key')->values()->all()
+            : $user->userModules()->pluck('module_key')->values()->all();
+
         return [
             'id' => (int) $user->id,
             'name' => (string) $user->name,
@@ -177,6 +208,30 @@ class UserController extends Controller
             'status' => $user->is_active ? 'active' : 'inactive',
             'created_at' => optional($user->created_at)->toIso8601String(),
             'updated_at' => optional($user->updated_at)->toIso8601String(),
+            'modules' => $modules,
         ];
+    }
+
+    /**
+     * @param string[] $modules
+     */
+    private function syncUserModules(User $user, string $role, array $modules): void
+    {
+        $isSelectableRole = in_array($role, self::MODULE_SELECTABLE_ROLES, true);
+        if (! $isSelectableRole) {
+            $user->userModules()->delete();
+            $user->update(['module_access' => null]);
+            return;
+        }
+
+        $filtered = array_values(array_unique(array_filter($modules, fn ($m) => in_array($m, self::ALLOWED_MODULES, true))));
+        $user->userModules()->delete();
+        if ($filtered !== []) {
+            $user->userModules()->createMany(array_map(
+                fn (string $module): array => ['module_key' => $module],
+                $filtered
+            ));
+        }
+        $user->update(['module_access' => $filtered]);
     }
 }
