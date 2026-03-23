@@ -23,6 +23,8 @@ return [
             'prefix_indexes' => true,
             'search_path' => 'public',
             'sslmode' => env('DB_SSLMODE', 'prefer'),
+            // Fail fast if DB is unreachable (seconds).
+            'connect_timeout' => 10,
         ],
     ],
 ];
