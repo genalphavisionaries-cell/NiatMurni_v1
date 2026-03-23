@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\CertificateVerificationController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\PublicController;
 use App\Http\Controllers\Api\StripeWebhookController;
 use App\Http\Controllers\Admin\AdminBookingCompletionController;
 use App\Http\Controllers\Admin\AdminFinanceReportController;
@@ -17,6 +18,11 @@ Route::get('/settings/{group}', [App\Http\Controllers\Api\SettingsGroupControlle
     ->name('api.settings.group');
 Route::get('/public/cms', App\Http\Controllers\Api\PublicCmsController::class)->name('api.public.cms');
 Route::post('/register', App\Http\Controllers\Api\RegisterForClassController::class)->name('api.register');
+Route::prefix('public')->group(function () {
+    Route::get('/classes/upcoming', [PublicController::class, 'upcomingClasses']);
+    Route::get('/classes/{id}', [PublicController::class, 'classDetail']);
+    Route::get('/bookings/{id}', [PublicController::class, 'bookingDetail']);
+});
 
 // Payment / Stripe checkout (public endpoint)
 Route::post('/payments/checkout', [PaymentController::class, 'createCheckoutSession']);
@@ -24,20 +30,17 @@ Route::post('/payments/checkout', [PaymentController::class, 'createCheckoutSess
 // Stripe webhook (must remain public / unauthenticated)
 Route::post('/webhooks/stripe', [StripeWebhookController::class, 'handle']);
 
-// Admin booking refund (temporarily public, will be secured later)
-Route::post('/admin/bookings/{bookingId}/refund', [AdminRefundController::class, 'refund']);
-
-Route::post('/admin/bookings/{bookingId}/complete', [AdminBookingCompletionController::class, 'complete']);
-
 Route::get('/certificate/verify/{token}', [CertificateVerificationController::class, 'verify']);
 Route::get('/certificate/download/{token}', [CertificateDownloadController::class, 'download']);
 
-Route::get('/admin/finance/revenue-timeline', [AdminFinanceReportController::class, 'revenueTimeline']);
-Route::get('/admin/finance/refund-timeline', [AdminFinanceReportController::class, 'refundTimeline']);
-Route::get('/admin/finance/tutor-payout-timeline', [AdminFinanceReportController::class, 'tutorPayoutTimeline']);
-
 // Admin API auth (Sanctum token in HttpOnly cookie)
 Route::post('/admin/login', [App\Http\Controllers\Api\AdminAuthController::class, 'login'])->name('api.admin.login');
+Route::post('/admin/forgot-password', [App\Http\Controllers\Api\AdminAuthController::class, 'forgotPassword'])
+    ->middleware('throttle:5,1')
+    ->name('api.admin.forgot-password');
+Route::post('/admin/reset-password', [App\Http\Controllers\Api\AdminAuthController::class, 'resetPassword'])
+    ->middleware('throttle:10,1')
+    ->name('api.admin.reset-password');
 
 // Participant portal auth and certificate access
 Route::post('/participant/login', [App\Http\Controllers\Api\ParticipantAuthController::class, 'login'])->name('api.participant.login');
@@ -47,9 +50,19 @@ Route::middleware('auth:sanctum')->prefix('participant')->name('api.participant.
     Route::get('/certificates', [App\Http\Controllers\Api\ParticipantCertificatesController::class, 'index'])->name('certificates.index');
 });
 
-Route::middleware('auth:sanctum')->prefix('admin')->name('api.admin.')->group(function () {
+Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureAdminAccess::class])->prefix('admin')->name('api.admin.')->group(function () {
     Route::post('/logout', [App\Http\Controllers\Api\AdminAuthController::class, 'logout'])->name('logout');
     Route::get('/me', [App\Http\Controllers\Api\AdminAuthController::class, 'me'])->name('me');
+    Route::post('/change-password', [App\Http\Controllers\Api\AdminAuthController::class, 'changePassword'])
+        ->middleware('throttle:10,1')
+        ->name('change-password');
+
+    // Secured admin operational endpoints.
+    Route::post('/bookings/{bookingId}/refund', [AdminRefundController::class, 'refund']);
+    Route::post('/bookings/{bookingId}/complete', [AdminBookingCompletionController::class, 'complete']);
+    Route::get('/finance/revenue-timeline', [AdminFinanceReportController::class, 'revenueTimeline']);
+    Route::get('/finance/refund-timeline', [AdminFinanceReportController::class, 'refundTimeline']);
+    Route::get('/finance/tutor-payout-timeline', [AdminFinanceReportController::class, 'tutorPayoutTimeline']);
 
     // CMS
     Route::put('/homepage-settings', [App\Http\Controllers\Api\Admin\HomepageSettingsController::class, 'update'])->name('homepage-settings.update');

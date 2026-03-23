@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\Validation\ValidationException;
 
 class AdminAuthController extends Controller
@@ -38,6 +41,12 @@ class AdminAuthController extends Controller
         if (!$user->canAccessAdmin()) {
             throw ValidationException::withMessages([
                 'email' => ['User is not allowed to access the admin panel.'],
+            ]);
+        }
+
+        if (! $user->is_active) {
+            throw ValidationException::withMessages([
+                'email' => ['This account is inactive. Please contact an administrator.'],
             ]);
         }
 
@@ -99,5 +108,80 @@ class AdminAuthController extends Controller
                 'role' => $user->role,
             ],
         ]);
+    }
+
+    /**
+     * POST /api/admin/forgot-password
+     * Sends password-reset email token using Laravel broker.
+     */
+    public function forgotPassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'email' => ['required', 'email'],
+        ]);
+
+        Password::sendResetLink([
+            'email' => (string) $request->string('email'),
+        ]);
+
+        // Enumeration-safe response.
+        return response()->json([
+            'message' => 'If your account exists, a password reset link has been sent.',
+        ]);
+    }
+
+    /**
+     * POST /api/admin/reset-password
+     * Consumes reset token and updates password.
+     */
+    public function resetPassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'token' => ['required', 'string'],
+            'email' => ['required', 'email'],
+            'password' => ['required', 'confirmed', PasswordRule::min(12)->letters()->mixedCase()->numbers()->symbols()],
+        ]);
+
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function ($user) use ($request): void {
+                $user->forceFill([
+                    'password' => Hash::make($request->string('password')->toString()),
+                    'remember_token' => Str::random(60),
+                ])->save();
+
+                $user->tokens()->delete();
+                event(new PasswordReset($user));
+            }
+        );
+
+        if ($status !== Password::PASSWORD_RESET) {
+            throw ValidationException::withMessages([
+                'email' => [__($status)],
+            ]);
+        }
+
+        return response()->json(['message' => __($status)]);
+    }
+
+    /**
+     * POST /api/admin/change-password
+     * Authenticated admin password change.
+     */
+    public function changePassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'current_password' => ['required', 'current_password'],
+            'password' => ['required', 'confirmed', PasswordRule::min(12)->letters()->mixedCase()->numbers()->symbols()],
+        ]);
+
+        /** @var \App\Models\User $user */
+        $user = $request->user();
+        $user->update([
+            'password' => Hash::make($request->string('password')->toString()),
+        ]);
+        $user->tokens()->delete();
+
+        return response()->json(['message' => 'Password changed successfully. Please log in again.']);
     }
 }

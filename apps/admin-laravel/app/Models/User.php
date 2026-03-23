@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Notifications\ResetAdminPasswordNotification;
 use App\Support\AdminModules;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -65,7 +66,25 @@ class User extends Authenticatable implements FilamentUser
     /** Returns true for roles that may open the admin panel (legacy gate). */
     public function canAccessAdmin(): bool
     {
-        return in_array($this->role, ['admin', 'tutor', 'staff'], true);
+        if ($this->role === 'tutor') {
+            return true;
+        }
+
+        if (! in_array($this->role, ['admin', 'staff'], true)) {
+            return false;
+        }
+
+        // Backward compatibility: allow legacy admin records with empty admin_role.
+        if ($this->admin_role === null || $this->admin_role === '') {
+            return $this->role === 'admin';
+        }
+
+        return $this->hasValidAdminRole();
+    }
+
+    public function hasValidAdminRole(): bool
+    {
+        return array_key_exists((string) $this->admin_role, self::adminRoleLabels());
     }
 
     public function isAdmin(): bool
@@ -184,5 +203,10 @@ class User extends Authenticatable implements FilamentUser
     public function auditLogs(): HasMany
     {
         return $this->hasMany(AuditLog::class);
+    }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new ResetAdminPasswordNotification((string) $token));
     }
 }

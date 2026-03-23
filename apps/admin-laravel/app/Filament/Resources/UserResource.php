@@ -13,6 +13,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password as PasswordRule;
 
 class UserResource extends Resource
 {
@@ -55,6 +56,10 @@ class UserResource extends Resource
             return false;
         }
 
+        if (! $actor->hasModuleAccess(AdminModules::USERS)) {
+            return false;
+        }
+
         // Super admin can edit anyone; others can only edit themselves.
         return $actor->isSuperAdmin() || $actor->id === $record->id;
     }
@@ -64,6 +69,10 @@ class UserResource extends Resource
         /** @var User $actor */
         $actor = auth()->user();
         if (!$actor || !$actor->isSuperAdmin()) {
+            return false;
+        }
+
+        if (! $actor->hasModuleAccess(AdminModules::USERS)) {
             return false;
         }
 
@@ -129,12 +138,12 @@ class UserResource extends Resource
                         ->label('Password')
                         ->password()
                         ->revealable()
-                        ->minLength(8)
+                        ->rule(PasswordRule::min(12)->letters()->mixedCase()->numbers()->symbols())
                         ->maxLength(255)
                         ->dehydrated(fn ($state) => filled($state))
                         ->required(fn (string $operation) => $operation === 'create')
                         ->dehydrateStateUsing(fn ($state) => Hash::make($state))
-                        ->helperText('Minimum 8 characters.'),
+                        ->helperText('Minimum 12 chars with uppercase, lowercase, number, and symbol.'),
 
                     Forms\Components\TextInput::make('password_confirmation')
                         ->label('Confirm password')
@@ -297,7 +306,7 @@ class UserResource extends Resource
                             ->password()
                             ->revealable()
                             ->required()
-                            ->minLength(8)
+                            ->rule(PasswordRule::min(12)->letters()->mixedCase()->numbers()->symbols())
                             ->maxLength(255),
                         Forms\Components\TextInput::make('new_password_confirmation')
                             ->label('Confirm new password')
@@ -371,12 +380,59 @@ class UserResource extends Resource
                         && auth()->id() !== $record->id),
 
                 Tables\Actions\DeleteAction::make()
+                    ->before(function (Tables\Actions\DeleteAction $action, User $record): void {
+                        if ($record->admin_role !== 'super_admin') {
+                            return;
+                        }
+
+                        $otherActiveSuperAdmins = User::query()
+                            ->where('admin_role', 'super_admin')
+                            ->where('is_active', true)
+                            ->where('id', '!=', $record->id)
+                            ->count();
+
+                        if ($otherActiveSuperAdmins === 0) {
+                            Notification::make()
+                                ->title('Cannot delete the last active Super Admin.')
+                                ->body('Assign another active Super Admin first.')
+                                ->danger()
+                                ->send();
+
+                            $action->halt();
+                        }
+                    })
                     ->visible(fn (User $record) => auth()->user()?->isSuperAdmin()
                         && auth()->id() !== $record->id),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make()
+                        ->before(function (Tables\Actions\DeleteBulkAction $action, \Illuminate\Database\Eloquent\Collection $records): void {
+                            $superAdminIds = $records
+                                ->filter(fn ($record) => $record instanceof User && $record->admin_role === 'super_admin')
+                                ->pluck('id')
+                                ->all();
+
+                            if ($superAdminIds === []) {
+                                return;
+                            }
+
+                            $remainingActiveSuperAdmins = User::query()
+                                ->where('admin_role', 'super_admin')
+                                ->where('is_active', true)
+                                ->whereNotIn('id', $superAdminIds)
+                                ->count();
+
+                            if ($remainingActiveSuperAdmins === 0) {
+                                Notification::make()
+                                    ->title('Cannot delete the last active Super Admin.')
+                                    ->body('Your selected records include all active Super Admins.')
+                                    ->danger()
+                                    ->send();
+
+                                $action->halt();
+                            }
+                        })
                         ->visible(fn () => auth()->user()?->isSuperAdmin()),
                 ]),
             ])

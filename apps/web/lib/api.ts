@@ -1,8 +1,5 @@
-const GO_API_URL = process.env.NEXT_PUBLIC_GO_API_URL || "";
-const LARAVEL_API_URL = process.env.NEXT_PUBLIC_LARAVEL_API_URL || "";
-
-// Architecture: registration & payments belong in Go. Once Go exposes e.g. POST /public/register
-// returning { redirect_url }, switch registerForClass to use GO_API_URL instead of LARAVEL_API_URL.
+const LARAVEL_API_URL =
+  process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_LARAVEL_API_URL || "";
 
 export type ClassSession = {
   id: number;
@@ -22,27 +19,102 @@ export type ClassSession = {
 };
 
 const BUILD_FETCH_TIMEOUT_MS = 5000;
+const MISSING_BACKEND_PREFIX = "[backend missing]";
+
+function asObject(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
+}
+
+function normalizeClassSession(input: unknown): ClassSession | null {
+  const row = asObject(input);
+  if (!row) return null;
+
+  const program = asObject(row.program);
+  const trainer = asObject(row.trainer);
+
+  const id = Number(row.id);
+  const programId = Number(row.program_id);
+  const startsAt = typeof row.starts_at === "string" ? row.starts_at : "";
+  const endsAt = typeof row.ends_at === "string" ? row.ends_at : "";
+  if (!Number.isFinite(id) || !Number.isFinite(programId) || !startsAt || !endsAt) return null;
+
+  return {
+    id,
+    program_id: programId,
+    program_name:
+      (typeof row.program_name === "string" && row.program_name) ||
+      (typeof program?.name === "string" ? program.name : ""),
+    trainer_id: Number.isFinite(Number(row.trainer_id)) ? Number(row.trainer_id) : undefined,
+    trainer_name:
+      (typeof row.trainer_name === "string" && row.trainer_name) ||
+      (typeof trainer?.name === "string" ? trainer.name : ""),
+    starts_at: startsAt,
+    ends_at: endsAt,
+    mode: typeof row.mode === "string" ? row.mode : "",
+    language: typeof row.language === "string" ? row.language : "",
+    venue: typeof row.venue === "string" ? row.venue : typeof row.location === "string" ? row.location : undefined,
+    capacity: Number.isFinite(Number(row.capacity)) ? Number(row.capacity) : 0,
+    min_threshold: Number.isFinite(Number(row.min_threshold)) ? Number(row.min_threshold) : 0,
+    status: typeof row.status === "string" ? row.status : "",
+    zoom_join_url: typeof row.zoom_join_url === "string" ? row.zoom_join_url : undefined,
+  };
+}
+
+function extractClassList(data: unknown): ClassSession[] {
+  if (Array.isArray(data)) return data.map(normalizeClassSession).filter((c): c is ClassSession => !!c);
+  const obj = asObject(data);
+  const candidates = Array.isArray(obj?.classes) ? obj.classes : Array.isArray(obj?.data) ? obj.data : [];
+  return candidates.map(normalizeClassSession).filter((c): c is ClassSession => !!c);
+}
+
+function logMissingBackendApi(endpoint: string, status?: number) {
+  console.warn(
+    `${MISSING_BACKEND_PREFIX} Laravel API ${endpoint} is unavailable${status ? ` (status ${status})` : ""}`
+  );
+}
 
 export async function fetchUpcomingClasses(): Promise<ClassSession[]> {
-  if (!GO_API_URL) return [];
+  if (!LARAVEL_API_URL) {
+    logMissingBackendApi("/api/public/classes/upcoming");
+    return [];
+  }
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), BUILD_FETCH_TIMEOUT_MS);
   try {
-    const res = await fetch(`${GO_API_URL}/public/classes/upcoming`, { signal: controller.signal });
+    const res = await fetch(`${LARAVEL_API_URL}/api/public/classes/upcoming`, {
+      signal: controller.signal,
+    });
     clearTimeout(timeout);
-    if (!res.ok) return [];
+    if (!res.ok) {
+      if (res.status === 404) logMissingBackendApi("/api/public/classes/upcoming", res.status);
+      return [];
+    }
     const data = await res.json();
-    return Array.isArray(data.classes) ? data.classes : [];
+    return extractClassList(data);
   } catch {
     clearTimeout(timeout);
+    logMissingBackendApi("/api/public/classes/upcoming");
     return [];
   }
 }
 
 export async function fetchClass(id: string): Promise<ClassSession | null> {
-  const res = await fetch(`${GO_API_URL}/classes/${id}`);
-  if (!res.ok) return null;
-  return res.json();
+  if (!LARAVEL_API_URL) {
+    logMissingBackendApi(`/api/public/classes/${id}`);
+    return null;
+  }
+  try {
+    const res = await fetch(`${LARAVEL_API_URL}/api/public/classes/${id}`);
+    if (!res.ok) {
+      if (res.status === 404) logMissingBackendApi(`/api/public/classes/${id}`, res.status);
+      return null;
+    }
+    const data = await res.json();
+    return normalizeClassSession(data) ?? normalizeClassSession(asObject(data)?.data) ?? null;
+  } catch {
+    logMissingBackendApi(`/api/public/classes/${id}`);
+    return null;
+  }
 }
 
 export type RegisterPayload = {
@@ -86,7 +158,40 @@ export type BookingResponse = {
 };
 
 export async function fetchBooking(id: string): Promise<BookingResponse | null> {
-  const res = await fetch(`${GO_API_URL}/bookings/${id}`);
-  if (!res.ok) return null;
-  return res.json();
+  if (!LARAVEL_API_URL) {
+    logMissingBackendApi(`/api/public/bookings/${id}`);
+    return null;
+  }
+  try {
+    const res = await fetch(`${LARAVEL_API_URL}/api/public/bookings/${id}`);
+    if (!res.ok) {
+      if (res.status === 404) logMissingBackendApi(`/api/public/bookings/${id}`, res.status);
+      return null;
+    }
+    const data = await res.json();
+    const payload = asObject(data);
+    const bookingObj = asObject(payload?.booking) ?? payload;
+    if (!bookingObj) return null;
+
+    const booking = {
+      id: Number(bookingObj.id),
+      participant_id: Number(bookingObj.participant_id),
+      class_session_id: Number(bookingObj.class_session_id),
+      status: typeof bookingObj.status === "string" ? bookingObj.status : "unknown",
+      paid_at: typeof bookingObj.paid_at === "string" ? bookingObj.paid_at : undefined,
+      created_at: typeof bookingObj.created_at === "string" ? bookingObj.created_at : "",
+      updated_at: typeof bookingObj.updated_at === "string" ? bookingObj.updated_at : "",
+    };
+    if (!Number.isFinite(booking.id) || !Number.isFinite(booking.class_session_id)) return null;
+
+    return {
+      status:
+        (typeof payload?.status === "string" && payload.status) ||
+        booking.status,
+      booking,
+    };
+  } catch {
+    logMissingBackendApi(`/api/public/bookings/${id}`);
+    return null;
+  }
 }
