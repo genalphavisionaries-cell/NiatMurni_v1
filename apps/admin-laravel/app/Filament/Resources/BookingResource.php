@@ -2,11 +2,13 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\EnforcesModuleAccess;
 use App\Filament\Resources\BookingResource\Pages;
 use App\Models\AuditLog;
 use App\Models\Booking;
 use App\Services\CertificateLifecycleService;
 use App\Services\StripeService;
+use App\Support\AdminModules;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -17,6 +19,10 @@ use Illuminate\Validation\ValidationException;
 
 class BookingResource extends Resource
 {
+    use EnforcesModuleAccess;
+
+    protected static string $requiredModule = AdminModules::BOOKINGS;
+
     protected static ?string $model = Booking::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-ticket';

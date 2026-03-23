@@ -2,7 +2,9 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Concerns\EnforcesModuleAccessWidget;
 use App\Models\AttendanceRecord;
+use App\Support\AdminModules;
 use App\Models\Booking;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -10,6 +12,10 @@ use Illuminate\Database\Eloquent\Builder;
 
 class AttendanceStatusWidget extends BaseWidget
 {
+    use EnforcesModuleAccessWidget;
+
+    protected static string $requiredModule = AdminModules::CLASSES;
+
     protected static ?int $sort = 4;
 
     protected function getStats(): array

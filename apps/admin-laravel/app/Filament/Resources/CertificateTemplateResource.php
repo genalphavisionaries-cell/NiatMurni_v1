@@ -2,8 +2,10 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\EnforcesModuleAccess;
 use App\Filament\Resources\CertificateTemplateResource\Pages;
 use App\Models\CertificateTemplate;
+use App\Support\AdminModules;
 use App\Support\CertificateTemplatePlaceholders;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -13,6 +15,10 @@ use Filament\Tables\Table;
 
 class CertificateTemplateResource extends Resource
 {
+    use EnforcesModuleAccess;
+
+    protected static string $requiredModule = AdminModules::CERTIFICATES;
+
     protected static ?string $model = CertificateTemplate::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';

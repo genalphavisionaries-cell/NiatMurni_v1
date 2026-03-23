@@ -2,9 +2,11 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\EnforcesModuleAccess;
 use App\Filament\Resources\SiteNavigationItemResource\Pages;
 use App\Filament\Resources\SiteNavigationItemResource\Pages\EditSiteNavigationItem;
 use App\Models\SiteNavigationItem;
+use App\Support\AdminModules;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
@@ -15,6 +17,10 @@ use Illuminate\Database\Eloquent\Builder;
 
 class SiteNavigationItemResource extends Resource
 {
+    use EnforcesModuleAccess;
+
+    protected static string $requiredModule = AdminModules::CMS;
+
     protected static ?string $model = SiteNavigationItem::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-bars-3';

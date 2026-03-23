@@ -3,26 +3,18 @@
 namespace App\Filament\Concerns;
 
 use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
 
 /**
- * Mixin for Filament Resources and Pages that should be gated by a module key.
+ * Mixin for Filament Resources gated by AdminModules keys.
  *
- * Usage in a Resource:
+ * Super Admins and legacy role=admin with empty admin_role pass hasModuleAccess() for all modules.
  *
- *   use App\Filament\Concerns\EnforcesModuleAccess;
- *
- *   class MyResource extends Resource
- *   {
- *       use EnforcesModuleAccess;
- *
- *       protected static string $requiredModule = AdminModules::MY_MODULE;
- *   }
- *
- * Super Admins always pass. Other users need the module in their access list.
+ * @see \App\Support\AdminModules
  */
 trait EnforcesModuleAccess
 {
-    /** The AdminModules key this resource requires. Set in each Resource class. */
+    /** Set in each Resource: e.g. AdminModules::PROGRAMS */
     protected static string $requiredModule = '';
 
     public static function canViewAny(): bool
@@ -35,10 +27,54 @@ trait EnforcesModuleAccess
         return static::actorHasModule(static::$requiredModule);
     }
 
+    public static function canEdit(Model $record): bool
+    {
+        return static::actorHasModule(static::$requiredModule);
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return static::actorHasModule(static::$requiredModule);
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return static::actorHasModule(static::$requiredModule);
+    }
+
+    public static function canForceDelete(Model $record): bool
+    {
+        return static::actorHasModule(static::$requiredModule);
+    }
+
+    public static function canForceDeleteAny(): bool
+    {
+        return static::actorHasModule(static::$requiredModule);
+    }
+
+    public static function canRestore(Model $record): bool
+    {
+        return static::actorHasModule(static::$requiredModule);
+    }
+
+    public static function canRestoreAny(): bool
+    {
+        return static::actorHasModule(static::$requiredModule);
+    }
+
+    public static function canReplicate(Model $record): bool
+    {
+        return static::actorHasModule(static::$requiredModule);
+    }
+
+    public static function canView(Model $record): bool
+    {
+        return static::actorHasModule(static::$requiredModule);
+    }
+
     protected static function actorHasModule(string $module): bool
     {
         if ($module === '') {
-            // No module restriction defined — allow all authenticated admin users.
             return auth()->check();
         }
 

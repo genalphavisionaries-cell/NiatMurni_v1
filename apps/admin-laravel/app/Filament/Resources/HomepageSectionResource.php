@@ -2,16 +2,23 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\EnforcesModuleAccess;
 use App\Filament\Resources\HomepageSectionResource\Pages;
 use App\Models\HomepageSection;
+use App\Support\AdminModules;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+
 class HomepageSectionResource extends Resource
 {
+    use EnforcesModuleAccess;
+
+    protected static string $requiredModule = AdminModules::CMS;
+
     protected static ?string $model = HomepageSection::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';

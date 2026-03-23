@@ -2,14 +2,20 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\EnforcesModuleAccess;
 use App\Filament\Resources\AuditLogResource\Pages;
 use App\Models\AuditLog;
+use App\Support\AdminModules;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 
 class AuditLogResource extends Resource
 {
+    use EnforcesModuleAccess;
+
+    protected static string $requiredModule = AdminModules::SETTINGS;
+
     protected static ?string $model = AuditLog::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';

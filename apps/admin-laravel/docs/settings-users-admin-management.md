@@ -115,44 +115,66 @@ This means **inactive accounts cannot log in** even if they have the correct cre
 
 ---
 
-## 8. Access control enforcement — now vs later
+## 8. Access control enforcement — Filament (global)
 
-### Enforced NOW
+### Traits
 
-| Area | What is enforced |
+| Trait | Used on | What it does |
+|---|---|---|
+| `EnforcesModuleAccess` | Resources | `canViewAny`, `canCreate`, `canEdit`, `canDelete`, `canView`, etc. → `User::hasModuleAccess($requiredModule)` |
+| `EnforcesModuleAccessPage` | Custom Pages | `canAccess()` → same |
+| `EnforcesModuleAccessWidget` | Dashboard widgets | `canView()` → same |
+
+**Super Admin** and **legacy** `role=admin` with empty `admin_role` still pass all module checks (`User::hasModuleAccess`).
+
+**UserResource** does **not** use `EnforcesModuleAccess` — it keeps custom rules (module `users` + super-admin-only actions).
+
+**SystemSettings** still uses inline `canAccess()` for `settings` (per product choice: do not refactor that page in this pass).
+
+### Resource / page → module mapping
+
+| Filament class | Module key |
 |---|---|
-| Panel entry | `canAccessPanel()` — inactive accounts blocked |
-| UserResource | Full CRUD gated by `hasModuleAccess('users')` / `isSuperAdmin()` |
-| CMS pages (ManageFrontendCmsSettings, ManageHomepageSettings) | Gated by `hasModuleAccess('cms')` |
-| Settings page (SystemSettings) | Gated by `hasModuleAccess('settings')` |
-| Password reset action | Super Admin only |
-| Role / status changes | Super Admin only |
-| Last Super Admin safety | Enforced on deactivate and on save |
+| `ProgramResource` | `programs` |
+| `ClassSessionResource` | `classes` |
+| `BookingResource` | `bookings` |
+| `ParticipantResource` | `participants` |
+| `EmployerResource` | `participants` |
+| `CertificateResource` | `certificates` |
+| `CertificateTemplateResource` | `certificates` |
+| `HomepageSectionResource` | `cms` |
+| `SiteNavigationItemResource` | `cms` |
+| `AuditLogResource` | `settings` |
+| `UserResource` | *(custom; see §7)* |
+| `ManageFrontendCmsSettings` | `cms` |
+| `ManageHomepageSettings` | `cms` |
+| `ManageClassAttendance` | `classes` |
+| `SystemSettings` | `settings` |
 
-### Deferred to later
+### Dashboard widgets → module
 
-| Area | What remains |
+| Widget | Module key |
 |---|---|
-| All other Resources (Programs, Bookings, Certificates, etc.) | Add `use EnforcesModuleAccess` trait + `$requiredModule` — see pattern below |
-| `last_login_at` recording | Add listener/observer on `Login` event |
-| Email verification send | Add "Send verification email" action to UserResource |
-| Filament navigation hiding | Already works via `canViewAny()` on Resources — but Resources without the trait still show for all panel users |
-| MFA / backup codes | Deferred |
+| `UpcomingClassesWidget` | `classes` |
+| `BookingsOverviewWidget` | `bookings` |
+| `RevenueSummaryWidget` | `finance` |
+| `AttendanceStatusWidget` | `classes` |
 
-### Pattern for adding enforcement to an existing Resource
+### Still intentionally deferred
 
-```php
-use App\Filament\Concerns\EnforcesModuleAccess;
-use App\Support\AdminModules;
+| Module key | Notes |
+|---|---|
+| `dashboard` | No dedicated Resource; dashboard is composed of gated widgets. |
+| `payments` / `refunds` | No standalone Filament resources in this codebase yet. |
+| `tutors` | No `TutorResource`; tutors may be managed via other flows. |
 
-class BookingResource extends Resource
-{
-    use EnforcesModuleAccess;
+### Other deferred items
 
-    protected static string $requiredModule = AdminModules::BOOKINGS;
-    // ...
-}
-```
+| Item | Notes |
+|---|---|
+| `last_login_at` on login | Listener not wired yet |
+| Email verification send | UserResource action |
+| MFA | Not started |
 
 ---
 
@@ -193,8 +215,21 @@ Visit `/admin` → Settings → Users to start managing admin accounts.
 | Priority | Item |
 |---|---|
 | High | Record `last_login_at` on successful login (listener on `Illuminate\Auth\Events\Login`) |
-| High | Apply `EnforcesModuleAccess` trait to all remaining Resources |
 | Medium | "Send verification email" action on UserResource |
 | Medium | Self-service password reset via email |
 | Low | Per-user activity log view (link to AuditLogResource filtered by user) |
 | Low | MFA support |
+
+## 12. Filament Resource pattern (reference)
+
+```php
+use App\Filament\Concerns\EnforcesModuleAccess;
+use App\Support\AdminModules;
+
+class BookingResource extends Resource
+{
+    use EnforcesModuleAccess;
+
+    protected static string $requiredModule = AdminModules::BOOKINGS;
+}
+```

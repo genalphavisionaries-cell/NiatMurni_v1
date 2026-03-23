@@ -2,8 +2,10 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\EnforcesModuleAccess;
 use App\Filament\Resources\EmployerResource\Pages;
 use App\Models\Employer;
+use App\Support\AdminModules;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -12,6 +14,11 @@ use Filament\Tables\Table;
 
 class EmployerResource extends Resource
 {
+    use EnforcesModuleAccess;
+
+    /** Corporate employers linked to participants / bookings */
+    protected static string $requiredModule = AdminModules::PARTICIPANTS;
+
     protected static ?string $model = Employer::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-building-office';

@@ -2,7 +2,9 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Concerns\EnforcesModuleAccessPage;
 use App\Models\Booking;
+use App\Support\AdminModules;
 use App\Models\ClassSession;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -15,7 +17,10 @@ use Illuminate\Support\Arr;
 
 class ManageClassAttendance extends Page implements HasForms
 {
+    use EnforcesModuleAccessPage;
     use InteractsWithForms;
+
+    protected static string $requiredModule = AdminModules::CLASSES;
 
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-check';
 

@@ -2,13 +2,19 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Concerns\EnforcesModuleAccessWidget;
 use App\Models\ClassSession;
+use App\Support\AdminModules;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Database\Eloquent\Builder;
 
 class UpcomingClassesWidget extends BaseWidget
 {
+    use EnforcesModuleAccessWidget;
+
+    protected static string $requiredModule = AdminModules::CLASSES;
+
     protected static ?int $sort = 1;
 
     protected function getStats(): array

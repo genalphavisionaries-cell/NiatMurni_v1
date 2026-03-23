@@ -2,9 +2,11 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\EnforcesModuleAccess;
 use App\Filament\Pages\ManageClassAttendance;
 use App\Filament\Resources\ClassSessionResource\Pages;
 use App\Models\ClassSession;
+use App\Support\AdminModules;
 use App\Services\ZoomService;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -15,6 +17,10 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ClassSessionResource extends Resource
 {
+    use EnforcesModuleAccess;
+
+    protected static string $requiredModule = AdminModules::CLASSES;
+
     protected static ?string $model = ClassSession::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-calendar-days';

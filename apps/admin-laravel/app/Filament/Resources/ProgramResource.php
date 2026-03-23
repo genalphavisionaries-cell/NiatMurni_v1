@@ -2,8 +2,10 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\EnforcesModuleAccess;
 use App\Filament\Resources\ProgramResource\Pages;
 use App\Models\Program;
+use App\Support\AdminModules;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -13,6 +15,10 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ProgramResource extends Resource
 {
+    use EnforcesModuleAccess;
+
+    protected static string $requiredModule = AdminModules::PROGRAMS;
+
     protected static ?string $model = Program::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-academic-cap';

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Concerns\EnforcesModuleAccessPage;
 use App\Models\HomepageSection;
 use App\Support\AdminModules;
 use Filament\Actions\Action;
@@ -23,7 +24,10 @@ use Filament\Pages\Page;
 
 class ManageHomepageSettings extends Page implements HasForms
 {
+    use EnforcesModuleAccessPage;
     use InteractsWithForms;
+
+    protected static string $requiredModule = AdminModules::CMS;
 
     protected static ?string $navigationIcon = 'heroicon-o-home';
 
@@ -36,11 +40,6 @@ class ManageHomepageSettings extends Page implements HasForms
     protected static ?string $title = 'Homepage Settings';
 
     protected static string $view = 'filament.pages.manage-homepage-settings';
-
-    public static function canAccess(): bool
-    {
-        return auth()->user()?->hasModuleAccess(AdminModules::CMS) ?? false;
-    }
 
     public ?array $data = [];
 

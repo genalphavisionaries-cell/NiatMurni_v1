@@ -2,13 +2,19 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Concerns\EnforcesModuleAccessWidget;
 use App\Models\Booking;
+use App\Support\AdminModules;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Database\Eloquent\Builder;
 
 class BookingsOverviewWidget extends BaseWidget
 {
+    use EnforcesModuleAccessWidget;
+
+    protected static string $requiredModule = AdminModules::BOOKINGS;
+
     protected static ?int $sort = 2;
 
     protected function getStats(): array

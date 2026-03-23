@@ -2,8 +2,10 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\EnforcesModuleAccess;
 use App\Filament\Resources\CertificateResource\Pages;
 use App\Models\Certificate;
+use App\Support\AdminModules;
 use App\Services\CertificateLifecycleService;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -14,6 +16,10 @@ use Illuminate\Validation\ValidationException;
 
 class CertificateResource extends Resource
 {
+    use EnforcesModuleAccess;
+
+    protected static string $requiredModule = AdminModules::CERTIFICATES;
+
     protected static ?string $model = Certificate::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-document-check';

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Concerns\EnforcesModuleAccessPage;
 use App\Models\Setting;
 use App\Support\AdminModules;
 use App\Support\FrontendCmsSettingKeys;
@@ -19,12 +20,10 @@ use Filament\Pages\Page;
 
 class ManageFrontendCmsSettings extends Page implements HasForms
 {
+    use EnforcesModuleAccessPage;
     use InteractsWithForms;
 
-    public static function canAccess(): bool
-    {
-        return auth()->user()?->hasModuleAccess(AdminModules::CMS) ?? false;
-    }
+    protected static string $requiredModule = AdminModules::CMS;
 
     protected static ?string $navigationIcon = 'heroicon-o-paint-brush';
 

@@ -2,8 +2,10 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\EnforcesModuleAccess;
 use App\Filament\Resources\ParticipantResource\Pages;
 use App\Models\Participant;
+use App\Support\AdminModules;
 use App\Services\ParticipantPortalAccessService;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -14,6 +16,10 @@ use Filament\Notifications\Notification;
 
 class ParticipantResource extends Resource
 {
+    use EnforcesModuleAccess;
+
+    protected static string $requiredModule = AdminModules::PARTICIPANTS;
+
     protected static ?string $model = Participant::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
