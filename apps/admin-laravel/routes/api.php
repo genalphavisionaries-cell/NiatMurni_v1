@@ -64,6 +64,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureAdminAccess::class
     Route::put('/settings', [App\Http\Controllers\Api\Admin\AdminSettingsController::class, 'updateSettings'])->name('settings.update');
     Route::get('/settings/api-connections', [App\Http\Controllers\Api\Admin\AdminSettingsController::class, 'apiConnections'])->name('settings.api-connections.index');
     Route::put('/settings/api-connections', [App\Http\Controllers\Api\Admin\AdminSettingsController::class, 'updateApiConnections'])->name('settings.api-connections.update');
+    Route::get('/dashboard/overview', [App\Http\Controllers\Api\Admin\DashboardController::class, 'overview'])->name('dashboard.overview');
 
     // Secured admin operational endpoints.
     Route::post('/bookings/{bookingId}/refund', [AdminRefundController::class, 'refund']);
