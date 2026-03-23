@@ -12,13 +12,13 @@ export default function AdminSettingsPage() {
         <p className="mt-1 text-sm text-gray-500">System and user settings</p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Link
-          href="/admin/settings/users"
+        <a
+          href="/admin/users"
           className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
         >
           <h2 className="font-semibold text-gray-900">Users</h2>
           <p className="mt-1 text-sm text-gray-500">Admin and tutor accounts</p>
-        </Link>
+        </a>
         <Link
           href="/admin/settings/system"
           className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
