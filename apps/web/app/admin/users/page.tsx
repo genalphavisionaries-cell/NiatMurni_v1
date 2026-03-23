@@ -36,7 +36,7 @@ export default function AdminUsersBridgePage() {
     // Same origin as Filament base: one hard navigation may reach Laravel if the
     // edge routes /admin/* to Laravel. Guard against redirect loops.
     const key = "nm_filament_users_nav";
-    const n = Number(sessionStorage.getItem(key) ?? "0", 10);
+    const n = parseInt(sessionStorage.getItem(key) ?? "0", 10);
     if (n < 1) {
       sessionStorage.setItem(key, String(n + 1));
       window.location.replace(target);
