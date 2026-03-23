@@ -11,13 +11,25 @@ import { adminApi } from "@/lib/admin-api";
 const MAX_VISIBLE_NAV = 6;
 
 type AdminTwoTierHeaderProps = {
-  user: { name: string; email: string } | null;
+  user: { name: string; email: string; role?: string } | null;
 };
 
 export function AdminTwoTierHeader({ user }: AdminTwoTierHeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const navItems = getNavForRole("admin");
+  const adminRole = user?.role ?? "";
+  const navItems = getNavForRole("admin").map((item) => {
+    if (item.label !== "Settings" || !item.children) return item;
+    return {
+      ...item,
+      children: item.children
+        .filter((c) => {
+          if (c.label !== "Users") return true;
+          return adminRole === "super_admin";
+        })
+        .map((c) => (c.label === "Users" ? { ...c, href: "/admin/users" } : c)),
+    };
+  });
   const [searchFocused, setSearchFocused] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -129,7 +141,7 @@ export function AdminTwoTierHeader({ user }: AdminTwoTierHeaderProps) {
                   <p className="truncate text-xs text-[var(--text-secondary)]">{user?.email}</p>
                 </div>
                 <Link
-                  href="/admin/settings/users"
+                  href="/admin/settings/profile"
                   className="block px-4 py-2 text-sm text-[var(--text-primary)] hover:bg-gray-50"
                   onClick={() => setProfileOpen(false)}
                 >

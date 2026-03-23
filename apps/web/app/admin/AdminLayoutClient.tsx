@@ -6,7 +6,7 @@ import { AdminTwoTierHeader } from "@/components/admin/AdminTwoTierHeader";
 
 export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
+  const [user, setUser] = useState<{ name: string; email: string; role?: string } | null>(null);
   const [checking, setChecking] = useState(pathname !== "/admin/login");
 
   useEffect(() => {
