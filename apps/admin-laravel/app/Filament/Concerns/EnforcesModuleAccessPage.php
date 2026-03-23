@@ -9,7 +9,10 @@ use App\Models\User;
  */
 trait EnforcesModuleAccessPage
 {
-    protected static string $requiredModule = '';
+    /**
+     * Each Page using this trait must declare:
+     * `protected static string $requiredModule = AdminModules::…;`
+     */
 
     public static function canAccess(): bool
     {

@@ -14,8 +14,11 @@ use Illuminate\Database\Eloquent\Model;
  */
 trait EnforcesModuleAccess
 {
-    /** Set in each Resource: e.g. AdminModules::PROGRAMS */
-    protected static string $requiredModule = '';
+    /**
+     * Each Resource using this trait must declare:
+     * `protected static string $requiredModule = AdminModules::…;`
+     * (PHP 8.3+ forbids defining the same static property on both trait and class with different defaults.)
+     */
 
     public static function canViewAny(): bool
     {

@@ -9,7 +9,10 @@ use App\Models\User;
  */
 trait EnforcesModuleAccessWidget
 {
-    protected static string $requiredModule = '';
+    /**
+     * Each Widget using this trait must declare:
+     * `protected static string $requiredModule = AdminModules::…;`
+     */
 
     public static function canView(): bool
     {
