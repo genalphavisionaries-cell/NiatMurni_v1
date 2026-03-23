@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             ProgramSeeder::class,
             AdminUserSeeder::class,
             FrontendCmsFoundationSeeder::class,
+            PlatformSettingsDefaultsSeeder::class,
         ]);
     }
 }

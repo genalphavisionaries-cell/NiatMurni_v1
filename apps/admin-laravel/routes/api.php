@@ -11,6 +11,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/homepage-settings', App\Http\Controllers\Api\HomepageSettingsController::class)->name('api.homepage-settings');
+
+Route::get('/settings/{group}', [App\Http\Controllers\Api\SettingsGroupController::class, 'show'])
+    ->middleware('throttle:60,1')
+    ->name('api.settings.group');
 Route::get('/public/cms', App\Http\Controllers\Api\PublicCmsController::class)->name('api.public.cms');
 Route::post('/register', App\Http\Controllers\Api\RegisterForClassController::class)->name('api.register');
 
