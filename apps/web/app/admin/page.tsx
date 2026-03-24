@@ -202,7 +202,7 @@ export default function AdminDashboardPage() {
   const bookingsDaily = dashboardData.trends?.bookings_daily ?? [0, 0, 0, 0, 0, 0, 0];
   const external = dashboardData?.external;
 
-  const stats = useMemo(
+  const primaryStats = useMemo(
     () => [
       {
         title: "Revenue",
@@ -229,16 +229,22 @@ export default function AdminDashboardPage() {
         icon: Users,
       },
       {
-        title: "Certificates Issued",
-        value: formatMetric(dashboardData.certificates?.issued_this_month, loading),
-        description: "This month",
-        icon: CheckCircle2,
-      },
-      {
         title: "Net Revenue",
         value: formatRM(dashboardData.finance?.net_revenue, loading),
         description: "After refunds",
         icon: Receipt,
+      },
+    ],
+    [dashboardData, loading]
+  );
+
+  const secondaryStats = useMemo(
+    () => [
+      {
+        title: "Certificates Issued",
+        value: formatMetric(dashboardData.certificates?.issued_this_month, loading),
+        description: "This month",
+        icon: CheckCircle2,
       },
       {
         title: "Website Users",
@@ -281,7 +287,7 @@ export default function AdminDashboardPage() {
       )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-        {stats.map((s) => (
+        {primaryStats.map((s) => (
           <StatCard
             key={s.title}
             title={s.title}
@@ -291,6 +297,22 @@ export default function AdminDashboardPage() {
             className="h-full p-4 [&>div]:gap-3 [&>div>div>p:first-child]:text-xs [&>div>div>p:nth-child(2)]:mt-0.5 [&>div>div>p:nth-child(2)]:text-xl [&>div>div>p:nth-child(3)]:mt-0.5 [&>div>div+div]:h-8 [&>div>div+div]:w-8 [&>div>div+div>svg]:h-4 [&>div>div+div>svg]:w-4"
           />
         ))}
+      </div>
+
+      <div className="mt-6">
+        <p className="mb-2 text-xs text-gray-500">Analytics & External Metrics</p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          {secondaryStats.map((s) => (
+            <StatCard
+              key={s.title}
+              title={s.title}
+              value={s.value}
+              description={s.description}
+              icon={s.icon}
+              className="h-full p-4 [&>div]:gap-3 [&>div>div>p:first-child]:text-xs [&>div>div>p:nth-child(2)]:mt-0.5 [&>div>div>p:nth-child(2)]:text-xl [&>div>div>p:nth-child(3)]:mt-0.5 [&>div>div+div]:h-8 [&>div>div+div]:w-8 [&>div>div+div>svg]:h-4 [&>div>div+div>svg]:w-4"
+            />
+          ))}
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
