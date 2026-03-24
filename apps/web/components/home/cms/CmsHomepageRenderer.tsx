@@ -8,7 +8,6 @@ import PromotionsSection from "./sections/PromotionsSection";
 
 import UpcomingClassesSection from "../UpcomingClassesSection";
 import ContactSection from "../ContactSection";
-import FloatingQuickMenu from "./FloatingQuickMenu";
 
 export type SupportedCmsSectionKey =
   | "hero"
@@ -83,7 +82,6 @@ export default function CmsHomepageRenderer({
 
   return (
     <>
-      <FloatingQuickMenu promotionsHref={cta ? "/#promotions" : "/#classes"} />
       {/* 1. Hero */}
       {hero ? <HeroSection section={hero} site={cms.site} /> : null}
       {/* 2. Why Us */}

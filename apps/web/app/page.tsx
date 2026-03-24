@@ -15,6 +15,7 @@ import {
 import { getHomepageSettings } from "@/lib/homepage-settings";
 import { fetchPublicCms, cmsString } from "@/lib/public-cms";
 import { cmsFlatNavToLinks, mergePublicCmsForHome } from "@/lib/merge-public-cms";
+import PublicFloatingLayer from "@/components/public/PublicFloatingLayer";
 
 const DEFAULT_TITLE = "Niat Murni Academy";
 const DEFAULT_DESC =
@@ -161,6 +162,7 @@ export default async function HomePage() {
           />
         </>
       )}
+      <PublicFloatingLayer />
     </div>
   );
 }

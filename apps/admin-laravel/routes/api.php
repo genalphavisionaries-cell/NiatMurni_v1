@@ -17,6 +17,9 @@ Route::get('/settings/{group}', [App\Http\Controllers\Api\SettingsGroupControlle
     ->middleware('throttle:60,1')
     ->name('api.settings.group');
 Route::get('/public/cms', App\Http\Controllers\Api\PublicCmsController::class)->name('api.public.cms');
+Route::get('/public/settings', App\Http\Controllers\Api\PublicSettingsController::class)
+    ->middleware('throttle:60,1')
+    ->name('api.public.settings');
 Route::post('/register', App\Http\Controllers\Api\RegisterForClassController::class)->name('api.register');
 Route::prefix('public')->group(function () {
     Route::get('/classes/upcoming', [PublicController::class, 'upcomingClasses']);

@@ -69,6 +69,20 @@ class PublicCmsController extends Controller
             'linkedin_url' => $s(FrontendCmsSettingKeys::SOCIAL_LINKEDIN_URL),
         ];
 
+        $floatingMenuRaw = $s(FrontendCmsSettingKeys::FLOATING_MENU_JSON);
+        $floatingMenu = [
+            'enabled' => false,
+            'items' => [],
+        ];
+        if ($floatingMenuRaw !== '') {
+            $decoded = json_decode($floatingMenuRaw, true);
+            if (is_array($decoded)) {
+                $floatingMenu['enabled'] = filter_var($decoded['enabled'] ?? false, FILTER_VALIDATE_BOOLEAN);
+                $items = $decoded['items'] ?? [];
+                $floatingMenu['items'] = is_array($items) ? array_values($items) : [];
+            }
+        }
+
         return response()->json([
             'site' => $site,
             'theme' => $theme,
@@ -82,6 +96,7 @@ class PublicCmsController extends Controller
                 'footer_legal' => $this->buildFlatNavList(SiteNavigationItem::LOCATION_FOOTER_LEGAL),
                 'footer_login' => $this->buildFlatNavList(SiteNavigationItem::LOCATION_FOOTER_LOGIN),
             ],
+            'floating_menu' => $floatingMenu,
             'homepage_sections' => HomepageSection::query()
                 ->where('is_active', true)
                 ->orderBy('sort_order')

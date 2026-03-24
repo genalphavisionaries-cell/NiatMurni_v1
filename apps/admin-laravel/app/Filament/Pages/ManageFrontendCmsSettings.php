@@ -190,6 +190,26 @@ class ManageFrontendCmsSettings extends Page implements HasForms
                             ->helperText('e.g. Website secured with SSL encryption.'),
                     ])
                     ->columns(1),
+
+                Section::make('Floating navigation & WhatsApp')
+                    ->description('Public-site widgets: bottom pill nav (4 slots) and the WhatsApp chat launcher. Valid JSON only; leave empty to disable.')
+                    ->schema([
+                        Textarea::make(FrontendCmsSettingKeys::FLOATING_MENU_JSON)
+                            ->label('Floating bottom menu (JSON)')
+                            ->rows(12)
+                            ->helperText(
+                                'Must include exactly 4 items when enabled. First three use "url"; the fourth opens WhatsApp. Example: {"enabled":true,"items":[{"label":"Home","url":"/","icon":"home"},{"label":"Classes","url":"/#classes","icon":"book"},{"label":"Contact","url":"/#contact","icon":"mail"},{"label":"Chat","url":null,"icon":"whatsapp"}]}'
+                            )
+                            ->columnSpanFull(),
+                        Textarea::make(FrontendCmsSettingKeys::WHATSAPP_PUBLIC_JSON)
+                            ->label('WhatsApp widget (JSON)')
+                            ->rows(10)
+                            ->helperText(
+                                'Phone digits with country code (no +). Example: {"enabled":true,"phone":"60123456789","welcome_text":"Hi!","default_message":"Hello…","helper_text":"Edit your message, then open WhatsApp.","auto_open_delay_ms":0}'
+                            )
+                            ->columnSpanFull(),
+                    ])
+                    ->columns(1),
             ])
             ->statePath('data');
     }

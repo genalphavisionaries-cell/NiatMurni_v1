@@ -3,6 +3,7 @@ import { CmsHeader, CmsFooter, Footer } from "@/components/home";
 import { getHomepageSettings } from "@/lib/homepage-settings";
 import { fetchPublicCms, cmsString } from "@/lib/public-cms";
 import { cmsFlatNavToLinks, mergePublicCmsForHome } from "@/lib/merge-public-cms";
+import PublicFloatingLayer from "@/components/public/PublicFloatingLayer";
 
 type Props = {
   children: ReactNode;
@@ -69,6 +70,7 @@ export default async function PublicSiteShell({
           cmsGlobal={null}
         />
       )}
+      <PublicFloatingLayer />
     </div>
   );
 }

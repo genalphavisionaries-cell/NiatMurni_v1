@@ -3,7 +3,7 @@
  * Base URL: same as homepage settings (NEXT_PUBLIC_ADMIN_API_URL or NEXT_PUBLIC_LARAVEL_API_URL).
  */
 
-const getApiBase = (): string => {
+export const getPublicApiBase = (): string => {
   const env =
     process.env.NEXT_PUBLIC_ADMIN_API_URL ||
     process.env.NEXT_PUBLIC_LARAVEL_API_URL ||
@@ -88,6 +88,20 @@ export type PublicCmsHomepageSection = {
   extra_data: Record<string, string> | null;
 };
 
+/** Bottom pill nav: first three items use `url`; fourth triggers WhatsApp via `action: "whatsapp"`. */
+export type PublicCmsFloatingMenuItem = {
+  label: string;
+  url: string | null;
+  /** Optional icon hint: home, book, mail, chat, link, whatsapp */
+  icon?: string;
+  action?: "whatsapp" | "link";
+};
+
+export type PublicCmsFloatingMenu = {
+  enabled: boolean;
+  items: PublicCmsFloatingMenuItem[];
+};
+
 export type PublicCmsPayload = {
   site: PublicCmsSite;
   theme: PublicCmsTheme;
@@ -104,6 +118,7 @@ export type PublicCmsPayload = {
     footer_login: PublicCmsNavItem[];
   };
   homepage_sections: PublicCmsHomepageSection[];
+  floating_menu: PublicCmsFloatingMenu;
 };
 
 const defaultFooterContactSocial = (): {
@@ -151,6 +166,7 @@ const emptyPayload = (): PublicCmsPayload => ({
   ...defaultFooterContactSocial(),
   navigation: { header: [], footer: [], footer_legal: [], footer_login: [] },
   homepage_sections: [],
+  floating_menu: { enabled: false, items: [] },
 });
 
 function normalizeNavItem(raw: Partial<PublicCmsNavItem> & Record<string, unknown>): PublicCmsNavItem {
@@ -165,6 +181,25 @@ function normalizeNavItem(raw: Partial<PublicCmsNavItem> & Record<string, unknow
     is_button: !!raw.is_button,
     children,
   };
+}
+
+function normalizeFloatingMenu(raw: PublicCmsPayload["floating_menu"] | undefined): PublicCmsFloatingMenu {
+  const enabled = !!raw?.enabled;
+  const items = Array.isArray(raw?.items)
+    ? raw.items.map((it) => ({
+        label: String((it as PublicCmsFloatingMenuItem).label ?? ""),
+        url:
+          (it as PublicCmsFloatingMenuItem).url == null || (it as PublicCmsFloatingMenuItem).url === ""
+            ? null
+            : String((it as PublicCmsFloatingMenuItem).url),
+        icon: (it as PublicCmsFloatingMenuItem).icon != null ? String((it as PublicCmsFloatingMenuItem).icon) : undefined,
+        action:
+          (it as PublicCmsFloatingMenuItem).action === "whatsapp"
+            ? ("whatsapp" as const)
+            : ("link" as const),
+      }))
+    : [];
+  return { enabled, items };
 }
 
 function normalizeCmsPayload(data: PublicCmsPayload): PublicCmsPayload {
@@ -203,11 +238,12 @@ function normalizeCmsPayload(data: PublicCmsPayload): PublicCmsPayload {
       footer_legal: (data.navigation?.footer_legal ?? []).map((n) => normalizeNavItem(n)),
       footer_login: (data.navigation?.footer_login ?? []).map((n) => normalizeNavItem(n)),
     },
+    floating_menu: normalizeFloatingMenu(data.floating_menu),
   };
 }
 
 export async function fetchPublicCms(): Promise<PublicCmsPayload | null> {
-  const base = getApiBase();
+  const base = getPublicApiBase();
   if (!base) return null;
   try {
     const res = await fetch(`${base}/api/public/cms`, {

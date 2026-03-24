@@ -50,6 +50,12 @@ final class FrontendCmsSettingKeys
     public const FOOTER_SSL_BADGE_URL = 'cms_footer_ssl_badge_url';
     public const FOOTER_SSL_CAPTION = 'cms_footer_ssl_caption';
 
+    /** JSON: floating bottom nav (enabled + 4 items; last item triggers WhatsApp). */
+    public const FLOATING_MENU_JSON = 'cms_floating_menu_json';
+
+    /** JSON: public WhatsApp widget (phone, copy, optional auto-open delay). */
+    public const WHATSAPP_PUBLIC_JSON = 'cms_whatsapp_public_json';
+
     /**
      * @return array<string, string> key => human label
      */
@@ -86,6 +92,8 @@ final class FrontendCmsSettingKeys
             self::FOOTER_PAYMENT_HEADLINE => 'Payment card headline',
             self::FOOTER_SSL_BADGE_URL => 'SSL / trust badge image URL',
             self::FOOTER_SSL_CAPTION => 'SSL caption under badge',
+            self::FLOATING_MENU_JSON => 'Floating bottom menu (JSON)',
+            self::WHATSAPP_PUBLIC_JSON => 'WhatsApp widget (JSON)',
         ];
     }
 }
