@@ -5,23 +5,66 @@ import { fetchUpcomingClasses } from "@/lib/api";
 import { adminApi, type DashboardOverview } from "@/lib/admin-api";
 import { StatCard } from "@/components/dashboard";
 import {
-  AlertCircle,
   BookOpen,
   Calendar,
+  CheckCircle2,
   DollarSign,
+  LineChart,
+  Receipt,
   TrendingUp,
   Users,
 } from "lucide-react";
 import Link from "next/link";
 type UpcomingClass = { id: number; program_name: string; starts_at: string };
+type DashboardOverviewExtended = DashboardOverview & {
+  finance?: {
+    gross_revenue?: number | null;
+    refunds?: number | null;
+    net_revenue?: number | null;
+  };
+  trends?: {
+    revenue_daily?: number[] | null;
+    bookings_daily?: number[] | null;
+  };
+  certificates?: {
+    issued?: number | null;
+    issued_total?: number | null;
+    issued_this_month?: number | null;
+    revoked?: number | null;
+  };
+  bookings?: {
+    today?: number | null;
+    this_week?: number | null;
+    this_month?: number | null;
+    total?: number | null;
+    pending?: number | null;
+    paid?: number | null;
+    cancelled?: number | null;
+  };
+  classes?: {
+    total?: number | null;
+    upcoming?: number | null;
+    ongoing?: number | null;
+    completed?: number | null;
+    total_seats?: number | null;
+    booked_seats?: number | null;
+  };
+  participants?: {
+    total?: number | null;
+    active?: number | null;
+    new_this_month?: number | null;
+  };
+};
 
-const DASHBOARD_FALLBACK: DashboardOverview = {
+const DASHBOARD_FALLBACK: DashboardOverviewExtended = {
   revenue: { today: 0, this_month: 0, this_year: 0 },
   bookings: { today: 0, this_week: 0, this_month: 0, total: 0 },
-  participants: { total: 0 },
+  participants: { total: 0, active: 0, new_this_month: 0 },
   tutors: { active: 0, total: 0 },
-  classes: { upcoming: 0, ongoing: 0 },
-  certificates: { issued: 0 },
+  classes: { total: 0, upcoming: 0, ongoing: 0, completed: 0, total_seats: 0, booked_seats: 0 },
+  certificates: { issued: 0, issued_total: 0, issued_this_month: 0, revoked: 0 },
+  finance: { gross_revenue: 0, refunds: 0, net_revenue: 0 },
+  trends: { revenue_daily: [0, 0, 0, 0, 0, 0, 0], bookings_daily: [0, 0, 0, 0, 0, 0, 0] },
 };
 
 function formatRM(value: number | null | undefined, loading: boolean): string {
@@ -33,19 +76,74 @@ function formatRM(value: number | null | undefined, loading: boolean): string {
 function formatMetric(value: number | null | undefined, loading: boolean): string | number {
   if (loading) return "-";
   if (value == null) return "-";
-  return value;
+  return value.toLocaleString("en-MY");
+}
+
+function valueOrZero(value: number | null | undefined): number {
+  return value ?? 0;
+}
+
+function MiniLineChart({
+  values,
+  stroke,
+}: {
+  values: number[];
+  stroke: string;
+}) {
+  const chartValues = values.length === 7 ? values : [0, 0, 0, 0, 0, 0, 0];
+  const max = Math.max(...chartValues, 1);
+  const points = chartValues
+    .map((v, idx) => {
+      const x = (idx / (chartValues.length - 1)) * 100;
+      const y = 100 - (v / max) * 100;
+      return `${x},${y}`;
+    })
+    .join(" ");
+
+  return (
+    <div className="h-40 w-full rounded-lg border border-[var(--border)] bg-white p-2">
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full">
+        <polyline
+          fill="none"
+          stroke={stroke}
+          strokeWidth="2.5"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          points={points}
+        />
+      </svg>
+    </div>
+  );
+}
+
+function LoadingDashboard() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-[var(--text-primary)]">Dashboard</h1>
+        <p className="mt-1 text-sm text-[var(--text-secondary)]">Loading dashboard...</p>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="h-28 animate-pulse rounded-xl border border-[var(--border)] bg-[var(--card-bg)]" />
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export default function AdminDashboardPage() {
-  const [dashboardData, setDashboardData] = useState<DashboardOverview>(DASHBOARD_FALLBACK);
+  const [dashboardData, setDashboardData] = useState<DashboardOverviewExtended>(DASHBOARD_FALLBACK);
   const [upcomingClasses, setUpcomingClasses] = useState<UpcomingClass[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
     const load = async () => {
       setLoading(true);
+      setError(null);
       try {
         const [overviewRes, classes] = await Promise.all([
           adminApi.getDashboardOverview(),
@@ -53,7 +151,7 @@ export default function AdminDashboardPage() {
         ]);
         if (cancelled) return;
 
-        setDashboardData(overviewRes.data ?? DASHBOARD_FALLBACK);
+        setDashboardData((overviewRes.data as DashboardOverviewExtended) ?? DASHBOARD_FALLBACK);
         setUpcomingClasses(
           (classes ?? []).slice(0, 5).map((c) => ({
             id: c.id,
@@ -66,6 +164,7 @@ export default function AdminDashboardPage() {
         if (!cancelled) {
           setDashboardData(DASHBOARD_FALLBACK);
           setUpcomingClasses([]);
+          setError("Failed to load dashboard");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -78,12 +177,19 @@ export default function AdminDashboardPage() {
     };
   }, []);
 
+  const bookedSeats = valueOrZero(dashboardData.classes?.booked_seats);
+  const totalSeats = valueOrZero(dashboardData.classes?.total_seats);
+  const occupancy = totalSeats > 0 ? Math.round((bookedSeats / totalSeats) * 100) : 0;
+
+  const revenueDaily = dashboardData.trends?.revenue_daily ?? [0, 0, 0, 0, 0, 0, 0];
+  const bookingsDaily = dashboardData.trends?.bookings_daily ?? [0, 0, 0, 0, 0, 0, 0];
+
   const stats = useMemo(
     () => [
       {
         title: "Revenue",
         value: formatRM(dashboardData.revenue?.this_month, loading),
-        description: "This period",
+        description: "This month",
         icon: DollarSign,
       },
       {
@@ -93,21 +199,34 @@ export default function AdminDashboardPage() {
         icon: BookOpen,
       },
       {
-        title: "Upcoming Sessions",
+        title: "Upcoming Classes",
         value: formatMetric(dashboardData.classes?.upcoming, loading),
         description: "Next 30 days",
         icon: Calendar,
       },
       {
-        title: "Active Trainers",
+        title: "Active Tutors",
         value: formatMetric(dashboardData.tutors?.active, loading),
         description: "Currently active",
         icon: Users,
       },
-      { title: "Completion Rate", value: "-", description: "Program completion", icon: TrendingUp },
+      {
+        title: "Certificates Issued",
+        value: formatMetric(dashboardData.certificates?.issued_this_month, loading),
+        description: "This month",
+        icon: CheckCircle2,
+      },
+      {
+        title: "Net Revenue",
+        value: formatRM(dashboardData.finance?.net_revenue, loading),
+        description: "After refunds",
+        icon: Receipt,
+      },
     ],
     [dashboardData, loading]
   );
+
+  if (loading) return <LoadingDashboard />;
 
   return (
     <div className="space-y-6">
@@ -115,17 +234,75 @@ export default function AdminDashboardPage() {
         <h1 className="text-2xl font-bold text-[var(--text-primary)]">Dashboard</h1>
         <p className="mt-1 text-sm text-[var(--text-secondary)]">Overview of platform activity</p>
       </div>
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+      )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {stats.map((s) => (
           <StatCard key={s.title} title={s.title} value={s.value} description={s.description} icon={s.icon} />
         ))}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--card-bg)] p-6 shadow-sm">
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-[var(--text-primary)]">
+            <LineChart className="h-5 w-5 text-[var(--primary)]" />
+            Revenue (Last 7 Days)
+          </h2>
+          <p className="mt-1 text-sm text-[var(--text-secondary)]">
+            Total: {formatRM(revenueDaily.reduce((acc, cur) => acc + cur, 0), false)}
+          </p>
+          <div className="mt-4">
+            <MiniLineChart values={revenueDaily} stroke="#2563eb" />
+          </div>
+        </div>
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--card-bg)] p-6 shadow-sm">
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-[var(--text-primary)]">
+            <LineChart className="h-5 w-5 text-emerald-600" />
+            Bookings (Last 7 Days)
+          </h2>
+          <p className="mt-1 text-sm text-[var(--text-secondary)]">
+            Total: {bookingsDaily.reduce((acc, cur) => acc + cur, 0).toLocaleString("en-MY")}
+          </p>
+          <div className="mt-4">
+            <MiniLineChart values={bookingsDaily} stroke="#059669" />
+          </div>
+        </div>
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--card-bg)] p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-[var(--text-primary)]">Business Insights</h2>
+          <div className="mt-4 space-y-4 text-sm">
+            <div>
+              <p className="font-medium text-[var(--text-primary)]">Booking Status</p>
+              <div className="mt-1 grid grid-cols-3 gap-2 text-[var(--text-secondary)]">
+                <div>Pending: {valueOrZero(dashboardData.bookings?.pending).toLocaleString("en-MY")}</div>
+                <div>Paid: {valueOrZero(dashboardData.bookings?.paid).toLocaleString("en-MY")}</div>
+                <div>Cancelled: {valueOrZero(dashboardData.bookings?.cancelled).toLocaleString("en-MY")}</div>
+              </div>
+            </div>
+            <div>
+              <p className="font-medium text-[var(--text-primary)]">Class Capacity</p>
+              <div className="mt-1 grid grid-cols-3 gap-2 text-[var(--text-secondary)]">
+                <div>Total Seats: {totalSeats.toLocaleString("en-MY")}</div>
+                <div>Booked Seats: {bookedSeats.toLocaleString("en-MY")}</div>
+                <div>Occupancy: {occupancy}%</div>
+              </div>
+            </div>
+            <div>
+              <p className="font-medium text-[var(--text-primary)]">Certificates</p>
+              <div className="mt-1 grid grid-cols-2 gap-2 text-[var(--text-secondary)]">
+                <div>Issued This Month: {valueOrZero(dashboardData.certificates?.issued_this_month).toLocaleString("en-MY")}</div>
+                <div>Total Issued: {valueOrZero(dashboardData.certificates?.issued_total ?? dashboardData.certificates?.issued).toLocaleString("en-MY")}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 rounded-xl border border-[var(--border)] bg-[var(--card-bg)] p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-[var(--text-primary)]">Recent Bookings</h2>
-          <p className="mt-1 text-sm text-[var(--text-secondary)]">Latest registrations and payments</p>
+          <p className="mt-1 text-sm text-[var(--text-secondary)]">Latest registrations and payments (placeholder)</p>
           <div className="mt-4 overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -154,40 +331,28 @@ export default function AdminDashboardPage() {
           </Link>
         </div>
 
-        <div className="space-y-6">
-          <div className="rounded-xl border border-[var(--border)] bg-[var(--card-bg)] p-6 shadow-sm">
-            <h2 className="flex items-center gap-2 text-lg font-semibold text-[var(--text-primary)]">
-              <AlertCircle className="h-5 w-5 text-amber-500" />
-              Alerts
-            </h2>
-            <ul className="mt-3 space-y-2 text-sm text-[var(--text-secondary)]">
-              <li>No alerts at the moment.</li>
-            </ul>
-          </div>
-
-          <div className="rounded-xl border border-[var(--border)] bg-[var(--card-bg)] p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-[var(--text-primary)]">Upcoming Classes</h2>
-            <ul className="mt-3 space-y-2">
-              {upcomingClasses.length === 0 ? (
-                <li className="text-sm text-[var(--text-secondary)]">No upcoming classes.</li>
-              ) : (
-                upcomingClasses.map((c) => (
-                  <li key={c.id} className="flex justify-between gap-2 text-sm">
-                    <span className="truncate text-[var(--text-primary)]">{c.program_name}</span>
-                    <span className="shrink-0 text-[var(--text-secondary)]">
-                      {new Date(c.starts_at).toLocaleDateString()}
-                    </span>
-                  </li>
-                ))
-              )}
-            </ul>
-            <Link
-              href="/admin/classes"
-              className="mt-4 inline-block text-sm font-medium text-[var(--primary)] hover:underline"
-            >
-              View all classes →
-            </Link>
-          </div>
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--card-bg)] p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-[var(--text-primary)]">Upcoming Classes</h2>
+          <ul className="mt-3 space-y-2">
+            {upcomingClasses.length === 0 ? (
+              <li className="text-sm text-[var(--text-secondary)]">No upcoming classes.</li>
+            ) : (
+              upcomingClasses.map((c) => (
+                <li key={c.id} className="flex justify-between gap-2 text-sm">
+                  <span className="truncate text-[var(--text-primary)]">{c.program_name}</span>
+                  <span className="shrink-0 text-[var(--text-secondary)]">
+                    {new Date(c.starts_at).toLocaleDateString()}
+                  </span>
+                </li>
+              ))
+            )}
+          </ul>
+          <Link
+            href="/admin/classes"
+            className="mt-4 inline-block text-sm font-medium text-[var(--primary)] hover:underline"
+          >
+            View all classes →
+          </Link>
         </div>
       </div>
     </div>
