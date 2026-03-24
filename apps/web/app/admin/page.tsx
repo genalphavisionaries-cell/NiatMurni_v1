@@ -5,10 +5,13 @@ import { fetchUpcomingClasses } from "@/lib/api";
 import { adminApi, type DashboardOverview } from "@/lib/admin-api";
 import { StatCard } from "@/components/dashboard";
 import {
+  Activity,
+  BarChart3,
   BookOpen,
   Calendar,
   CheckCircle2,
   DollarSign,
+  Globe,
   LineChart,
   Receipt,
   TrendingUp,
@@ -54,6 +57,16 @@ type DashboardOverviewExtended = DashboardOverview & {
     active?: number | null;
     new_this_month?: number | null;
   };
+  external?: {
+    google_analytics?: {
+      users?: number | null;
+      sessions?: number | null;
+      page_views?: number | null;
+    };
+    stripe?: {
+      total_revenue?: number | null;
+    };
+  };
 };
 
 const DASHBOARD_FALLBACK: DashboardOverviewExtended = {
@@ -65,6 +78,10 @@ const DASHBOARD_FALLBACK: DashboardOverviewExtended = {
   certificates: { issued: 0, issued_total: 0, issued_this_month: 0, revoked: 0 },
   finance: { gross_revenue: 0, refunds: 0, net_revenue: 0 },
   trends: { revenue_daily: [0, 0, 0, 0, 0, 0, 0], bookings_daily: [0, 0, 0, 0, 0, 0, 0] },
+  external: {
+    google_analytics: { users: 0, sessions: 0, page_views: 0 },
+    stripe: { total_revenue: 0 },
+  },
 };
 
 function formatRM(value: number | null | undefined, loading: boolean): string {
@@ -183,6 +200,7 @@ export default function AdminDashboardPage() {
 
   const revenueDaily = dashboardData.trends?.revenue_daily ?? [0, 0, 0, 0, 0, 0, 0];
   const bookingsDaily = dashboardData.trends?.bookings_daily ?? [0, 0, 0, 0, 0, 0, 0];
+  const external = dashboardData?.external;
 
   const stats = useMemo(
     () => [
@@ -222,8 +240,32 @@ export default function AdminDashboardPage() {
         description: "After refunds",
         icon: Receipt,
       },
+      {
+        title: "Website Users",
+        value: formatMetric(external?.google_analytics?.users, loading),
+        description: valueOrZero(external?.google_analytics?.users) === 0 ? "No data yet" : "Google Analytics",
+        icon: Globe,
+      },
+      {
+        title: "Sessions",
+        value: formatMetric(external?.google_analytics?.sessions, loading),
+        description: valueOrZero(external?.google_analytics?.sessions) === 0 ? "No data yet" : "Google Analytics",
+        icon: Activity,
+      },
+      {
+        title: "Page Views",
+        value: formatMetric(external?.google_analytics?.page_views, loading),
+        description: valueOrZero(external?.google_analytics?.page_views) === 0 ? "No data yet" : "Google Analytics",
+        icon: BarChart3,
+      },
+      {
+        title: "Stripe Revenue",
+        value: formatRM(external?.stripe?.total_revenue, loading),
+        description: valueOrZero(external?.stripe?.total_revenue) === 0 ? "Live Stripe revenue • No data yet" : "Live Stripe revenue",
+        icon: DollarSign,
+      },
     ],
-    [dashboardData, loading]
+    [dashboardData, external, loading]
   );
 
   if (loading) return <LoadingDashboard />;
