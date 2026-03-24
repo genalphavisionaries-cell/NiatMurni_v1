@@ -153,6 +153,7 @@ export default function AdminDashboardPage() {
   const [dashboardData, setDashboardData] = useState<DashboardOverviewExtended>(DASHBOARD_FALLBACK);
   const [upcomingClasses, setUpcomingClasses] = useState<UpcomingClass[]>([]);
   const [modules, setModules] = useState<string[]>([]);
+  const [role, setRole] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -173,6 +174,7 @@ export default function AdminDashboardPage() {
         setDashboardData((overviewRes.data as DashboardOverviewExtended) ?? DASHBOARD_FALLBACK);
         const user = profileRes?.data as ({ module_access?: string[]; modules?: string[] } & Record<string, unknown>) | undefined;
         setModules(user?.module_access ?? user?.modules ?? []);
+        setRole((user?.role as string) ?? "");
         setUpcomingClasses(
           (classes ?? []).slice(0, 5).map((c) => ({
             id: c.id,
@@ -186,6 +188,7 @@ export default function AdminDashboardPage() {
           setDashboardData(DASHBOARD_FALLBACK);
           setUpcomingClasses([]);
           setModules([]);
+          setRole("");
           setError("Failed to load dashboard");
         }
       } finally {
@@ -206,7 +209,7 @@ export default function AdminDashboardPage() {
   const revenueDaily = dashboardData.trends?.revenue_daily ?? [0, 0, 0, 0, 0, 0, 0];
   const bookingsDaily = dashboardData.trends?.bookings_daily ?? [0, 0, 0, 0, 0, 0, 0];
   const external = dashboardData?.external;
-  const hasAccess = (module: string) => modules.includes(module);
+  const hasAccess = (module: string) => role === "super_admin" || modules.includes(module);
 
   const primaryStats = useMemo(
     () => {

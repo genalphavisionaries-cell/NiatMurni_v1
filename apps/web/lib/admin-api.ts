@@ -101,6 +101,11 @@ export type DashboardOverview = {
   };
 };
 
+export type FinanceTimelinePoint = {
+  period: string;
+  amount_cents: number;
+};
+
 async function request<T>(
   path: string,
   options: RequestInit & { params?: Record<string, string> } = {}
@@ -262,6 +267,15 @@ export const adminApi = {
   },
   getDashboardOverview(): Promise<{ data: DashboardOverview }> {
     return request("/api/admin/dashboard/overview");
+  },
+  getRevenueTimeline(period: "day" | "week" | "month" | "year" = "month"): Promise<{ period: string; data: FinanceTimelinePoint[] }> {
+    return request("/api/admin/finance/revenue-timeline", { params: { period } });
+  },
+  getRefundTimeline(period: "day" | "week" | "month" | "year" = "month"): Promise<{ period: string; data: FinanceTimelinePoint[] }> {
+    return request("/api/admin/finance/refund-timeline", { params: { period } });
+  },
+  getTutorPayoutTimeline(period: "day" | "week" | "month" | "year" = "month"): Promise<{ period: string; data: FinanceTimelinePoint[] }> {
+    return request("/api/admin/finance/tutor-payout-timeline", { params: { period } });
   },
 
   // Users (native Next admin user management)
