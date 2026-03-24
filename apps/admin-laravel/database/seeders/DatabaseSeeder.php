@@ -14,7 +14,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             ProgramSeeder::class,
             AdminUserSeeder::class,
-            FrontendCmsFoundationSeeder::class,
+            CmsHomepageStructureSeeder::class,
             PlatformSettingsDefaultsSeeder::class,
         ]);
     }

@@ -3,44 +3,55 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Support\FrontendCmsSettingKeys;
-use App\Models\Setting;
+use App\Services\SettingService;
 use Illuminate\Http\JsonResponse;
 
 /**
- * Public site settings (non-secret) for Next.js widgets.
+ * Public site settings (non-CMS): WhatsApp widget + safe integration metadata.
  */
 class PublicSettingsController extends Controller
 {
-    public function __invoke(): JsonResponse
+    public function __invoke(SettingService $settings): JsonResponse
     {
-        $s = fn (string $key): string => (string) (Setting::query()->where('key', $key)->value('value') ?? '');
+        $whatsapp = $settings->get('public', 'whatsapp', []);
+        if (is_string($whatsapp) && $whatsapp !== '') {
+            $decoded = json_decode($whatsapp, true);
+            $whatsapp = is_array($decoded) ? $decoded : [];
+        }
+        if (! is_array($whatsapp)) {
+            $whatsapp = [];
+        }
 
-        $raw = $s(FrontendCmsSettingKeys::WHATSAPP_PUBLIC_JSON);
-        $whatsapp = [
+        $whatsapp = array_merge([
             'enabled' => false,
             'phone' => '',
             'welcome_text' => '',
             'default_message' => '',
             'helper_text' => '',
             'auto_open_delay_ms' => 0,
+        ], $whatsapp);
+
+        $whatsapp['enabled'] = filter_var($whatsapp['enabled'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        $whatsapp['phone'] = isset($whatsapp['phone']) ? preg_replace('/\D+/', '', (string) $whatsapp['phone']) : '';
+        $whatsapp['welcome_text'] = (string) ($whatsapp['welcome_text'] ?? '');
+        $whatsapp['default_message'] = (string) ($whatsapp['default_message'] ?? '');
+        $whatsapp['helper_text'] = (string) ($whatsapp['helper_text'] ?? '');
+        $delay = $whatsapp['auto_open_delay_ms'] ?? 0;
+        $whatsapp['auto_open_delay_ms'] = is_numeric($delay) ? max(0, (int) $delay) : 0;
+
+        $integrations = [
+            'stripe' => [
+                'publishable_key' => (string) $settings->get('api_connections', 'stripe.publishable_key', ''),
+            ],
+            'google_analytics' => [
+                'measurement_id' => (string) $settings->get('api_connections', 'google_analytics.measurement_id', ''),
+            ],
         ];
-        if ($raw !== '') {
-            $decoded = json_decode($raw, true);
-            if (is_array($decoded)) {
-                $whatsapp['enabled'] = filter_var($decoded['enabled'] ?? false, FILTER_VALIDATE_BOOLEAN);
-                $whatsapp['phone'] = isset($decoded['phone']) ? preg_replace('/\D+/', '', (string) $decoded['phone']) : '';
-                $whatsapp['welcome_text'] = (string) ($decoded['welcome_text'] ?? '');
-                $whatsapp['default_message'] = (string) ($decoded['default_message'] ?? '');
-                $whatsapp['helper_text'] = (string) ($decoded['helper_text'] ?? '');
-                $delay = $decoded['auto_open_delay_ms'] ?? 0;
-                $whatsapp['auto_open_delay_ms'] = is_numeric($delay) ? max(0, (int) $delay) : 0;
-            }
-        }
 
         return response()->json([
             'data' => [
                 'whatsapp' => $whatsapp,
+                'integrations' => $integrations,
             ],
         ]);
     }

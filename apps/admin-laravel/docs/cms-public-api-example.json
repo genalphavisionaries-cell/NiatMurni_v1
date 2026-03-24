@@ -1,0 +1,58 @@
+{
+  "GET /api/public/cms": {
+    "data": {
+      "header": {
+        "section_key": "header",
+        "title": "Header",
+        "content": {
+          "logo_url": "https://example.com/logo.png",
+          "cta": { "label": "Book", "url": "/classes", "bg_color": "#0ea5e9", "text_color": "#ffffff" },
+          "languages": [{ "code": "en", "label": "EN", "active": true }]
+        },
+        "items": {
+          "menu_item": [
+            {
+              "type": "menu_item",
+              "title": "Courses",
+              "link_url": "/#classes",
+              "extra": { "nav_type": "anchor", "has_children": false }
+            }
+          ]
+        }
+      },
+      "hero": [],
+      "usp": [],
+      "classes": [],
+      "trust": {
+        "testimonials": [
+          {
+            "name": "A. Customer",
+            "image_url": null,
+            "rating": 5,
+            "content": "Great training.",
+            "sort_order": 0
+          }
+        ]
+      },
+      "promo": [],
+      "footer": [],
+      "floating_menu": []
+    }
+  },
+  "GET /api/public/settings": {
+    "data": {
+      "whatsapp": {
+        "enabled": false,
+        "phone": "60123456789",
+        "welcome_text": "",
+        "default_message": "",
+        "helper_text": "",
+        "auto_open_delay_ms": 0
+      },
+      "integrations": {
+        "stripe": { "publishable_key": "pk_live_xxx" },
+        "google_analytics": { "measurement_id": "G-XXXX" }
+      }
+    }
+  }
+}

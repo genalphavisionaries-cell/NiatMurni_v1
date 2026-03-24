@@ -16,7 +16,7 @@ Route::get('/homepage-settings', App\Http\Controllers\Api\HomepageSettingsContro
 Route::get('/settings/{group}', [App\Http\Controllers\Api\SettingsGroupController::class, 'show'])
     ->middleware('throttle:60,1')
     ->name('api.settings.group');
-Route::get('/public/cms', App\Http\Controllers\Api\PublicCmsController::class)->name('api.public.cms');
+Route::get('/public/cms', App\Http\Controllers\Api\Public\CmsController::class)->name('api.public.cms');
 Route::get('/public/settings', App\Http\Controllers\Api\PublicSettingsController::class)
     ->middleware('throttle:60,1')
     ->name('api.public.settings');
@@ -83,11 +83,6 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureAdminAccess::class
         Route::get('/finance/revenue-timeline', [AdminFinanceReportController::class, 'revenueTimeline']);
         Route::get('/finance/refund-timeline', [AdminFinanceReportController::class, 'refundTimeline']);
         Route::get('/finance/tutor-payout-timeline', [AdminFinanceReportController::class, 'tutorPayoutTimeline']);
-    });
-
-    // CMS
-    Route::middleware('module:cms,homepage')->group(function () {
-        Route::put('/homepage-settings', [App\Http\Controllers\Api\Admin\HomepageSettingsController::class, 'update'])->name('homepage-settings.update');
     });
 
     // Programs
