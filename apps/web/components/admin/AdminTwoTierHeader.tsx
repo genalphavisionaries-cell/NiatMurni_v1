@@ -11,23 +11,17 @@ import { adminApi } from "@/lib/admin-api";
 const MAX_VISIBLE_NAV = 6;
 
 type AdminTwoTierHeaderProps = {
-  user: { name: string; email: string; role?: string; modules?: string[] } | null;
+  user: { name: string; email: string; role?: string; modules?: string[]; module_access?: string[] } | null;
 };
 
 export function AdminTwoTierHeader({ user }: AdminTwoTierHeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
   const adminRole = user?.role ?? "";
-  const assignedModules = user?.modules ?? [];
+  const assignedModules = user?.module_access ?? user?.modules ?? [];
   const canAccessModule = (module: string) => {
     if (adminRole === "super_admin") return true;
-    if (adminRole === "technical_admin") return !["finance", "users"].includes(module);
-    if (adminRole === "content_admin" || adminRole === "cms_admin") return ["cms", "homepage", "blog", "settings"].includes(module);
-    if (adminRole === "operations_admin" || adminRole === "finance_admin" || adminRole === "accountant") {
-      return assignedModules.includes(module);
-    }
-    if (assignedModules.length > 0) return assignedModules.includes(module);
-    return true;
+    return assignedModules.includes(module);
   };
   const moduleForItem = (item: NavItem): string | null => {
     switch (item.label) {
@@ -55,6 +49,7 @@ export function AdminTwoTierHeader({ user }: AdminTwoTierHeaderProps) {
   };
   const navItems = getNavForRole("admin")
     .filter((item) => {
+      if (item.label === "Dashboard") return true;
       const module = moduleForItem(item);
       return module ? canAccessModule(module) : true;
     })
@@ -64,8 +59,8 @@ export function AdminTwoTierHeader({ user }: AdminTwoTierHeaderProps) {
       const children = item.children
         .map((c) => (c.label === "Users" ? { ...c, href: "/admin/users" } : c))
         .filter((c) => {
-          if (c.label === "Users") return adminRole === "super_admin" && canAccessModule("users");
-          if (c.label === "System") return canAccessModule("settings");
+          if (c.label === "Users") return adminRole === "super_admin";
+          if (c.label === "System") return canAccessModule("finance");
           return true;
         });
 
@@ -80,6 +75,7 @@ export function AdminTwoTierHeader({ user }: AdminTwoTierHeaderProps) {
 
   const visible = navItems.slice(0, MAX_VISIBLE_NAV);
   const overflow = navItems.slice(MAX_VISIBLE_NAV);
+  const showAccessHint = adminRole !== "super_admin" && assignedModules.length > 0 && navItems.length <= 2;
   const [overflowOpen, setOverflowOpen] = useState(false);
   const overflowRef = useRef<HTMLDivElement>(null);
 
@@ -250,6 +246,11 @@ export function AdminTwoTierHeader({ user }: AdminTwoTierHeaderProps) {
           )}
         </div>
       </nav>
+      {showAccessHint && (
+        <div className="border-b border-[var(--border)] bg-[var(--card-bg)] px-4 py-2 text-xs text-[var(--text-secondary)]">
+          Menu customized based on your access
+        </div>
+      )}
 
       {/* Mobile collapsible menu */}
       {mobileMenuOpen && (
