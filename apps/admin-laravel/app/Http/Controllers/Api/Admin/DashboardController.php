@@ -5,17 +5,36 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class DashboardController extends Controller
 {
+    // Performance note (index suggestions):
+    // bookings(created_at), bookings(status), certificates(created_at), class_sessions(starts_at)
     public function overview(): JsonResponse
     {
         return $this->getOverview();
     }
 
     public function getOverview(): JsonResponse
+    {
+        try {
+            $data = Cache::remember('admin_dashboard_overview', 60, function (): array {
+                return $this->buildOverviewData();
+            });
+
+            return response()->json(['data' => $data]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'Dashboard load failed',
+                'error' => app()->environment('local') ? $e->getMessage() : null,
+            ], 500);
+        }
+    }
+
+    private function buildOverviewData(): array
     {
         $now = Carbon::now();
         $today = $now->toDateString();
@@ -306,58 +325,56 @@ class DashboardController extends Controller
             $bookingsDaily = array_fill(0, 7, 0);
         }
 
-        return response()->json([
-            'data' => [
-                'revenue' => [
-                    'today' => $revenueToday,
-                    'this_week' => $revenueWeek,
-                    'this_month' => $revenueMonth,
-                    'this_year' => $revenueYear,
-                    'total' => $revenueTotal,
-                ],
-                'bookings' => [
-                    'today' => $bookingsToday,
-                    'this_week' => $bookingsWeek,
-                    'this_month' => $bookingsMonth,
-                    'total' => $bookingsTotal,
-                    'pending' => $bookingsPending,
-                    'paid' => $bookingsPaid,
-                    'cancelled' => $bookingsCancelled,
-                ],
-                'participants' => [
-                    'total' => $participantsTotal,
-                    'active' => $participantsActive,
-                    'new_this_month' => $participantsNewThisMonth,
-                ],
-                'tutors' => [
-                    'active' => $tutorsActive,
-                    'total' => $tutorsTotal,
-                ],
-                'classes' => [
-                    'total' => $classesTotal,
-                    'upcoming' => $classesUpcoming,
-                    'ongoing' => $classesOngoing,
-                    'completed' => $classesCompleted,
-                    'total_seats' => $classesTotalSeats,
-                    'booked_seats' => $classesBookedSeats,
-                ],
-                'certificates' => [
-                    'issued' => $certificatesIssued,
-                    'issued_total' => $certificatesIssued,
-                    'issued_this_month' => $certificatesIssuedThisMonth,
-                    'revoked' => $certificatesRevoked,
-                ],
-                'finance' => [
-                    'gross_revenue' => $financeGrossRevenue,
-                    'refunds' => $financeRefunds,
-                    'net_revenue' => $financeNetRevenue,
-                ],
-                'trends' => [
-                    'revenue_daily' => $revenueDaily,
-                    'bookings_daily' => $bookingsDaily,
-                ],
+        return [
+            'revenue' => [
+                'today' => $revenueToday,
+                'this_week' => $revenueWeek,
+                'this_month' => $revenueMonth,
+                'this_year' => $revenueYear,
+                'total' => $revenueTotal,
             ],
-        ]);
+            'bookings' => [
+                'today' => $bookingsToday,
+                'this_week' => $bookingsWeek,
+                'this_month' => $bookingsMonth,
+                'total' => $bookingsTotal,
+                'pending' => $bookingsPending,
+                'paid' => $bookingsPaid,
+                'cancelled' => $bookingsCancelled,
+            ],
+            'participants' => [
+                'total' => $participantsTotal,
+                'active' => $participantsActive,
+                'new_this_month' => $participantsNewThisMonth,
+            ],
+            'tutors' => [
+                'active' => $tutorsActive,
+                'total' => $tutorsTotal,
+            ],
+            'classes' => [
+                'total' => $classesTotal,
+                'upcoming' => $classesUpcoming,
+                'ongoing' => $classesOngoing,
+                'completed' => $classesCompleted,
+                'total_seats' => $classesTotalSeats,
+                'booked_seats' => $classesBookedSeats,
+            ],
+            'certificates' => [
+                'issued' => $certificatesIssued,
+                'issued_total' => $certificatesIssued,
+                'issued_this_month' => $certificatesIssuedThisMonth,
+                'revoked' => $certificatesRevoked,
+            ],
+            'finance' => [
+                'gross_revenue' => $financeGrossRevenue,
+                'refunds' => $financeRefunds,
+                'net_revenue' => $financeNetRevenue,
+            ],
+            'trends' => [
+                'revenue_daily' => $revenueDaily,
+                'bookings_daily' => $bookingsDaily,
+            ],
+        ];
     }
 
     private function resolveAmountColumn(string $table): ?string
