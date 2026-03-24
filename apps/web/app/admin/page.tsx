@@ -152,6 +152,7 @@ function LoadingDashboard() {
 export default function AdminDashboardPage() {
   const [dashboardData, setDashboardData] = useState<DashboardOverviewExtended>(DASHBOARD_FALLBACK);
   const [upcomingClasses, setUpcomingClasses] = useState<UpcomingClass[]>([]);
+  const [modules, setModules] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -162,13 +163,16 @@ export default function AdminDashboardPage() {
       setLoading(true);
       setError(null);
       try {
-        const [overviewRes, classes] = await Promise.all([
+        const [overviewRes, classes, profileRes] = await Promise.all([
           adminApi.getDashboardOverview(),
           fetchUpcomingClasses(),
+          adminApi.getMyProfile(),
         ]);
         if (cancelled) return;
 
         setDashboardData((overviewRes.data as DashboardOverviewExtended) ?? DASHBOARD_FALLBACK);
+        const user = profileRes?.data as ({ module_access?: string[]; modules?: string[] } & Record<string, unknown>) | undefined;
+        setModules(user?.module_access ?? user?.modules ?? []);
         setUpcomingClasses(
           (classes ?? []).slice(0, 5).map((c) => ({
             id: c.id,
@@ -181,6 +185,7 @@ export default function AdminDashboardPage() {
         if (!cancelled) {
           setDashboardData(DASHBOARD_FALLBACK);
           setUpcomingClasses([]);
+          setModules([]);
           setError("Failed to load dashboard");
         }
       } finally {
@@ -201,78 +206,100 @@ export default function AdminDashboardPage() {
   const revenueDaily = dashboardData.trends?.revenue_daily ?? [0, 0, 0, 0, 0, 0, 0];
   const bookingsDaily = dashboardData.trends?.bookings_daily ?? [0, 0, 0, 0, 0, 0, 0];
   const external = dashboardData?.external;
+  const hasAccess = (module: string) => modules.includes(module);
 
   const primaryStats = useMemo(
-    () => [
-      {
+    () => {
+      const cards = [];
+      if (hasAccess("finance")) {
+        cards.push({
         title: "Revenue",
         value: formatRM(dashboardData.revenue?.this_month, loading),
         description: "This month",
         icon: DollarSign,
-      },
-      {
+      });
+      }
+      if (hasAccess("bookings")) {
+        cards.push({
         title: "Total Bookings",
         value: formatMetric(dashboardData.bookings?.total, loading),
         description: "All time",
         icon: BookOpen,
-      },
-      {
+      });
+      }
+      if (hasAccess("classes")) {
+        cards.push({
         title: "Upcoming Classes",
         value: formatMetric(dashboardData.classes?.upcoming, loading),
         description: "Next 30 days",
         icon: Calendar,
-      },
-      {
+      });
+      }
+      if (hasAccess("tutors")) {
+        cards.push({
         title: "Active Tutors",
         value: formatMetric(dashboardData.tutors?.active, loading),
         description: "Currently active",
         icon: Users,
-      },
-      {
+      });
+      }
+      if (hasAccess("finance")) {
+        cards.push({
         title: "Net Revenue",
         value: formatRM(dashboardData.finance?.net_revenue, loading),
         description: "After refunds",
         icon: Receipt,
-      },
-    ],
-    [dashboardData, loading]
+      });
+      }
+      return cards;
+    },
+    [dashboardData, loading, modules]
   );
 
   const secondaryStats = useMemo(
-    () => [
-      {
+    () => {
+      const cards = [];
+      if (hasAccess("certificates")) {
+        cards.push({
         title: "Certificates Issued",
         value: formatMetric(dashboardData.certificates?.issued_this_month, loading),
         description: "This month",
         icon: CheckCircle2,
-      },
-      {
+      });
+      }
+      if (hasAccess("finance")) {
+        cards.push({
         title: "Website Users",
         value: formatMetric(external?.google_analytics?.users, loading),
         description: valueOrZero(external?.google_analytics?.users) === 0 ? "No data yet" : "Google Analytics",
         icon: Globe,
-      },
-      {
+      });
+        cards.push({
         title: "Sessions",
         value: formatMetric(external?.google_analytics?.sessions, loading),
         description: valueOrZero(external?.google_analytics?.sessions) === 0 ? "No data yet" : "Google Analytics",
         icon: Activity,
-      },
-      {
+      });
+        cards.push({
         title: "Page Views",
         value: formatMetric(external?.google_analytics?.page_views, loading),
         description: valueOrZero(external?.google_analytics?.page_views) === 0 ? "No data yet" : "Google Analytics",
         icon: BarChart3,
-      },
-      {
+      });
+        cards.push({
         title: "Stripe Revenue",
         value: formatRM(external?.stripe?.total_revenue, loading),
         description: valueOrZero(external?.stripe?.total_revenue) === 0 ? "Live Stripe revenue • No data yet" : "Live Stripe revenue",
         icon: DollarSign,
-      },
-    ],
-    [dashboardData, external, loading]
+      });
+      }
+      return cards;
+    },
+    [dashboardData, external, loading, modules]
   );
+
+  const showBusinessInsights = hasAccess("bookings") || hasAccess("classes") || hasAccess("certificates");
+  const showLimitedState = !error && primaryStats.length === 0 && secondaryStats.length === 0;
 
   if (loading) return <LoadingDashboard />;
 
@@ -286,23 +313,9 @@ export default function AdminDashboardPage() {
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-        {primaryStats.map((s) => (
-          <StatCard
-            key={s.title}
-            title={s.title}
-            value={s.value}
-            description={s.description}
-            icon={s.icon}
-            className="h-full p-4 [&>div]:gap-3 [&>div>div>p:first-child]:text-xs [&>div>div>p:nth-child(2)]:mt-0.5 [&>div>div>p:nth-child(2)]:text-xl [&>div>div>p:nth-child(3)]:mt-0.5 [&>div>div+div]:h-8 [&>div>div+div]:w-8 [&>div>div+div>svg]:h-4 [&>div>div+div>svg]:w-4"
-          />
-        ))}
-      </div>
-
-      <div className="mt-6">
-        <p className="mb-2 text-xs text-gray-500">Analytics & External Metrics</p>
+      {primaryStats.length > 0 && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          {secondaryStats.map((s) => (
+          {primaryStats.map((s) => (
             <StatCard
               key={s.title}
               title={s.title}
@@ -313,9 +326,34 @@ export default function AdminDashboardPage() {
             />
           ))}
         </div>
-      </div>
+      )}
+
+      {secondaryStats.length > 0 && (
+        <div className="mt-6">
+          <p className="mb-2 text-xs text-gray-500">Analytics & External Metrics</p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            {secondaryStats.map((s) => (
+              <StatCard
+                key={s.title}
+                title={s.title}
+                value={s.value}
+                description={s.description}
+                icon={s.icon}
+                className="h-full p-4 [&>div]:gap-3 [&>div>div>p:first-child]:text-xs [&>div>div>p:nth-child(2)]:mt-0.5 [&>div>div>p:nth-child(2)]:text-xl [&>div>div>p:nth-child(3)]:mt-0.5 [&>div>div+div]:h-8 [&>div>div+div]:w-8 [&>div>div+div>svg]:h-4 [&>div>div+div>svg]:w-4"
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {showLimitedState && (
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--card-bg)] p-4 text-sm text-[var(--text-secondary)]">
+          You only have access to limited modules. Dashboard is customized based on your permissions.
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
+        {hasAccess("finance") && (
         <div className="rounded-xl border border-[var(--border)] bg-[var(--card-bg)] p-6 shadow-sm">
           <h2 className="flex items-center gap-2 text-lg font-semibold text-[var(--text-primary)]">
             <LineChart className="h-5 w-5 text-[var(--primary)]" />
@@ -328,6 +366,8 @@ export default function AdminDashboardPage() {
             <MiniLineChart values={revenueDaily} stroke="#2563eb" />
           </div>
         </div>
+        )}
+        {hasAccess("bookings") && (
         <div className="rounded-xl border border-[var(--border)] bg-[var(--card-bg)] p-6 shadow-sm">
           <h2 className="flex items-center gap-2 text-lg font-semibold text-[var(--text-primary)]">
             <LineChart className="h-5 w-5 text-emerald-600" />
@@ -340,34 +380,37 @@ export default function AdminDashboardPage() {
             <MiniLineChart values={bookingsDaily} stroke="#059669" />
           </div>
         </div>
+        )}
+        {showBusinessInsights && (
         <div className="rounded-xl border border-[var(--border)] bg-[var(--card-bg)] p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-[var(--text-primary)]">Business Insights</h2>
           <div className="mt-4 space-y-4 text-sm">
-            <div>
+            {hasAccess("bookings") && <div>
               <p className="font-medium text-[var(--text-primary)]">Booking Status</p>
               <div className="mt-1 grid grid-cols-3 gap-2 text-[var(--text-secondary)]">
                 <div>Pending: {valueOrZero(dashboardData.bookings?.pending).toLocaleString("en-MY")}</div>
                 <div>Paid: {valueOrZero(dashboardData.bookings?.paid).toLocaleString("en-MY")}</div>
                 <div>Cancelled: {valueOrZero(dashboardData.bookings?.cancelled).toLocaleString("en-MY")}</div>
               </div>
-            </div>
-            <div>
+            </div>}
+            {hasAccess("classes") && <div>
               <p className="font-medium text-[var(--text-primary)]">Class Capacity</p>
               <div className="mt-1 grid grid-cols-3 gap-2 text-[var(--text-secondary)]">
                 <div>Total Seats: {totalSeats.toLocaleString("en-MY")}</div>
                 <div>Booked Seats: {bookedSeats.toLocaleString("en-MY")}</div>
                 <div>Occupancy: {occupancy}%</div>
               </div>
-            </div>
-            <div>
+            </div>}
+            {hasAccess("certificates") && <div>
               <p className="font-medium text-[var(--text-primary)]">Certificates</p>
               <div className="mt-1 grid grid-cols-2 gap-2 text-[var(--text-secondary)]">
                 <div>Issued This Month: {valueOrZero(dashboardData.certificates?.issued_this_month).toLocaleString("en-MY")}</div>
                 <div>Total Issued: {valueOrZero(dashboardData.certificates?.issued_total ?? dashboardData.certificates?.issued).toLocaleString("en-MY")}</div>
               </div>
-            </div>
+            </div>}
           </div>
         </div>
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
