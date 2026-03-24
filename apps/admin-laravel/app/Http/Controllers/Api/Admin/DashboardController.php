@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\SettingService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
@@ -42,6 +43,11 @@ class DashboardController extends Controller
         $weekEnd = $now->copy()->endOfWeek();
         $monthStart = $now->copy()->startOfMonth();
         $yearStart = $now->copy()->startOfYear();
+        $settings = app(SettingService::class);
+
+        $gaMeasurementId = $settings->get('api_connections', 'google_analytics.measurement_id');
+        $gaServiceAccount = $settings->get('api_connections', 'google_analytics.service_account');
+        $stripeSecret = $settings->get('api_connections', 'stripe.secret_key');
 
         $bookingsToday = 0;
         $bookingsWeek = 0;
@@ -325,6 +331,50 @@ class DashboardController extends Controller
             $bookingsDaily = array_fill(0, 7, 0);
         }
 
+        $gaData = [
+            'users' => 0,
+            'sessions' => 0,
+            'page_views' => 0,
+        ];
+
+        try {
+            if ($gaMeasurementId && $gaServiceAccount) {
+                // Placeholder structure for GA integration readiness.
+                $gaData = [
+                    'users' => 0,
+                    'sessions' => 0,
+                    'page_views' => 0,
+                ];
+            }
+        } catch (\Throwable) {
+            // fail silently
+        }
+
+        $stripeData = [
+            'total_revenue' => 0,
+        ];
+
+        try {
+            if ($stripeSecret) {
+                \Stripe\Stripe::setApiKey((string) $stripeSecret);
+
+                $charges = \Stripe\Charge::all([
+                    'limit' => 100,
+                ]);
+
+                $total = 0;
+                foreach ($charges->data as $charge) {
+                    if ($charge->paid && ! $charge->refunded) {
+                        $total += (int) $charge->amount;
+                    }
+                }
+
+                $stripeData['total_revenue'] = round($total / 100, 2);
+            }
+        } catch (\Throwable) {
+            // fail silently
+        }
+
         return [
             'revenue' => [
                 'today' => $revenueToday,
@@ -373,6 +423,10 @@ class DashboardController extends Controller
             'trends' => [
                 'revenue_daily' => $revenueDaily,
                 'bookings_daily' => $bookingsDaily,
+            ],
+            'external' => [
+                'google_analytics' => $gaData,
+                'stripe' => $stripeData,
             ],
         ];
     }
