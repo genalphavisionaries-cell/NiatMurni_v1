@@ -2,23 +2,78 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Concerns\EnforcesModuleAccess;
 use App\Filament\Resources\CmsTestimonialResource\Pages;
 use App\Models\CmsTestimonial;
-use App\Support\AdminModules;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class CmsTestimonialResource extends Resource
 {
-    use EnforcesModuleAccess;
-
-    protected static string $requiredModule = AdminModules::CMS;
-
     protected static ?string $model = CmsTestimonial::class;
+
+    public static function canAccess(): bool
+    {
+        return auth()->check();
+    }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->check();
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->check();
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return auth()->check();
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return auth()->check();
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return auth()->check();
+    }
+
+    public static function canForceDelete(Model $record): bool
+    {
+        return auth()->check();
+    }
+
+    public static function canForceDeleteAny(): bool
+    {
+        return auth()->check();
+    }
+
+    public static function canRestore(Model $record): bool
+    {
+        return auth()->check();
+    }
+
+    public static function canRestoreAny(): bool
+    {
+        return auth()->check();
+    }
+
+    public static function canReplicate(Model $record): bool
+    {
+        return auth()->check();
+    }
+
+    public static function canView(Model $record): bool
+    {
+        return auth()->check();
+    }
 
     protected static ?string $navigationIcon = 'heroicon-o-chat-bubble-bottom-center-text';
 

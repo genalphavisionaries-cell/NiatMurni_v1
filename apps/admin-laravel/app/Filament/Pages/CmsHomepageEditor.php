@@ -45,6 +45,11 @@ class CmsHomepageEditor extends Page implements HasForms
 
     protected static string $view = 'filament.pages.cms-homepage-editor';
 
+    public static function canAccess(): bool
+    {
+        return auth()->check();
+    }
+
     public ?array $data = [];
 
     public function mount(): void
