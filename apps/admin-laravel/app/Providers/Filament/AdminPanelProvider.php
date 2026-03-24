@@ -2,6 +2,10 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\CmsHomepageEditor;
+use App\Filament\Pages\CmsLayoutEditor;
+use App\Filament\Pages\ManageClassAttendance;
+use App\Filament\Pages\SystemSettings;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -32,9 +36,18 @@ class AdminPanelProvider extends PanelProvider
                 'danger' => Color::Rose,
                 'success' => Color::Emerald,
             ])
+            ->navigationGroups([
+                'CMS',
+                'Management',
+                'Settings',
+            ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
-            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
-            ->pages([])
+            ->pages([
+                CmsLayoutEditor::class,
+                CmsHomepageEditor::class,
+                ManageClassAttendance::class,
+                SystemSettings::class,
+            ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([])
             ->middleware([
