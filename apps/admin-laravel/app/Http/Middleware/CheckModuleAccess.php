@@ -9,7 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CheckModuleAccess
 {
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next, string $modules = ''): Response
     {
         /** @var User|null $user */
         $user = $request->user();
@@ -17,77 +17,50 @@ class CheckModuleAccess
             return response()->json(['message' => 'Unauthenticated'], 401);
         }
 
+        if ($modules === '') {
+            return $next($request);
+        }
+
         $role = (string) ($user->admin_role ?: $user->role);
-        $module = $this->resolveModuleFromRequest($request);
-
-        // Unmapped routes are allowed (e.g. /api/admin/me, logout).
-        if ($module === null) {
+        if (in_array($role, ['super_admin'], true) || in_array((string) $user->role, ['super_admin'], true)) {
             return $next($request);
         }
 
-        if ($role === 'super_admin') {
+        $required = array_filter(array_map('trim', explode(',', $modules)));
+        $allowed = $this->resolveAllowedModules($user);
+
+        if ($required === [] || array_intersect($required, $allowed) !== []) {
             return $next($request);
         }
 
-        if ($role === 'technical_admin') {
-            if (in_array($module, ['finance', 'users'], true)) {
-                return response()->json(['message' => 'Forbidden'], 403);
-            }
-            return $next($request);
-        }
-
-        if (in_array($role, ['content_admin', 'cms_admin'], true)) {
-            $allowed = ['cms', 'homepage', 'blog', 'settings'];
-            if (! in_array($module, $allowed, true)) {
-                return response()->json(['message' => 'Forbidden'], 403);
-            }
-            return $next($request);
-        }
-
-        if (in_array($role, ['operations_admin', 'finance_admin', 'accountant'], true)) {
-            $allowed = $user->userModules()->pluck('module_key')->all();
-            if (! in_array($module, $allowed, true)) {
-                return response()->json(['message' => 'Forbidden'], 403);
-            }
-            return $next($request);
-        }
-
-        if ($user->hasModuleAccess($module)) {
-            return $next($request);
-        }
-
-        return response()->json(['message' => 'Forbidden'], 403);
+        return response()->json([
+            'message' => 'Forbidden: No access to this module',
+        ], 403);
     }
 
-    private function resolveModuleFromRequest(Request $request): ?string
+    /**
+     * @return string[]
+     */
+    private function resolveAllowedModules(User $user): array
     {
-        $path = trim($request->path(), '/');
-        if (! str_starts_with($path, 'api/admin/')) {
-            return null;
+        $modules = [];
+
+        if (is_array($user->module_access)) {
+            $modules = array_merge($modules, $user->module_access);
         }
 
-        $mapping = [
-            'api/admin/programs' => 'programs',
-            'api/admin/class-sessions' => 'classes',
-            'api/admin/classes' => 'classes',
-            'api/admin/bookings' => 'bookings',
-            'api/admin/participants' => 'participants',
-            'api/admin/tutors' => 'tutors',
-            'api/admin/certificates' => 'certificates',
-            'api/admin/finance' => 'finance',
-            'api/admin/settings' => 'settings',
-            'api/admin/users' => 'users',
-            'api/admin/homepage-settings' => 'homepage',
-            'api/admin/cms' => 'cms',
-            'api/admin/blog' => 'blog',
-        ];
+        $dbModules = $user->relationLoaded('userModules')
+            ? $user->userModules->pluck('module_key')->all()
+            : $user->userModules()->pluck('module_key')->all();
 
-        foreach ($mapping as $prefix => $module) {
-            if ($path === $prefix || str_starts_with($path, $prefix . '/')) {
-                return $module;
-            }
+        if ($dbModules !== []) {
+            $modules = array_merge($modules, $dbModules);
         }
 
-        return null;
+        if ($modules === []) {
+            $modules = $user->resolvedModules();
+        }
+
+        return array_values(array_unique(array_filter(array_map('strval', $modules))));
     }
 }

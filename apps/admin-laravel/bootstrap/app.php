@@ -17,6 +17,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'webhooks/stripe',
             'api/*',
         ]);
+        $middleware->alias([
+            'module' => \App\Http\Middleware\CheckModuleAccess::class,
+        ]);
         $middleware->api(prepend: [
             HandleCors::class,
             \App\Http\Middleware\SanctumTokenFromCookie::class,
