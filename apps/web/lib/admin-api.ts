@@ -71,6 +71,34 @@ export type AdminApiConnections = {
   };
 };
 
+export type DashboardOverview = {
+  revenue: {
+    today: number | null;
+    this_month: number | null;
+    this_year: number | null;
+  };
+  bookings: {
+    today: number | null;
+    this_week: number | null;
+    this_month: number | null;
+    total: number | null;
+  };
+  participants: {
+    total: number | null;
+  };
+  tutors: {
+    active: number | null;
+    total: number | null;
+  };
+  classes: {
+    upcoming: number | null;
+    ongoing: number | null;
+  };
+  certificates: {
+    issued: number | null;
+  };
+};
+
 async function request<T>(
   path: string,
   options: RequestInit & { params?: Record<string, string> } = {}
@@ -228,6 +256,9 @@ export const adminApi = {
       method: "PUT",
       body: JSON.stringify(data),
     });
+  },
+  getDashboardOverview(): Promise<{ data: DashboardOverview }> {
+    return request("/api/admin/dashboard/overview");
   },
 
   // Users (native Next admin user management)

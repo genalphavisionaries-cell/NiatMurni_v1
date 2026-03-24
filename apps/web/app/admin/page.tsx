@@ -1,4 +1,8 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
 import { fetchUpcomingClasses } from "@/lib/api";
+import { adminApi, type DashboardOverview } from "@/lib/admin-api";
 import { StatCard } from "@/components/dashboard";
 import {
   AlertCircle,
@@ -9,32 +13,101 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
+type UpcomingClass = { id: number; program_name: string; starts_at: string };
 
-export const metadata = {
-  title: "Admin Dashboard | Niat Murni",
-  description: "Admin dashboard",
+const DASHBOARD_FALLBACK: DashboardOverview = {
+  revenue: { today: 0, this_month: 0, this_year: 0 },
+  bookings: { today: 0, this_week: 0, this_month: 0, total: 0 },
+  participants: { total: 0 },
+  tutors: { active: 0, total: 0 },
+  classes: { upcoming: 0, ongoing: 0 },
+  certificates: { issued: 0 },
 };
 
-export default async function AdminDashboardPage() {
-  let upcomingClasses: Array<{ id: number; program_name: string; starts_at: string }> = [];
-  try {
-    const classes = await fetchUpcomingClasses();
-    upcomingClasses = (classes ?? []).slice(0, 5).map((c) => ({
-      id: c.id,
-      program_name: c.program_name,
-      starts_at: c.starts_at,
-    }));
-  } catch {
-    // use placeholder when API not available
-  }
+function formatRM(value: number | null | undefined, loading: boolean): string {
+  if (loading) return "-";
+  if (value == null) return "-";
+  return `RM ${value.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
 
-  const stats = [
-    { title: "Revenue", value: "—", description: "This period", icon: DollarSign },
-    { title: "Total Bookings", value: "—", description: "All time", icon: BookOpen },
-    { title: "Upcoming Sessions", value: upcomingClasses.length, description: "Next 30 days", icon: Calendar },
-    { title: "Active Trainers", value: "—", description: "Currently active", icon: Users },
-    { title: "Completion Rate", value: "—", description: "Program completion", icon: TrendingUp },
-  ];
+function formatMetric(value: number | null | undefined, loading: boolean): string | number {
+  if (loading) return "-";
+  if (value == null) return "-";
+  return value;
+}
+
+export default function AdminDashboardPage() {
+  const [dashboardData, setDashboardData] = useState<DashboardOverview>(DASHBOARD_FALLBACK);
+  const [upcomingClasses, setUpcomingClasses] = useState<UpcomingClass[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      setLoading(true);
+      try {
+        const [overviewRes, classes] = await Promise.all([
+          adminApi.getDashboardOverview(),
+          fetchUpcomingClasses(),
+        ]);
+        if (cancelled) return;
+
+        setDashboardData(overviewRes.data ?? DASHBOARD_FALLBACK);
+        setUpcomingClasses(
+          (classes ?? []).slice(0, 5).map((c) => ({
+            id: c.id,
+            program_name: c.program_name,
+            starts_at: c.starts_at,
+          }))
+        );
+      } catch (error) {
+        console.error("Failed to load admin dashboard overview", error);
+        if (!cancelled) {
+          setDashboardData(DASHBOARD_FALLBACK);
+          setUpcomingClasses([]);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const stats = useMemo(
+    () => [
+      {
+        title: "Revenue",
+        value: formatRM(dashboardData.revenue?.this_month, loading),
+        description: "This period",
+        icon: DollarSign,
+      },
+      {
+        title: "Total Bookings",
+        value: formatMetric(dashboardData.bookings?.total, loading),
+        description: "All time",
+        icon: BookOpen,
+      },
+      {
+        title: "Upcoming Sessions",
+        value: formatMetric(dashboardData.classes?.upcoming, loading),
+        description: "Next 30 days",
+        icon: Calendar,
+      },
+      {
+        title: "Active Trainers",
+        value: formatMetric(dashboardData.tutors?.active, loading),
+        description: "Currently active",
+        icon: Users,
+      },
+      { title: "Completion Rate", value: "-", description: "Program completion", icon: TrendingUp },
+    ],
+    [dashboardData, loading]
+  );
 
   return (
     <div className="space-y-6">
