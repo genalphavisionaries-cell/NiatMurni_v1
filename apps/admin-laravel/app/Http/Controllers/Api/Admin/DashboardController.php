@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Services\SettingService;
 use Carbon\Carbon;
+use Google\Analytics\Data\V1beta\Client\BetaAnalyticsDataClient;
+use Google\Analytics\Data\V1beta\DateRange;
+use Google\Analytics\Data\V1beta\Metric;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -339,12 +342,37 @@ class DashboardController extends Controller
 
         try {
             if ($gaMeasurementId && $gaServiceAccount) {
-                // Placeholder structure for GA integration readiness.
-                $gaData = [
-                    'users' => 0,
-                    'sessions' => 0,
-                    'page_views' => 0,
-                ];
+                $client = new BetaAnalyticsDataClient([
+                    'credentials' => json_decode((string) $gaServiceAccount, true),
+                ]);
+
+                $propertyId = str_replace('G-', '', (string) $gaMeasurementId);
+
+                $response = $client->runReport([
+                    'property' => 'properties/'.$propertyId,
+                    'dateRanges' => [
+                        new DateRange([
+                            'start_date' => '7daysAgo',
+                            'end_date' => 'today',
+                        ]),
+                    ],
+                    'metrics' => [
+                        new Metric(['name' => 'totalUsers']),
+                        new Metric(['name' => 'sessions']),
+                        new Metric(['name' => 'screenPageViews']),
+                    ],
+                ]);
+
+                $row = $response->getRows()[0] ?? null;
+                if ($row) {
+                    $metrics = $row->getMetricValues();
+
+                    $gaData = [
+                        'users' => (int) ($metrics[0]->getValue() ?? 0),
+                        'sessions' => (int) ($metrics[1]->getValue() ?? 0),
+                        'page_views' => (int) ($metrics[2]->getValue() ?? 0),
+                    ];
+                }
             }
         } catch (\Throwable) {
             // fail silently
