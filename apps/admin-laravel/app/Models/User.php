@@ -56,7 +56,17 @@ class User extends Authenticatable implements FilamentUser
      */
     public function canAccessPanel(Panel $panel): bool
     {
-        return (bool) $this->is_active && $this->canAccessAdmin();
+        $allowed = (bool) $this->is_active && $this->canAccessAdmin();
+        if (! $allowed) {
+            logger()->warning('User canAccessPanel denied', [
+                'user_id' => $this->id,
+                'is_active' => $this->is_active,
+                'role' => $this->role,
+                'admin_role' => $this->admin_role,
+            ]);
+        }
+
+        return $allowed;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -71,15 +81,41 @@ class User extends Authenticatable implements FilamentUser
         }
 
         if (! in_array($this->role, ['admin', 'staff'], true)) {
+            logger()->warning('User canAccessAdmin denied', [
+                'user_id' => $this->id,
+                'reason' => 'role_not_admin_or_staff',
+                'role' => $this->role,
+                'admin_role' => $this->admin_role,
+            ]);
             return false;
         }
 
         // Backward compatibility: allow legacy admin records with empty admin_role.
         if ($this->admin_role === null || $this->admin_role === '') {
-            return $this->role === 'admin';
+            $ok = $this->role === 'admin';
+            if (! $ok) {
+                logger()->warning('User canAccessAdmin denied', [
+                    'user_id' => $this->id,
+                    'reason' => 'empty_admin_role_not_admin',
+                    'role' => $this->role,
+                    'admin_role' => $this->admin_role,
+                ]);
+            }
+
+            return $ok;
         }
 
-        return $this->hasValidAdminRole();
+        $ok = $this->hasValidAdminRole();
+        if (! $ok) {
+            logger()->warning('User canAccessAdmin denied', [
+                'user_id' => $this->id,
+                'reason' => 'invalid_admin_role',
+                'role' => $this->role,
+                'admin_role' => $this->admin_role,
+            ]);
+        }
+
+        return $ok;
     }
 
     public function hasValidAdminRole(): bool
