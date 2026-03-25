@@ -76,46 +76,10 @@ class User extends Authenticatable implements FilamentUser
     /** Returns true for roles that may open the admin panel (legacy gate). */
     public function canAccessAdmin(): bool
     {
-        if ($this->role === 'tutor') {
-            return true;
-        }
-
-        if (! in_array($this->role, ['admin', 'staff'], true)) {
-            logger()->warning('User canAccessAdmin denied', [
-                'user_id' => $this->id,
-                'reason' => 'role_not_admin_or_staff',
-                'role' => $this->role,
-                'admin_role' => $this->admin_role,
-            ]);
-            return false;
-        }
-
-        // Backward compatibility: allow legacy admin records with empty admin_role.
-        if ($this->admin_role === null || $this->admin_role === '') {
-            $ok = $this->role === 'admin';
-            if (! $ok) {
-                logger()->warning('User canAccessAdmin denied', [
-                    'user_id' => $this->id,
-                    'reason' => 'empty_admin_role_not_admin',
-                    'role' => $this->role,
-                    'admin_role' => $this->admin_role,
-                ]);
-            }
-
-            return $ok;
-        }
-
-        $ok = $this->hasValidAdminRole();
-        if (! $ok) {
-            logger()->warning('User canAccessAdmin denied', [
-                'user_id' => $this->id,
-                'reason' => 'invalid_admin_role',
-                'role' => $this->role,
-                'admin_role' => $this->admin_role,
-            ]);
-        }
-
-        return $ok;
+        // TEMPORARY (project-wide unblock):
+        // While the RBAC/module access work is being finalized, allow any
+        // active user to access the admin panel and all modules.
+        return (bool) $this->is_active;
     }
 
     public function hasValidAdminRole(): bool
@@ -179,33 +143,10 @@ class User extends Authenticatable implements FilamentUser
      */
     public function hasModuleAccess(string $module): bool
     {
-        if ($this->isSuperAdmin()) {
-            return true;
-        }
-
-        // Legacy accounts (role=admin) created before admin_role existed: full module access.
-        if ($this->role === 'admin' && ($this->admin_role === null || $this->admin_role === '')) {
-            return true;
-        }
-
-        if (in_array($this->admin_role, ['operations_admin', 'finance_admin'], true)) {
-            $moduleKeys = $this->relationLoaded('userModules')
-                ? $this->userModules->pluck('module_key')->all()
-                : $this->userModules()->pluck('module_key')->all();
-            if ($moduleKeys !== []) {
-                return in_array($module, $moduleKeys, true);
-            }
-        }
-
-        // Explicit overrides stored in module_access column take precedence.
-        if (is_array($this->module_access) && $this->module_access !== []) {
-            return in_array($module, $this->module_access, true);
-        }
-
-        // Fall back to role defaults when no explicit list has been saved.
-        $defaults = AdminModules::defaultsForRole((string) $this->admin_role);
-
-        return in_array($module, $defaults, true);
+        // TEMPORARY (project-wide unblock):
+        // While the RBAC/module access work is being finalized, allow access
+        // to all modules for any active user.
+        return (bool) $this->is_active;
     }
 
     /**

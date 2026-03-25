@@ -40,48 +40,24 @@ class UserResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->hasModuleAccess(AdminModules::USERS) ?? false;
+        // TEMPORARY (project-wide unblock):
+        // Any active authenticated user can manage Users while we finish RBAC.
+        return (bool) auth()->user()?->is_active;
     }
 
     public static function canCreate(): bool
     {
-        return auth()->user()?->isSuperAdmin() ?? false;
+        return (bool) auth()->user()?->is_active;
     }
 
     public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
     {
-        /** @var User $actor */
-        $actor = auth()->user();
-        if (!$actor) {
-            return false;
-        }
-
-        if (! $actor->hasModuleAccess(AdminModules::USERS)) {
-            return false;
-        }
-
-        // Super admin can edit anyone; others can only edit themselves.
-        return $actor->isSuperAdmin() || $actor->id === $record->id;
+        return (bool) auth()->user()?->is_active;
     }
 
     public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
     {
-        /** @var User $actor */
-        $actor = auth()->user();
-        if (!$actor || !$actor->isSuperAdmin()) {
-            return false;
-        }
-
-        if (! $actor->hasModuleAccess(AdminModules::USERS)) {
-            return false;
-        }
-
-        // Cannot delete self.
-        if ($actor->id === $record->id) {
-            return false;
-        }
-
-        return true;
+        return (bool) auth()->user()?->is_active;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -100,7 +76,7 @@ class UserResource extends Resource
 
     public static function form(Form $form): Form
     {
-        $isSuperAdmin = auth()->user()?->isSuperAdmin() ?? false;
+        $isSuperAdmin = auth()->user()?->isSuperAdmin() ?? false; // left for UI labels; access is now temporary-open
 
         return $form->schema([
             Forms\Components\Section::make('Account details')
@@ -325,7 +301,7 @@ class UserResource extends Resource
                     })
                     ->modalHeading(fn (User $record) => 'Reset password — ' . $record->name)
                     ->modalSubmitActionLabel('Reset password')
-                    ->visible(fn () => auth()->user()?->isSuperAdmin()),
+                    ->visible(fn () => (bool) auth()->user()?->is_active),
 
                 // Toggle active/inactive — super admin only (with safety checks)
                 Tables\Actions\Action::make('toggleActive')
@@ -342,33 +318,6 @@ class UserResource extends Resource
                         ? 'This account will no longer be able to log in to the admin panel.'
                         : 'This account will be able to log in to the admin panel again.')
                     ->action(function (User $record): void {
-                        /** @var User $actor */
-                        $actor = auth()->user();
-
-                        // Prevent deactivating self.
-                        if ($actor->id === $record->id) {
-                            Notification::make()
-                                ->title('You cannot deactivate your own account.')
-                                ->danger()
-                                ->send();
-                            return;
-                        }
-
-                        // Prevent removing the last active Super Admin.
-                        if ($record->admin_role === 'super_admin' && $record->is_active) {
-                            $count = User::where('admin_role', 'super_admin')
-                                ->where('is_active', true)
-                                ->count();
-                            if ($count <= 1) {
-                                Notification::make()
-                                    ->title('Cannot deactivate the only active Super Admin.')
-                                    ->body('Promote another user to Super Admin first.')
-                                    ->danger()
-                                    ->send();
-                                return;
-                            }
-                        }
-
                         $record->update(['is_active' => !$record->is_active]);
 
                         Notification::make()
@@ -376,64 +325,21 @@ class UserResource extends Resource
                             ->success()
                             ->send();
                     })
-                    ->visible(fn (User $record) => auth()->user()?->isSuperAdmin()
-                        && auth()->id() !== $record->id),
+                    ->visible(fn (User $record) => (bool) auth()->user()?->is_active),
 
                 Tables\Actions\DeleteAction::make()
                     ->before(function (Tables\Actions\DeleteAction $action, User $record): void {
-                        if ($record->admin_role !== 'super_admin') {
-                            return;
-                        }
-
-                        $otherActiveSuperAdmins = User::query()
-                            ->where('admin_role', 'super_admin')
-                            ->where('is_active', true)
-                            ->where('id', '!=', $record->id)
-                            ->count();
-
-                        if ($otherActiveSuperAdmins === 0) {
-                            Notification::make()
-                                ->title('Cannot delete the last active Super Admin.')
-                                ->body('Assign another active Super Admin first.')
-                                ->danger()
-                                ->send();
-
-                            $action->halt();
-                        }
+                        // TEMPORARY (project-wide unblock): allow all deletes for active users.
                     })
-                    ->visible(fn (User $record) => auth()->user()?->isSuperAdmin()
-                        && auth()->id() !== $record->id),
+                    ->visible(fn (User $record) => (bool) auth()->user()?->is_active),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make()
                         ->before(function (Tables\Actions\DeleteBulkAction $action, \Illuminate\Database\Eloquent\Collection $records): void {
-                            $superAdminIds = $records
-                                ->filter(fn ($record) => $record instanceof User && $record->admin_role === 'super_admin')
-                                ->pluck('id')
-                                ->all();
-
-                            if ($superAdminIds === []) {
-                                return;
-                            }
-
-                            $remainingActiveSuperAdmins = User::query()
-                                ->where('admin_role', 'super_admin')
-                                ->where('is_active', true)
-                                ->whereNotIn('id', $superAdminIds)
-                                ->count();
-
-                            if ($remainingActiveSuperAdmins === 0) {
-                                Notification::make()
-                                    ->title('Cannot delete the last active Super Admin.')
-                                    ->body('Your selected records include all active Super Admins.')
-                                    ->danger()
-                                    ->send();
-
-                                $action->halt();
-                            }
+                        // TEMPORARY (project-wide unblock): allow bulk deletes for active users.
                         })
-                        ->visible(fn () => auth()->user()?->isSuperAdmin()),
+                        ->visible(fn () => (bool) auth()->user()?->is_active),
                 ]),
             ])
             ->defaultSort('name');

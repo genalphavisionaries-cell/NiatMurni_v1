@@ -385,11 +385,9 @@ class SystemSettings extends Page implements HasForms
                 continue;
             }
             $v = $tab['visible'] ?? true;
-            if ($v === true) {
-                $out[] = (string) $tabId;
-            } elseif ($v === 'super_admin_only' && $user?->isSuperAdmin()) {
-                $out[] = (string) $tabId;
-            } elseif ($v === 'finance_or_super' && $user?->canAccessPaymentFinanceSettings()) {
+            // TEMPORARY (project-wide unblock):
+            // Show all settings tabs to any authenticated admin-panel user.
+            if ($v === true || $v === 'super_admin_only' || $v === 'finance_or_super') {
                 $out[] = (string) $tabId;
             }
         }

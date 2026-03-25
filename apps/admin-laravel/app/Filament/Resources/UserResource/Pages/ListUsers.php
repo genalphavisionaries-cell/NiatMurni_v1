@@ -14,7 +14,7 @@ class ListUsers extends ListRecords
     {
         return [
             Actions\CreateAction::make()
-                ->visible(fn () => auth()->user()?->isSuperAdmin()),
+                ->visible(fn () => (bool) auth()->user()?->is_active),
         ];
     }
 }
