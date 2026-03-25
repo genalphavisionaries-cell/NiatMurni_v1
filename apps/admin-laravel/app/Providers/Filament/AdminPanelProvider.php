@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\CmsHomepageEditor;
 use App\Filament\Pages\CmsLayoutEditor;
+use App\Filament\Pages\HomepageEditor;
 use App\Filament\Pages\ManageClassAttendance;
 use App\Filament\Pages\SystemSettings;
 use App\Http\Middleware\LogAdminPanelAuth;
@@ -42,6 +43,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->navigationGroups([
                 'CMS',
+                'Homepage',
                 'Management',
                 'Settings',
             ])
@@ -49,6 +51,7 @@ class AdminPanelProvider extends PanelProvider
             ->pages([
                 CmsLayoutEditor::class,
                 CmsHomepageEditor::class,
+                HomepageEditor::class,
                 ManageClassAttendance::class,
                 SystemSettings::class,
             ])
