@@ -2,12 +2,10 @@
 
 namespace App\Filament\Pages;
 
-use App\Filament\Concerns\EnforcesModuleAccessPage;
 use App\Models\CmsItem;
 use App\Models\CmsPage;
 use App\Models\CmsSection;
 use App\Services\CmsService;
-use App\Support\AdminModules;
 use Filament\Actions\Action;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Repeater;
@@ -29,10 +27,7 @@ use Illuminate\Support\Facades\DB;
  */
 class CmsLayoutEditor extends Page implements HasForms
 {
-    use EnforcesModuleAccessPage;
     use InteractsWithForms;
-
-    protected static string $requiredModule = AdminModules::CMS;
 
     protected static ?string $navigationIcon = 'heroicon-o-squares-2x2';
 
@@ -45,11 +40,6 @@ class CmsLayoutEditor extends Page implements HasForms
     protected static ?string $title = 'Layout & Navigation';
 
     protected static string $view = 'filament.pages.cms-layout-editor';
-
-    public static function canAccess(): bool
-    {
-        return auth()->check();
-    }
 
     public ?array $data = [];
 

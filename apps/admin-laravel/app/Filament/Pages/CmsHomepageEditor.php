@@ -2,12 +2,10 @@
 
 namespace App\Filament\Pages;
 
-use App\Filament\Concerns\EnforcesModuleAccessPage;
 use App\Models\CmsItem;
 use App\Models\CmsPage;
 use App\Models\CmsSection;
 use App\Services\CmsService;
-use App\Support\AdminModules;
 use Filament\Actions\Action;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Placeholder;
@@ -28,10 +26,7 @@ use Illuminate\Support\Facades\DB;
  */
 class CmsHomepageEditor extends Page implements HasForms
 {
-    use EnforcesModuleAccessPage;
     use InteractsWithForms;
-
-    protected static string $requiredModule = AdminModules::CMS;
 
     protected static ?string $navigationIcon = 'heroicon-o-home';
 
@@ -44,11 +39,6 @@ class CmsHomepageEditor extends Page implements HasForms
     protected static ?string $title = 'Homepage';
 
     protected static string $view = 'filament.pages.cms-homepage-editor';
-
-    public static function canAccess(): bool
-    {
-        return auth()->check();
-    }
 
     public ?array $data = [];
 
