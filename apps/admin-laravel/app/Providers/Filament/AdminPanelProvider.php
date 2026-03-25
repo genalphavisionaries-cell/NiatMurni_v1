@@ -6,6 +6,7 @@ use App\Filament\Pages\CmsHomepageEditor;
 use App\Filament\Pages\CmsLayoutEditor;
 use App\Filament\Pages\ManageClassAttendance;
 use App\Filament\Pages\SystemSettings;
+use App\Http\Middleware\LogAdminPanelAuth;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -58,6 +59,7 @@ class AdminPanelProvider extends PanelProvider
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
                 AuthenticateSession::class,
+                LogAdminPanelAuth::class,
                 ShareErrorsFromSession::class,
                 VerifyCsrfToken::class,
                 SubstituteBindings::class,
