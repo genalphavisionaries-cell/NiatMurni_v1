@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'panels' => [
+        App\Providers\Filament\AdminPanelProvider::class,
+    ],
     'assets_path' => null,
     'broadcasting' => [
         'enabled' => false,

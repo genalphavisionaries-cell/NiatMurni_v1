@@ -24,6 +24,8 @@ class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
+        logger()->info('AdminPanelProvider LOADED');
+
         // Panel at /admin (path only; no domain restriction)
         return $panel
             ->default()
