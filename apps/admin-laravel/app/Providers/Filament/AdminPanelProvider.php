@@ -32,7 +32,6 @@ class AdminPanelProvider extends PanelProvider
             ->authGuard('web')
             ->login()
             ->passwordReset()
-            ->authorize(fn () => auth()->check())
             ->colors([
                 'primary' => Color::Amber,
                 'danger' => Color::Rose,
