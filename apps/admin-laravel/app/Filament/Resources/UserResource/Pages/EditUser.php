@@ -20,14 +20,23 @@ class EditUser extends EditRecord
                 ->before(function (Actions\DeleteAction $action): void {
                     /** @var User $record */
                     $record = $this->record;
-                    if ($record->admin_role !== 'super_admin') {
+                    if (! $record->isSuperAdmin()) {
                         return;
                     }
 
                     $otherActiveSuperAdmins = User::query()
-                        ->where('admin_role', 'super_admin')
                         ->where('is_active', true)
                         ->where('id', '!=', $record->id)
+                        ->where(function ($q) {
+                            $q->where('admin_role', 'super_admin')
+                                ->orWhere(function ($q2) {
+                                    $q2->where('role', 'admin')
+                                        ->where(function ($q3) {
+                                            $q3->whereNull('admin_role')
+                                                ->orWhere('admin_role', '');
+                                        });
+                                });
+                        })
                         ->count();
 
                     if ($otherActiveSuperAdmins === 0) {
@@ -97,17 +106,30 @@ class EditUser extends EditRecord
             }
         }
 
-        if ($record->admin_role === 'super_admin') {
-            $wasActive   = $record->is_active;
-            $nowActive   = $data['is_active'] ?? true;
-            $nowRole     = $data['admin_role'] ?? $record->admin_role;
+        if ($record->isSuperAdmin()) {
+            $wasActive = (bool) $record->is_active;
+            $nowActive = (bool) ($data['is_active'] ?? true);
 
-            $losingSuper = ($wasActive && !$nowActive) || ($nowRole !== 'super_admin');
+            $nextRole = $data['role'] ?? $record->role;
+            $nextAdminRole = $data['admin_role'] ?? $record->admin_role;
+            $nextIsSuper = User::isSuperAdminRole($nextRole, $nextAdminRole);
+
+            $losingSuper = ($wasActive && !$nowActive) || ! $nextIsSuper;
 
             if ($losingSuper) {
-                $activeSuperCount = User::where('admin_role', 'super_admin')
+                $activeSuperCount = User::query()
                     ->where('is_active', true)
                     ->where('id', '!=', $record->id)
+                    ->where(function ($q) {
+                        $q->where('admin_role', 'super_admin')
+                            ->orWhere(function ($q2) {
+                                $q2->where('role', 'admin')
+                                    ->where(function ($q3) {
+                                        $q3->whereNull('admin_role')
+                                            ->orWhere('admin_role', '');
+                                    });
+                            });
+                    })
                     ->count();
 
                 if ($activeSuperCount === 0) {

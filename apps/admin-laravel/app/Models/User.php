@@ -135,7 +135,27 @@ class User extends Authenticatable implements FilamentUser
 
     public function isSuperAdmin(): bool
     {
-        return $this->admin_role === 'super_admin';
+        return self::isSuperAdminRole($this->role, $this->admin_role);
+    }
+
+    /**
+     * Centralized definition of "super admin".
+     *
+     * Legacy compatibility:
+     * - old admin records may have role=admin and empty admin_role
+     * - existing logic treats those as having full module access
+     */
+    public static function isSuperAdminRole(?string $role, ?string $adminRole): bool
+    {
+        if ($adminRole === 'super_admin') {
+            return true;
+        }
+
+        if ($adminRole === null || $adminRole === '') {
+            return $role === 'admin';
+        }
+
+        return false;
     }
 
     public function isFinanceAdmin(): bool
