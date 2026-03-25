@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Support\AdminModules;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Hash;
@@ -12,6 +13,7 @@ Artisan::command('inspire', function () {
 Artisan::command('admin:ensure-admin', function () {
     $password = 'NiatMurniAdmin!';
     $hashed = Hash::make($password);
+    $allModules = array_keys(AdminModules::labels());
 
     $admins = [
         ['email' => 'admin@niatmurniacademy.com', 'name' => 'Admin'],
@@ -26,6 +28,8 @@ Artisan::command('admin:ensure-admin', function () {
                     'name' => $admin['name'],
                     'password' => $hashed,
                     'role' => 'admin',
+                    'admin_role' => 'super_admin',
+                    'module_access' => $allModules,
                     'is_active' => true,
                 ]
             );
@@ -50,4 +54,4 @@ Artisan::command('admin:ensure-admin', function () {
     }
 
     return 0;
-})->purpose('Ensure admin accounts exist with known password (fix login)');
+})->purpose('Ensure super-admin accounts exist with full module access (fix login)');

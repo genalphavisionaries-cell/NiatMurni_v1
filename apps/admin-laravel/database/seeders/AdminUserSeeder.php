@@ -3,13 +3,14 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Support\AdminModules;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
 class AdminUserSeeder extends Seeder
 {
     /**
-     * Two admin accounts (same password):
+     * Two super-admin accounts (same password):
      * - admin@niatmurniacademy.com (official domain)
      * - admin@niatmurni.my (legacy)
      * Password: NiatMurniAdmin!
@@ -17,6 +18,7 @@ class AdminUserSeeder extends Seeder
     public function run(): void
     {
         $password = Hash::make('NiatMurniAdmin!');
+        $allModules = array_keys(AdminModules::labels());
 
         User::updateOrCreate(
             ['email' => 'admin@niatmurniacademy.com'],
@@ -24,6 +26,8 @@ class AdminUserSeeder extends Seeder
                 'name' => 'Admin',
                 'password' => $password,
                 'role' => 'admin',
+                'admin_role' => 'super_admin',
+                'module_access' => $allModules,
                 'is_active' => true,
             ]
         );
@@ -34,6 +38,8 @@ class AdminUserSeeder extends Seeder
                 'name' => 'Admin (legacy)',
                 'password' => $password,
                 'role' => 'admin',
+                'admin_role' => 'super_admin',
+                'module_access' => $allModules,
                 'is_active' => true,
             ]
         );
