@@ -52,8 +52,11 @@ class ReservationService
 
             // 3. Count seats already booked (all non-cancelled bookings)
             $bookedSeatsQuery = Booking::query()
-                ->where('class_session_id', $class->id)
-                ->whereNull('cancelled_at');
+                ->where('class_session_id', $class->id);
+
+            if (Schema::hasColumn('bookings', 'cancelled_at')) {
+                $bookedSeatsQuery->whereNull('cancelled_at');
+            }
 
             $bookedSeats = Schema::hasColumn('bookings', 'seats_reserved')
                 ? (int) $bookedSeatsQuery->sum('seats_reserved')
