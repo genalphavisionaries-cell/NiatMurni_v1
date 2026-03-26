@@ -15,7 +15,16 @@ const DELIVERY_FEES: Record<"normal" | "fast", number> = {
 };
 
 export function CartModal() {
-  const { cart, isOpen, closeCart, clearCart, updateSeatCount } = useCart();
+  const {
+    cart,
+    isOpen,
+    closeCart,
+    clearCart,
+    removeItem,
+    updateSeatCount,
+    replacementNotice,
+    dismissReplacementNotice,
+  } = useCart();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -156,25 +165,61 @@ export function CartModal() {
         </div>
 
         <div className="space-y-5">
+          {replacementNotice && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              <div className="flex items-start justify-between gap-2">
+                <span>{replacementNotice}</span>
+                <button
+                  type="button"
+                  className="rounded px-1 text-amber-700 hover:bg-amber-100"
+                  onClick={dismissReplacementNotice}
+                >
+                  x
+                </button>
+              </div>
+            </div>
+          )}
+
           {step === 1 && (
             <section className="rounded-2xl border border-slate-200 p-4 text-sm shadow-sm">
               <h3 className="mb-2 text-base font-semibold text-slate-900">Cart Summary</h3>
               <p className="text-sm text-slate-700">{cart.class_title}</p>
-              <div className="mt-2 flex items-center gap-2">
+              <div className="mt-3 flex items-center gap-2">
                 <span className="text-sm text-slate-600">Seats</span>
-                <input
-                  type="number"
-                  min={1}
-                  max={3}
-                  value={cart.seat_count}
-                  onChange={(e) => updateSeatCount(Number(e.target.value) || 1)}
-                  className="w-20 rounded-lg border border-slate-300 px-2 py-1 text-sm"
+                <button
+                  type="button"
+                  onClick={() => updateSeatCount(Math.max(1, cart.seat_count - 1))}
+                  className="h-8 w-8 rounded-md border border-slate-300 text-slate-700 disabled:opacity-50"
+                  disabled={loading || !!reservation || cart.seat_count <= 1}
+                >
+                  -
+                </button>
+                <span className="min-w-8 text-center text-sm font-semibold text-slate-900">{cart.seat_count}</span>
+                <button
+                  type="button"
+                  onClick={() => updateSeatCount(cart.seat_count + 1)}
+                  className="h-8 w-8 rounded-md border border-slate-300 text-slate-700 disabled:opacity-50"
                   disabled={loading || !!reservation}
-                />
+                >
+                  +
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    removeItem();
+                    closeCart();
+                    resetModalState();
+                  }}
+                  className="ml-auto rounded-md border border-red-200 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50"
+                  disabled={loading || !!reservation}
+                >
+                  Remove
+                </button>
               </div>
               <p className="mt-2 text-sm text-slate-600">
                 RM {cart.price_per_seat.toFixed(2)} x {cart.seat_count}
               </p>
+              <p className="mt-1 text-sm font-semibold text-slate-900">Total: RM {courseTotal.toFixed(2)}</p>
             </section>
           )}
 

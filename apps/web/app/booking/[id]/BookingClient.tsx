@@ -41,6 +41,9 @@ export default function BookingClient({ id }: Props) {
     };
   }, [id]);
 
+  const isAccessible =
+    booking?.booking?.status === "confirmed" || booking?.booking?.status === "completed";
+
   return (
     <div>
       <header className="border-b border-stone-200 bg-white px-6 py-4">
@@ -58,7 +61,9 @@ export default function BookingClient({ id }: Props) {
         ) : !id ? (
           <p className="text-stone-500">Invalid booking.</p>
         ) : !booking ? (
-          <p className="text-stone-500">Booking not found.</p>
+          <p className="text-stone-500">Booking not found or not completed yet.</p>
+        ) : !isAccessible ? (
+          <p className="text-stone-500">Booking not found or not completed yet.</p>
         ) : (
           <div className="rounded-lg border border-stone-200 bg-white p-6 shadow-sm space-y-3">
             <p>

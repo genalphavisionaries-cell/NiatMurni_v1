@@ -352,13 +352,13 @@ export default function UpcomingClassesSection() {
                             Kuantiti: {it.qty}
                           </p>
                         </div>
-                        <Link
-                          href={`/booking/${it.classId}`}
+                        <button
+                          type="button"
                           className="inline-flex shrink-0 items-center justify-center rounded-lg bg-[#2563EB] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1D4ED8]"
                           onClick={() => setCartOpen(false)}
                         >
-                          Terus Booking →
-                        </Link>
+                          Continue Checkout
+                        </button>
                       </li>
                     ))}
                   </ul>
