@@ -61,23 +61,41 @@ class PaymentService
             ]);
         }
 
-        $priceCents = (int) ($reservation->classSession?->price_cents ?? 0);
+        $priceCents = (int) round((float) ($reservation->total_amount ?? 0) * 100);
+        if ($priceCents <= 0) {
+            $priceCents = (int) ($reservation->classSession?->price_cents ?? 0);
+        }
         if ($priceCents <= 0) {
             throw ValidationException::withMessages([
                 'reservation_id' => ['Class price is not configured.'],
             ]);
         }
 
+        $precreatedBooking = $reservation->converted_booking_id
+            ? Booking::query()->find($reservation->converted_booking_id)
+            : Booking::query()->where('reservation_id', $reservation->id)->orderByDesc('id')->first();
+
+        $customerEmail = $reservation->email ?: $reservation->participant?->email;
+
         $session = $this->stripeService->createCheckoutSessionForAmount(
             amountCents: $priceCents,
             currency: 'myr',
             metadata: [
                 'reservation_id' => (string) $reservation->id,
+                'booking_id' => (string) ($precreatedBooking?->id ?? ''),
                 'program_id' => (string) ($reservation->classSession?->program?->public_id ?? $reservation->classSession?->program_id ?? ''),
                 'session_id' => (string) ($reservation->classSession?->public_id ?? $reservation->classSession_id),
                 'product_id' => (string) ($reservation->classSession?->public_id ?? $reservation->classSession_id),
             ],
+            customerEmail: $customerEmail ? (string) $customerEmail : null,
         );
+
+        Log::info('stripe.session.created', [
+            'reservation_id' => (int) $reservation->id,
+            'booking_id' => (int) ($precreatedBooking?->id ?? 0),
+            'amount_cents' => $priceCents,
+            'has_customer_email' => ! empty($customerEmail),
+        ]);
 
         return [
             'checkout_url' => (string) $session->url,
@@ -133,7 +151,7 @@ class PaymentService
                 }
             }
 
-            if ((string) $reservation->status === Reservation::LEGACY_STATUS_CONVERTED && $reservation->converted_booking_id) {
+            if ($reservation->converted_booking_id) {
                 $booking = Booking::query()->findOrFail($reservation->converted_booking_id);
             } else {
                 $booking = $this->reservationService->convertReservationToBooking($reservation->id);

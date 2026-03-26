@@ -34,6 +34,7 @@ Route::post('/reservations', [ReservationController::class, 'store']);
 Route::post('/payments/checkout', [PaymentController::class, 'createCheckoutSession']);
 Route::post('/payments/manual/upload-receipt', [ManualPaymentController::class, 'uploadReceipt']);
 Route::post('/payments/manual/submit', [ManualPaymentController::class, 'submit']);
+Route::post('/bookings/{id}/manual-payment', [ManualPaymentController::class, 'submitForBooking']);
 
 // Stripe webhook (must remain public / unauthenticated)
 Route::post('/webhooks/stripe', [StripeWebhookController::class, 'handle']);

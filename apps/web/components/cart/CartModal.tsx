@@ -5,11 +5,13 @@ import {
   createReservation,
   createPaymentCheckout,
   fetchPublicCheckoutSettings,
+  submitManualPaymentForBooking,
   type PublicCheckoutSettings,
   type CreateReservationResponse,
 } from "@/lib/api";
 import { BookingForm, type BookingFormValues } from "./BookingForm";
 import { useCart } from "./CartProvider";
+import PaymentSuccessPanel from "@/components/checkout/PaymentSuccessPanel";
 
 export function CartModal() {
   const {
@@ -29,6 +31,8 @@ export function CartModal() {
   const [reservation, setReservation] = useState<CreateReservationResponse | null>(null);
   const [receipt, setReceipt] = useState<File | null>(null);
   const [checkoutSettings, setCheckoutSettings] = useState<PublicCheckoutSettings | null>(null);
+  const [showManualPayment, setShowManualPayment] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<"paid" | "pending_verification" | null>(null);
   const [form, setForm] = useState<BookingFormValues>({
     full_name: "",
     phone: "",
@@ -65,6 +69,8 @@ export function CartModal() {
     setSuccess(null);
     setReservation(null);
     setReceipt(null);
+    setShowManualPayment(false);
+    setPaymentStatus(null);
     setForm({
       full_name: "",
       phone: "",
@@ -148,6 +154,29 @@ export function CartModal() {
       window.location.href = checkout_url;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to start payment.");
+      setLoading(false);
+    }
+  };
+
+  const submitManualPayment = async () => {
+    if (!reservation?.booking_id) {
+      setError("Booking is not ready. Please retry reservation step.");
+      return;
+    }
+    if (!receipt) {
+      setError("Please upload payment receipt before submitting.");
+      return;
+    }
+
+    setError(null);
+    setLoading(true);
+    try {
+      await submitManualPaymentForBooking(reservation.booking_id, receipt);
+      setPaymentStatus("pending_verification");
+      setSuccess("Payment submitted. Awaiting admin verification.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to submit manual payment.");
+    } finally {
       setLoading(false);
     }
   };
@@ -298,82 +327,109 @@ export function CartModal() {
 
           {step === 3 && reservation && (
             <section className="space-y-3 rounded-2xl border border-slate-200 p-4 shadow-sm">
-              <p className="text-sm text-slate-700">
-                Reservation ID: <span className="font-semibold">{reservation.reservation_id}</span>
-              </p>
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm">
-                <p className="font-medium text-emerald-800">Secure Payment Powered by Stripe</p>
-                <p className="mt-1 text-xs text-emerald-700">
-                  [ STRIPE ] Your payment is encrypted and protected.
-                </p>
-              </div>
-              <div className="grid gap-2 sm:grid-cols-2">
-                <button
-                  type="button"
-                  onClick={payNow}
-                  disabled={loading}
-                  className="rounded-lg border border-amber-600 bg-amber-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-60"
-                >
-                  {loading ? (
-                    <span className="inline-flex items-center gap-2">
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/50 border-t-white" />
-                      Redirecting...
-                    </span>
-                  ) : (
-                    "Pay Now Online"
-                  )}
-                </button>
-                <button
-                  type="button"
-                  className="rounded-lg border border-slate-700 bg-slate-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800"
-                >
-                  Pay Manually
-                </button>
-              </div>
-
-              <div className="rounded-lg bg-slate-50 p-3">
-                <p className="text-sm font-medium text-slate-900">Manual Payment</p>
-                {manualPaymentEnabled ? (
-                  <>
-                    {checkoutSettings?.manual_payment.qr_image_url ? (
-                      <img
-                        src={checkoutSettings.manual_payment.qr_image_url}
-                        alt="Manual payment QR"
-                        className="mt-2 h-40 w-40 rounded border object-contain"
-                      />
-                    ) : (
-                      <p className="mt-1 text-xs text-slate-600">QR code not configured yet.</p>
-                    )}
-                    <p className="mt-2 text-xs text-slate-700">
-                      {checkoutSettings?.manual_payment.bank_name || "Bank"} · {checkoutSettings?.manual_payment.account_name || "Account Name"}
-                    </p>
-                    <p className="text-xs text-slate-700">
-                      {checkoutSettings?.manual_payment.account_number || "Account Number"}
-                      {checkoutSettings?.manual_payment.bank_code ? ` (${checkoutSettings.manual_payment.bank_code})` : ""}
-                    </p>
-                    {checkoutSettings?.manual_payment.instructions && (
-                      <p className="mt-2 text-xs text-slate-600">{checkoutSettings.manual_payment.instructions}</p>
-                    )}
-                  </>
-                ) : (
-                  <p className="mt-1 text-xs text-slate-600">Manual payment is currently unavailable.</p>
-                )}
-                <input
-                  type="file"
-                  accept="image/*,.pdf"
-                  className="mt-3 block w-full text-sm"
-                  onChange={(e) => setReceipt(e.target.files?.[0] ?? null)}
-                  disabled={!manualPaymentEnabled}
+              {paymentStatus ? (
+                <PaymentSuccessPanel
+                  paymentStatus={paymentStatus}
+                  summary={{
+                    reservationId: reservation.reservation_id,
+                    classTitle: cart.class_title,
+                    seatCount: cart.seat_count,
+                    totalAmount: grandTotal,
+                    deliveryMethod: form.delivery_type,
+                  }}
+                  onGoPortal={() => {
+                    window.location.href = "/participant/login";
+                  }}
+                  onBackHome={() => {
+                    window.location.href = "/";
+                  }}
                 />
-                <button
-                  type="button"
-                  className="mt-3 rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700"
-                  onClick={() => console.log("Manual receipt draft", { reservation, receipt })}
-                  disabled={!manualPaymentEnabled}
-                >
-                  Save Manual Receipt (temporary)
-                </button>
-              </div>
+              ) : (
+                <>
+                  <p className="text-sm text-slate-700">
+                    Reservation ID: <span className="font-semibold">{reservation.reservation_id}</span>
+                  </p>
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm">
+                    <p className="font-medium text-emerald-800">Secure Payment Powered by Stripe</p>
+                    <p className="mt-1 text-xs text-emerald-700">
+                      [ STRIPE ] Your payment is encrypted and protected.
+                    </p>
+                  </div>
+                  {!showManualPayment && (
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <button
+                        type="button"
+                        onClick={payNow}
+                        disabled={loading}
+                        className="rounded-lg border border-amber-600 bg-amber-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-60"
+                      >
+                        {loading ? (
+                          <span className="inline-flex items-center gap-2">
+                            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/50 border-t-white" />
+                            Redirecting...
+                          </span>
+                        ) : (
+                          "Pay Now Online"
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!manualPaymentEnabled}
+                        onClick={() => setShowManualPayment(true)}
+                        className="rounded-lg border border-slate-700 bg-slate-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+                      >
+                        Pay Manually
+                      </button>
+                    </div>
+                  )}
+
+                  {showManualPayment && (
+                    <div className="rounded-lg bg-slate-50 p-3">
+                      <p className="text-sm font-medium text-slate-900">Manual Payment</p>
+                      {manualPaymentEnabled ? (
+                        <>
+                          {checkoutSettings?.manual_payment.qr_image_url ? (
+                            <img
+                              src={checkoutSettings.manual_payment.qr_image_url}
+                              alt="Manual payment QR"
+                              className="mt-2 h-40 w-40 rounded border object-contain"
+                            />
+                          ) : (
+                            <p className="mt-1 text-xs text-slate-600">QR code not configured yet.</p>
+                          )}
+                          <p className="mt-2 text-xs text-slate-700">
+                            {checkoutSettings?.manual_payment.bank_name || "Bank"} · {checkoutSettings?.manual_payment.account_name || "Account Name"}
+                          </p>
+                          <p className="text-xs text-slate-700">
+                            {checkoutSettings?.manual_payment.account_number || "Account Number"}
+                            {checkoutSettings?.manual_payment.bank_code ? ` (${checkoutSettings.manual_payment.bank_code})` : ""}
+                          </p>
+                          {checkoutSettings?.manual_payment.instructions && (
+                            <p className="mt-2 text-xs text-slate-600">{checkoutSettings.manual_payment.instructions}</p>
+                          )}
+                        </>
+                      ) : (
+                        <p className="mt-1 text-xs text-slate-600">Manual payment is currently unavailable.</p>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*,.pdf"
+                        className="mt-3 block w-full text-sm"
+                        onChange={(e) => setReceipt(e.target.files?.[0] ?? null)}
+                        disabled={!manualPaymentEnabled || loading}
+                      />
+                      <button
+                        type="button"
+                        className="mt-3 w-full rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white disabled:opacity-60"
+                        onClick={submitManualPayment}
+                        disabled={!manualPaymentEnabled || !receipt || loading}
+                      >
+                        {loading ? "Submitting..." : "Payment Made"}
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
 
               <button
                 type="button"

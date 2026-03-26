@@ -174,6 +174,7 @@ export type CreateReservationPayload = {
 
 export type CreateReservationResponse = {
   reservation_id: number;
+  booking_id?: number;
   total_amount: number;
   expires_at: string;
 };
@@ -232,6 +233,7 @@ export async function createReservation(
   }
   return {
     reservation_id: Number(data.reservation_id),
+    booking_id: data.booking_id != null ? Number(data.booking_id) : undefined,
     total_amount: Number(data.total_amount),
     expires_at: String(data.expires_at ?? ""),
   };
@@ -253,6 +255,31 @@ export async function createPaymentCheckout(
     throw new Error("Checkout URL was not returned.");
   }
   return { checkout_url: String(data.checkout_url) };
+}
+
+export async function submitManualPaymentForBooking(
+  bookingId: number,
+  receipt: File
+): Promise<{ message: string; payment_status: string; receipt_url?: string }> {
+  const form = new FormData();
+  form.set("receipt", receipt);
+  form.set("payment_method", "manual");
+
+  const res = await fetch(`${LARAVEL_API_URL}/api/bookings/${bookingId}/manual-payment`, {
+    method: "POST",
+    headers: { Accept: "application/json" },
+    body: form,
+  });
+  const data = (await parseJsonResponse(res)) as Record<string, unknown>;
+  if (!res.ok) {
+    throw new Error((data.error as string) || (data.message as string) || "Failed to submit manual payment");
+  }
+
+  return {
+    message: String(data.message ?? "Manual payment submitted successfully"),
+    payment_status: String(data.payment_status ?? "pending_verification"),
+    receipt_url: typeof data.receipt_url === "string" ? data.receipt_url : undefined,
+  };
 }
 
 export async function fetchPublicCheckoutSettings(): Promise<PublicCheckoutSettings | null> {

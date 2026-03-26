@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\Reservation;
 use Illuminate\Http\JsonResponse;
@@ -14,6 +15,76 @@ use Illuminate\Validation\ValidationException;
 
 class ManualPaymentController extends Controller
 {
+    public function submitForBooking(Request $request, int $id): JsonResponse
+    {
+        $validated = $request->validate([
+            'receipt' => ['required', 'file', 'max:5120', 'mimes:jpg,jpeg,png,pdf,webp'],
+            'payment_method' => ['nullable', 'string', 'in:manual,bank_transfer,qr,cash'],
+        ]);
+
+        /** @var Booking $booking */
+        $booking = Booking::query()->with('reservation')->findOrFail($id);
+        $file = $request->file('receipt');
+        $ext = (string) $file->getClientOriginalExtension();
+        $fileName = now()->format('YmdHis').'-'.Str::random(8).($ext ? ".{$ext}" : '');
+        $path = $file->storeAs("receipts/booking-{$booking->id}", $fileName, 'public');
+        $receiptUrl = Storage::disk('public')->url($path);
+
+        $methodInput = (string) ($validated['payment_method'] ?? Payment::METHOD_BANK_TRANSFER);
+        $method = $methodInput === 'manual' ? Payment::METHOD_BANK_TRANSFER : $methodInput;
+
+        $reservationId = (int) ($booking->reservation_id ?? 0) ?: (int) ($booking->reservation?->id ?? 0);
+        $payment = Payment::query()
+            ->where('provider', Payment::PROVIDER_MANUAL)
+            ->where('booking_id', $booking->id)
+            ->where('status', Payment::STATUS_PENDING)
+            ->orderByDesc('id')
+            ->first();
+
+        $amountCents = (int) ($booking->total_amount_cents ?? 0);
+        if ($amountCents <= 0) {
+            $amountCents = (int) round((float) ($booking->reservation?->total_amount ?? 0) * 100);
+        }
+
+        if ($payment) {
+            $payment->update([
+                'reservation_id' => $reservationId > 0 ? $reservationId : $payment->reservation_id,
+                'method' => $method,
+                'receipt_url' => $receiptUrl,
+                'amount_cents' => $amountCents,
+                'status' => Payment::STATUS_PENDING,
+            ]);
+        } else {
+            $payment = Payment::query()->create([
+                'booking_id' => $booking->id,
+                'reservation_id' => $reservationId > 0 ? $reservationId : null,
+                'provider' => Payment::PROVIDER_MANUAL,
+                'method' => $method,
+                'amount_cents' => $amountCents,
+                'currency' => 'myr',
+                'status' => Payment::STATUS_PENDING,
+                'receipt_url' => $receiptUrl,
+                'provider_payload' => ['source' => 'booking_manual_payment_submit'],
+            ]);
+        }
+
+        $booking->update([
+            'payment_status' => 'pending_verification',
+        ]);
+
+        Log::info('manual_payment.submitted_from_booking', [
+            'booking_id' => $booking->id,
+            'payment_id' => $payment->id,
+            'receipt_url' => $receiptUrl,
+        ]);
+
+        return response()->json([
+            'message' => 'Manual payment submitted successfully',
+            'payment_status' => 'pending_verification',
+            'receipt_url' => $receiptUrl,
+        ]);
+    }
+
     public function uploadReceipt(Request $request): JsonResponse
     {
         $validated = $request->validate([

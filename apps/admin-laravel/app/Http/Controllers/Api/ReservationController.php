@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Booking;
 use App\Models\Participant;
 use App\Services\ReservationService;
 use Illuminate\Http\JsonResponse;
@@ -71,8 +72,22 @@ class ReservationController extends Controller
             'seat_count' => (int) ($reservation->seats_reserved ?? 1),
         ]);
 
+        $booking = Booking::query()->firstOrCreate(
+            ['reservation_id' => (int) $reservation->id],
+            [
+                'participant_id' => (int) $participant->id,
+                'class_session_id' => (int) $reservation->class_session_id,
+                'employer_id' => null,
+                'status' => Booking::LEGACY_STATUS_PENDING,
+                'payment_status' => 'pending',
+                'total_amount_cents' => (int) round((float) ($reservation->total_amount ?? 0) * 100),
+                'source' => 'checkout',
+            ],
+        );
+
         return response()->json([
             'reservation_id' => (int) $reservation->id,
+            'booking_id' => (int) $booking->id,
             'total_amount' => (float) $reservation->total_amount,
             'expires_at' => optional($reservation->expires_at)->toIso8601String(),
         ], 201);

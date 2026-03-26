@@ -23,11 +23,16 @@ class StripeService
      *
      * @throws ApiErrorException
      */
-    public function createCheckoutSessionForAmount(int $amountCents, string $currency, array $metadata = []): StripeSession
+    public function createCheckoutSessionForAmount(
+        int $amountCents,
+        string $currency,
+        array $metadata = [],
+        ?string $customerEmail = null
+    ): StripeSession
     {
         $appUrl = rtrim((string) config('app.url'), '/');
 
-        return $this->settingsStripe()->checkout->sessions->create([
+        $payload = [
             'payment_method_types' => ['card'],
             'mode' => 'payment',
             'line_items' => [[
@@ -43,7 +48,13 @@ class StripeService
             'metadata' => $metadata,
             'success_url' => $appUrl . '/payment-success',
             'cancel_url' => $appUrl . '/payment-cancel',
-        ]);
+        ];
+
+        if (! empty($customerEmail)) {
+            $payload['customer_email'] = $customerEmail;
+        }
+
+        return $this->settingsStripe()->checkout->sessions->create($payload);
     }
 
     /**
