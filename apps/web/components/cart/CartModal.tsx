@@ -130,8 +130,9 @@ export function CartModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4">
-      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl sm:p-6">
+    <div className="fixed inset-0 z-40 flex items-center justify-center p-4">
+      <div className="pointer-events-none absolute inset-0 bg-black/45" />
+      <div className="pointer-events-auto relative z-50 max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl sm:p-6">
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold text-slate-900">Checkout</h2>

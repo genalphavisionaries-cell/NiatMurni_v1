@@ -35,6 +35,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     () => ({
       cart,
       addToCart: (item, seatCount) => {
+        if (seatCount <= 0) {
+          return;
+        }
         setCart((prev) => {
           if (prev) {
             setReplacementNotice("Your previous selection was replaced");

@@ -10,7 +10,7 @@ type Props = { id: string };
 export default function ClassDetailClient({ id }: Props) {
   const [classSession, setClassSession] = useState<ClassSession | null>(null);
   const [loading, setLoading] = useState(true);
-  const [seatCount, setSeatCount] = useState(1);
+  const [seatCount, setSeatCount] = useState(0);
   const { addToCart } = useCart();
 
   useEffect(() => {
@@ -108,15 +108,19 @@ export default function ClassDetailClient({ id }: Props) {
               Seats
               <input
                 type="number"
-                min={1}
-                max={3}
+                min={0}
+                max={classSession.capacity}
                 value={seatCount}
-                onChange={(e) => setSeatCount(Math.max(1, Math.min(3, Number(e.target.value) || 1)))}
+                onChange={(e) => setSeatCount(Math.max(0, Math.min(classSession.capacity, Number(e.target.value) || 0)))}
                 className="w-20 rounded border border-stone-300 px-2 py-1"
               />
             </label>
+            {seatCount <= 0 && (
+              <p className="text-xs font-medium text-amber-600">Please select number of seats</p>
+            )}
             <button
               type="button"
+              disabled={seatCount <= 0}
               onClick={() =>
                 addToCart(
                   {
@@ -127,7 +131,7 @@ export default function ClassDetailClient({ id }: Props) {
                   seatCount
                 )
               }
-              className="inline-block rounded bg-amber-600 px-6 py-3 font-medium text-white hover:bg-amber-700"
+              className="inline-block rounded bg-amber-600 px-6 py-3 font-medium text-white hover:bg-amber-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600"
             >
               Add to Cart
             </button>

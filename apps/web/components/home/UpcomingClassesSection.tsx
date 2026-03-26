@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { fetchUpcomingClasses, type ClassSession } from "@/lib/api";
 import QuantitySelector from "@/components/home/QuantitySelector";
+import { useCart } from "@/components/cart/CartProvider";
 
 type HeroClassItem = {
   id: string;
@@ -14,11 +15,6 @@ type HeroClassItem = {
   slots: number;
   mode: string;
   language: string;
-};
-
-type CartItem = {
-  classId: string;
-  qty: number;
 };
 
 function formatClassDate(dateStr: string) {
@@ -129,7 +125,8 @@ export default function UpcomingClassesSection() {
   const [desktopVisible, setDesktopVisible] = useState(DESKTOP_INITIAL);
 
   const [cartOpen, setCartOpen] = useState(false);
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [selectedCart, setSelectedCart] = useState<{ classId: string; qty: number } | null>(null);
+  const { addToCart } = useCart();
 
   useEffect(() => {
     let cancelled = false;
@@ -169,7 +166,11 @@ export default function UpcomingClassesSection() {
     [displayList, mobileVisible]
   );
 
-  const cartCount = cart.reduce((sum, it) => sum + it.qty, 0);
+  const classById = useMemo(() => {
+    const map = new Map<string, ClassSession>();
+    apiClasses.forEach((c) => map.set(String(c.id), c));
+    return map;
+  }, [apiClasses]);
 
   return (
     <section id="classes" className="scroll-mt-20 bg-[#EFF6FF] py-16 sm:py-20">
@@ -208,15 +209,8 @@ export default function UpcomingClassesSection() {
                         item={c}
                         isNext={firstRecommendedId === c.id}
                         onAddToCart={(qty) => {
-                          setCart((prev) => {
-                            const existing = prev.find((p) => p.classId === c.id);
-                            if (existing) {
-                              return prev.map((p) =>
-                                p.classId === c.id ? { ...p, qty: p.qty + qty } : p
-                              );
-                            }
-                            return [...prev, { classId: c.id, qty }];
-                          });
+                          if (qty <= 0) return;
+                          setSelectedCart({ classId: c.id, qty });
                           setCartOpen(true);
                         }}
                       />
@@ -234,19 +228,8 @@ export default function UpcomingClassesSection() {
                               item={c}
                               isNext={firstRecommendedId === c.id}
                               onAddToCart={(qty) => {
-                                setCart((prev) => {
-                                  const existing = prev.find(
-                                    (p) => p.classId === c.id
-                                  );
-                                  if (existing) {
-                                    return prev.map((p) =>
-                                      p.classId === c.id
-                                        ? { ...p, qty: p.qty + qty }
-                                        : p
-                                    );
-                                  }
-                                  return [...prev, { classId: c.id, qty }];
-                                });
+                                if (qty <= 0) return;
+                                setSelectedCart({ classId: c.id, qty });
                                 setCartOpen(true);
                               }}
                             />
@@ -317,13 +300,14 @@ export default function UpcomingClassesSection() {
 
         {/* Cart popup */}
         {cartOpen ? (
-          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
-            <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl">
+          <div className="fixed inset-0 z-40 flex items-end justify-center p-4 sm:items-center">
+            <div className="pointer-events-none absolute inset-0 bg-black/40" />
+            <div className="pointer-events-auto relative z-50 w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl">
               <div className="flex items-start justify-between gap-4 border-b border-[#E5E7EB] p-6">
                 <div>
                   <h3 className="text-lg font-bold text-[#0F172A]">Keranjang Pendaftaran</h3>
                   <p className="mt-1 text-sm text-[#64748B]">
-                    {cartCount} seat dipilih. Pilih kelas untuk teruskan booking.
+                    {selectedCart?.qty ?? 0} seat dipilih. Pilih kelas untuk teruskan checkout.
                   </p>
                 </div>
                 <button
@@ -337,30 +321,38 @@ export default function UpcomingClassesSection() {
               </div>
 
               <div className="p-6">
-                {cart.length ? (
+                {selectedCart ? (
                   <ul className="space-y-3">
-                    {cart.map((it) => (
-                      <li
-                        key={it.classId}
-                        className="flex items-center justify-between gap-4 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4"
+                    <li className="flex items-center justify-between gap-4 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-[#0F172A]">
+                          {classById.get(selectedCart.classId)?.program_name ?? `Kelas sesi #${selectedCart.classId}`}
+                        </p>
+                        <p className="text-xs text-[#64748B] mt-1">
+                          Kuantiti: {selectedCart.qty}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        className="inline-flex shrink-0 items-center justify-center rounded-lg bg-[#2563EB] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1D4ED8]"
+                        onClick={() => {
+                          const classSession = classById.get(selectedCart.classId);
+                          if (!classSession) return;
+                          console.log("Clicked Continue Checkout");
+                          addToCart(
+                            {
+                              class_session_id: classSession.id,
+                              class_title: classSession.program_name,
+                              price_per_seat: classSession.price ?? 0,
+                            },
+                            selectedCart.qty
+                          );
+                          setCartOpen(false);
+                        }}
                       >
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-[#0F172A]">
-                            Kelas sesi #{it.classId}
-                          </p>
-                          <p className="text-xs text-[#64748B] mt-1">
-                            Kuantiti: {it.qty}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          className="inline-flex shrink-0 items-center justify-center rounded-lg bg-[#2563EB] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1D4ED8]"
-                          onClick={() => setCartOpen(false)}
-                        >
-                          Continue Checkout
-                        </button>
-                      </li>
-                    ))}
+                        Continue Checkout
+                      </button>
+                    </li>
                   </ul>
                 ) : (
                   <p className="text-sm text-[#64748B]">Keranjang anda kosong.</p>
@@ -387,10 +379,10 @@ function UpcomingClassCard({
   isNext: boolean;
   onAddToCart: (qty: number) => void;
 }) {
-  const [qty, setQty] = useState(1);
+  const [qty, setQty] = useState(0);
   const seatsLeft = item.slots ?? 0;
-  const max = Math.max(1, Math.min(10, seatsLeft));
-  const disabled = seatsLeft <= 0;
+  const max = Math.max(0, seatsLeft);
+  const disabled = seatsLeft <= 0 || qty <= 0;
   const { dayNumber, month, year } = formatClassDate(item.date);
   const timeText = item.time.replace(/\s*–\s*/g, " – ");
   const monthShort = month ? toMalayMonthShort(month) : "";
@@ -470,9 +462,9 @@ function UpcomingClassCard({
             <div className="scale-[0.88] origin-right">
               <QuantitySelector
                 compact
-                min={1}
+                min={0}
                 max={max}
-                defaultValue={1}
+                defaultValue={0}
                 onChange={(n) => setQty(n)}
               />
             </div>
@@ -485,13 +477,16 @@ function UpcomingClassCard({
               }}
               className={`inline-flex h-[26px] min-w-[3.75rem] shrink-0 items-center justify-center rounded-md px-2 text-[11px] font-bold leading-none shadow-sm transition ${
                 disabled
-                  ? "cursor-not-allowed bg-slate-300 text-[#0F172A]"
+                  ? "cursor-not-allowed bg-slate-300 text-[#64748B]"
                   : "bg-[#0F3B7B] text-white hover:bg-[#0b2e5f]"
               }`}
             >
               Daftar
             </button>
           </div>
+          {qty <= 0 && seatsLeft > 0 ? (
+            <p className="text-[10px] font-medium text-amber-600">Please select number of seats</p>
+          ) : null}
         </div>
 
       </div>
