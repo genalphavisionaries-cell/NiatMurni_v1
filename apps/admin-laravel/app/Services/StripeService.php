@@ -2,6 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\Booking;
+use Stripe\Checkout\Session as StripeSession;
+use Stripe\Event as StripeEvent;
 use Stripe\Exception\ApiErrorException;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\StripeClient;
@@ -9,29 +12,22 @@ use Stripe\Webhook;
 
 class StripeService
 {
-    protected StripeClient $client;
+    private ?StripeClient $settingsClient = null;
 
-    public function __construct()
-    {
-        $secretKey = setting('stripe_secret_key');
-
-        if (empty($secretKey)) {
-            throw new \RuntimeException('Stripe secret key is not configured. Set stripe_secret_key in system settings.');
-        }
-
-        $this->client = new StripeClient($secretKey);
-    }
+    public function __construct(
+        protected StripeClient $stripe
+    ) {}
 
     /**
      * Create a Stripe Checkout Session for a one-time payment.
      *
      * @throws ApiErrorException
      */
-    public function createCheckoutSession(int $amountCents, string $currency, array $metadata = []): \Stripe\Checkout\Session
+    public function createCheckoutSessionForAmount(int $amountCents, string $currency, array $metadata = []): StripeSession
     {
         $appUrl = rtrim((string) config('app.url'), '/');
 
-        return $this->client->checkout->sessions->create([
+        return $this->settingsStripe()->checkout->sessions->create([
             'payment_method_types' => ['card'],
             'mode' => 'payment',
             'line_items' => [[
@@ -55,7 +51,7 @@ class StripeService
      *
      * @throws SignatureVerificationException
      */
-    public function constructEvent(string $payload, string $signature): \Stripe\Event
+    public function constructEvent(string $payload, string $signature): StripeEvent
     {
         $secret = setting('stripe_webhook_secret');
 
@@ -69,27 +65,11 @@ class StripeService
             $secret,
         );
     }
-}
-
-<?php
-
-namespace App\Services;
-
-use App\Models\Booking;
-use Stripe\Checkout\Session as StripeSession;
-use Stripe\Exception\ApiErrorException;
-use Stripe\StripeClient;
-
-class StripeService
-{
-    public function __construct(
-        protected StripeClient $stripe
-    ) {}
 
     /**
      * Create a Checkout Session for a booking. Stores session ID on booking and returns redirect URL.
      */
-    public function createCheckoutSession(Booking $booking): string
+    public function createCheckoutSessionForBooking(Booking $booking): string
     {
         $priceId = config('stripe.price_id');
         if (empty($priceId)) {
@@ -212,5 +192,22 @@ class StripeService
             return false;
         }
         return true;
+    }
+
+    private function settingsStripe(): StripeClient
+    {
+        if ($this->settingsClient !== null) {
+            return $this->settingsClient;
+        }
+
+        $secretKey = setting('stripe_secret_key');
+
+        if (empty($secretKey)) {
+            throw new \RuntimeException('Stripe secret key is not configured. Set stripe_secret_key in system settings.');
+        }
+
+        $this->settingsClient = new StripeClient($secretKey);
+
+        return $this->settingsClient;
     }
 }

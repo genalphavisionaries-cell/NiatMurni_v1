@@ -39,7 +39,7 @@ class PaymentController extends Controller
             abort(500, 'Class price not configured');
         }
 
-        $session = $this->stripe->createCheckoutSession(
+        $session = $this->stripe->createCheckoutSessionForAmount(
             amountCents: (int) $priceCents,
             currency: 'myr',
             metadata: [

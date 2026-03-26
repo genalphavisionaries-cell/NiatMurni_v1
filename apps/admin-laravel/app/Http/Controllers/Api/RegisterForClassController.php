@@ -53,7 +53,7 @@ class RegisterForClassController extends Controller
         if ($existing) {
             if ($existing->status === 'pending' || $existing->status === 'reserved') {
                 try {
-                    $url = $stripe->createCheckoutSession($existing);
+                    $url = $stripe->createCheckoutSessionForBooking($existing);
                     return response()->json(['redirect_url' => $url]);
                 } catch (\Throwable $e) {
                     return response()->json(['error' => 'Could not create payment session'], 500);
@@ -69,7 +69,7 @@ class RegisterForClassController extends Controller
         ]);
 
         try {
-            $url = $stripe->createCheckoutSession($booking);
+            $url = $stripe->createCheckoutSessionForBooking($booking);
             return response()->json(['redirect_url' => $url]);
         } catch (\Throwable $e) {
             return response()->json(['error' => 'Could not create payment session'], 500);

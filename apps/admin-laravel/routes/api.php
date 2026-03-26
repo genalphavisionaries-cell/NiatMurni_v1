@@ -93,6 +93,10 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureAdminAccess::class
     // Class sessions
     Route::middleware('module:classes')->group(function () {
         Route::apiResource('class-sessions', App\Http\Controllers\Api\Admin\ClassSessionController::class);
+        Route::post('/attendance/update', [App\Http\Controllers\Api\Admin\AttendanceController::class, 'update'])
+            ->name('attendance.update');
+        Route::post('/attendance/bulk-update', [App\Http\Controllers\Api\Admin\AttendanceController::class, 'bulkUpdate'])
+            ->name('attendance.bulk-update');
     });
 
     // Tutors (users with role trainer)
