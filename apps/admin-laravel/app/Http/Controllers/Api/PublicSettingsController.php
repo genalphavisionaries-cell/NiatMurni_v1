@@ -48,10 +48,38 @@ class PublicSettingsController extends Controller
             ],
         ];
 
+        $methodsRaw = (string) ($settings->get('payment_delivery', 'manual_payment_methods', 'bank_transfer,qr,cash') ?? 'bank_transfer,qr,cash');
+        $manualMethods = array_values(array_filter(array_map('trim', explode(',', $methodsRaw))));
+
+        $checkout = [
+            'delivery' => [
+                'normal' => [
+                    'enabled' => filter_var($settings->get('payment_delivery', 'delivery_normal_enabled', true), FILTER_VALIDATE_BOOLEAN),
+                    'fee' => (float) ($settings->get('payment_delivery', 'delivery_normal_fee', 10) ?? 10),
+                ],
+                'fast' => [
+                    'enabled' => filter_var($settings->get('payment_delivery', 'delivery_fast_enabled', true), FILTER_VALIDATE_BOOLEAN),
+                    'fee' => (float) ($settings->get('payment_delivery', 'delivery_fast_fee', 20) ?? 20),
+                ],
+                'rules' => (string) ($settings->get('payment_delivery', 'delivery_rules', '') ?? ''),
+            ],
+            'manual_payment' => [
+                'enabled' => filter_var($settings->get('payment_delivery', 'manual_payment_enabled', true), FILTER_VALIDATE_BOOLEAN),
+                'methods' => $manualMethods,
+                'qr_image_url' => (string) ($settings->get('payment_delivery', 'manual_payment_qr_image_url', '') ?? ''),
+                'account_name' => (string) ($settings->get('payment_delivery', 'manual_payment_account_name', '') ?? ''),
+                'bank_name' => (string) ($settings->get('payment_delivery', 'manual_payment_bank_name', '') ?? ''),
+                'account_number' => (string) ($settings->get('payment_delivery', 'manual_payment_account_number', '') ?? ''),
+                'bank_code' => (string) ($settings->get('payment_delivery', 'manual_payment_bank_code', '') ?? ''),
+                'instructions' => (string) ($settings->get('payment_delivery', 'manual_payment_instructions', '') ?? ''),
+            ],
+        ];
+
         return response()->json([
             'data' => [
                 'whatsapp' => $whatsapp,
                 'integrations' => $integrations,
+                'checkout' => $checkout,
             ],
         ]);
     }

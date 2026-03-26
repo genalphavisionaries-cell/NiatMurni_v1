@@ -182,6 +182,24 @@ export type CheckoutPayload = {
   reservation_id: number;
 };
 
+export type PublicCheckoutSettings = {
+  delivery: {
+    normal: { enabled: boolean; fee: number };
+    fast: { enabled: boolean; fee: number };
+    rules?: string;
+  };
+  manual_payment: {
+    enabled: boolean;
+    methods: string[];
+    qr_image_url?: string;
+    account_name?: string;
+    bank_name?: string;
+    account_number?: string;
+    bank_code?: string;
+    instructions?: string;
+  };
+};
+
 export async function registerForClass(
   payload: RegisterPayload
 ): Promise<{ redirect_url: string }> {
@@ -235,6 +253,50 @@ export async function createPaymentCheckout(
     throw new Error("Checkout URL was not returned.");
   }
   return { checkout_url: String(data.checkout_url) };
+}
+
+export async function fetchPublicCheckoutSettings(): Promise<PublicCheckoutSettings | null> {
+  try {
+    const res = await fetch(`${LARAVEL_API_URL}/api/public/settings`, {
+      headers: { Accept: "application/json" },
+    });
+    if (!res.ok) return null;
+    const data = (await parseJsonResponse(res)) as Record<string, unknown>;
+    const root = asObject(data.data) ?? asObject(data);
+    const checkout = asObject(root?.checkout);
+    if (!checkout) return null;
+
+    const delivery = asObject(checkout.delivery) ?? {};
+    const normal = asObject(delivery.normal) ?? {};
+    const fast = asObject(delivery.fast) ?? {};
+    const manual = asObject(checkout.manual_payment) ?? {};
+
+    return {
+      delivery: {
+        normal: {
+          enabled: Boolean(normal.enabled ?? true),
+          fee: Number(normal.fee ?? 10),
+        },
+        fast: {
+          enabled: Boolean(fast.enabled ?? true),
+          fee: Number(fast.fee ?? 20),
+        },
+        rules: typeof delivery.rules === "string" ? delivery.rules : "",
+      },
+      manual_payment: {
+        enabled: Boolean(manual.enabled ?? true),
+        methods: Array.isArray(manual.methods) ? manual.methods.map((m) => String(m)) : ["bank_transfer", "qr", "cash"],
+        qr_image_url: typeof manual.qr_image_url === "string" ? manual.qr_image_url : "",
+        account_name: typeof manual.account_name === "string" ? manual.account_name : "",
+        bank_name: typeof manual.bank_name === "string" ? manual.bank_name : "",
+        account_number: typeof manual.account_number === "string" ? manual.account_number : "",
+        bank_code: typeof manual.bank_code === "string" ? manual.bank_code : "",
+        instructions: typeof manual.instructions === "string" ? manual.instructions : "",
+      },
+    };
+  } catch {
+    return null;
+  }
 }
 
 export type BookingResponse = {

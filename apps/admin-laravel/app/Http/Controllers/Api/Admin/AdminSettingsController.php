@@ -169,6 +169,90 @@ class AdminSettingsController extends Controller
         ]);
     }
 
+    public function paymentDeliverySettings(SettingService $settings): JsonResponse
+    {
+        $methodsRaw = (string) ($settings->get('payment_delivery', 'manual_payment_methods', 'bank_transfer,qr,cash') ?? 'bank_transfer,qr,cash');
+        $methods = array_values(array_filter(array_map('trim', explode(',', $methodsRaw))));
+
+        return response()->json([
+            'data' => [
+                'delivery' => [
+                    'normal' => [
+                        'enabled' => filter_var($settings->get('payment_delivery', 'delivery_normal_enabled', true), FILTER_VALIDATE_BOOLEAN),
+                        'fee' => (float) ($settings->get('payment_delivery', 'delivery_normal_fee', 10) ?? 10),
+                    ],
+                    'fast' => [
+                        'enabled' => filter_var($settings->get('payment_delivery', 'delivery_fast_enabled', true), FILTER_VALIDATE_BOOLEAN),
+                        'fee' => (float) ($settings->get('payment_delivery', 'delivery_fast_fee', 20) ?? 20),
+                    ],
+                    'rules' => (string) ($settings->get('payment_delivery', 'delivery_rules', '') ?? ''),
+                ],
+                'manual_payment' => [
+                    'enabled' => filter_var($settings->get('payment_delivery', 'manual_payment_enabled', true), FILTER_VALIDATE_BOOLEAN),
+                    'methods' => $methods,
+                    'qr_image_url' => (string) ($settings->get('payment_delivery', 'manual_payment_qr_image_url', '') ?? ''),
+                    'account_name' => (string) ($settings->get('payment_delivery', 'manual_payment_account_name', '') ?? ''),
+                    'bank_name' => (string) ($settings->get('payment_delivery', 'manual_payment_bank_name', '') ?? ''),
+                    'account_number' => (string) ($settings->get('payment_delivery', 'manual_payment_account_number', '') ?? ''),
+                    'bank_code' => (string) ($settings->get('payment_delivery', 'manual_payment_bank_code', '') ?? ''),
+                    'instructions' => (string) ($settings->get('payment_delivery', 'manual_payment_instructions', '') ?? ''),
+                ],
+            ],
+        ]);
+    }
+
+    public function updatePaymentDeliverySettings(Request $request, SettingService $settings): JsonResponse
+    {
+        $validated = $request->validate([
+            'delivery' => ['required', 'array'],
+            'delivery.normal' => ['required', 'array'],
+            'delivery.normal.enabled' => ['required', 'boolean'],
+            'delivery.normal.fee' => ['required', 'numeric', 'min:0', 'max:99999.99'],
+            'delivery.fast' => ['required', 'array'],
+            'delivery.fast.enabled' => ['required', 'boolean'],
+            'delivery.fast.fee' => ['required', 'numeric', 'min:0', 'max:99999.99'],
+            'delivery.rules' => ['nullable', 'string', 'max:3000'],
+            'manual_payment' => ['required', 'array'],
+            'manual_payment.enabled' => ['required', 'boolean'],
+            'manual_payment.methods' => ['required', 'array', 'min:1'],
+            'manual_payment.methods.*' => ['string', Rule::in(['bank_transfer', 'qr', 'cash'])],
+            'manual_payment.qr_image_url' => ['nullable', 'string', 'max:2048'],
+            'manual_payment.qr_image' => ['nullable', 'file', 'image', 'max:5120'],
+            'manual_payment.account_name' => ['nullable', 'string', 'max:255'],
+            'manual_payment.bank_name' => ['nullable', 'string', 'max:255'],
+            'manual_payment.account_number' => ['nullable', 'string', 'max:255'],
+            'manual_payment.bank_code' => ['nullable', 'string', 'max:100'],
+            'manual_payment.instructions' => ['nullable', 'string', 'max:3000'],
+        ]);
+
+        $delivery = $validated['delivery'] ?? [];
+        $manual = $validated['manual_payment'] ?? [];
+        $actorId = (int) ($request->user()?->id ?? 0) ?: null;
+
+        $qrImageUrl = (string) ($manual['qr_image_url'] ?? '');
+        if ($request->hasFile('manual_payment.qr_image')) {
+            $path = $request->file('manual_payment.qr_image')->store('admin/payment-delivery', 'public');
+            $baseUrl = rtrim((string) config('app.url'), '/');
+            $qrImageUrl = $baseUrl.'/storage/'.ltrim($path, '/');
+        }
+
+        $settings->set('payment_delivery', 'delivery_normal_enabled', (bool) ($delivery['normal']['enabled'] ?? true), false, $actorId);
+        $settings->set('payment_delivery', 'delivery_normal_fee', (string) ((float) ($delivery['normal']['fee'] ?? 10)), false, $actorId);
+        $settings->set('payment_delivery', 'delivery_fast_enabled', (bool) ($delivery['fast']['enabled'] ?? true), false, $actorId);
+        $settings->set('payment_delivery', 'delivery_fast_fee', (string) ((float) ($delivery['fast']['fee'] ?? 20)), false, $actorId);
+        $settings->set('payment_delivery', 'delivery_rules', (string) ($delivery['rules'] ?? ''), false, $actorId);
+        $settings->set('payment_delivery', 'manual_payment_enabled', (bool) ($manual['enabled'] ?? true), false, $actorId);
+        $settings->set('payment_delivery', 'manual_payment_methods', implode(',', array_values($manual['methods'] ?? ['bank_transfer'])), false, $actorId);
+        $settings->set('payment_delivery', 'manual_payment_qr_image_url', $qrImageUrl, false, $actorId);
+        $settings->set('payment_delivery', 'manual_payment_account_name', (string) ($manual['account_name'] ?? ''), false, $actorId);
+        $settings->set('payment_delivery', 'manual_payment_bank_name', (string) ($manual['bank_name'] ?? ''), false, $actorId);
+        $settings->set('payment_delivery', 'manual_payment_account_number', (string) ($manual['account_number'] ?? ''), false, $actorId);
+        $settings->set('payment_delivery', 'manual_payment_bank_code', (string) ($manual['bank_code'] ?? ''), false, $actorId);
+        $settings->set('payment_delivery', 'manual_payment_instructions', (string) ($manual['instructions'] ?? ''), false, $actorId);
+
+        return $this->paymentDeliverySettings($settings);
+    }
+
     private function transformMe(User $user): array
     {
         $role = (string) ($user->admin_role ?: $user->role);

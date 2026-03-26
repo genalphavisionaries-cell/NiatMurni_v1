@@ -1,18 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   createReservation,
   createPaymentCheckout,
+  fetchPublicCheckoutSettings,
+  type PublicCheckoutSettings,
   type CreateReservationResponse,
 } from "@/lib/api";
 import { BookingForm, type BookingFormValues } from "./BookingForm";
 import { useCart } from "./CartProvider";
-
-const DELIVERY_FEES: Record<"normal" | "fast", number> = {
-  normal: 10,
-  fast: 20,
-};
 
 export function CartModal() {
   const {
@@ -31,6 +28,7 @@ export function CartModal() {
   const [success, setSuccess] = useState<string | null>(null);
   const [reservation, setReservation] = useState<CreateReservationResponse | null>(null);
   const [receipt, setReceipt] = useState<File | null>(null);
+  const [checkoutSettings, setCheckoutSettings] = useState<PublicCheckoutSettings | null>(null);
   const [form, setForm] = useState<BookingFormValues>({
     full_name: "",
     phone: "",
@@ -50,7 +48,10 @@ export function CartModal() {
     return cart.price_per_seat * cart.seat_count;
   }, [cart]);
 
-  const deliveryFee = DELIVERY_FEES[form.delivery_type];
+  const deliveryFee =
+    form.delivery_type === "fast"
+      ? Number(checkoutSettings?.delivery.fast.fee ?? 20)
+      : Number(checkoutSettings?.delivery.normal.fee ?? 10);
   const grandTotal = courseTotal + deliveryFee;
   const pricePerSeat = Number.isFinite(cart?.price_per_seat) ? (cart?.price_per_seat ?? 0) : 0;
 
@@ -59,6 +60,8 @@ export function CartModal() {
   }
 
   if (!isOpen || !cart) return null;
+
+  const manualPaymentEnabled = checkoutSettings?.manual_payment.enabled ?? true;
 
   const resetModalState = () => {
     setStep(1);
@@ -90,6 +93,19 @@ export function CartModal() {
       form.state.trim(),
     ].filter(Boolean);
     return parts.join(", ");
+  };
+
+  const loadCheckoutSettings = async () => {
+    const result = await fetchPublicCheckoutSettings();
+    if (result) {
+      setCheckoutSettings(result);
+      if (form.delivery_type === "normal" && !result.delivery.normal.enabled && result.delivery.fast.enabled) {
+        setForm((prev) => ({ ...prev, delivery_type: "fast" }));
+      }
+      if (form.delivery_type === "fast" && !result.delivery.fast.enabled && result.delivery.normal.enabled) {
+        setForm((prev) => ({ ...prev, delivery_type: "normal" }));
+      }
+    }
   };
 
   const submitReservation = async (): Promise<boolean> => {
@@ -160,6 +176,13 @@ export function CartModal() {
       setStep(3);
     }
   };
+
+  useEffect(() => {
+    if (!isOpen) return;
+    if (checkoutSettings) return;
+    void loadCheckoutSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, checkoutSettings]);
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center p-4">
@@ -305,17 +328,43 @@ export function CartModal() {
 
               <div className="rounded-lg bg-slate-50 p-3">
                 <p className="text-sm font-medium text-slate-900">Manual Payment</p>
-                <p className="mt-1 text-xs text-slate-600">QR placeholder + bank details placeholder</p>
+                {manualPaymentEnabled ? (
+                  <>
+                    {checkoutSettings?.manual_payment.qr_image_url ? (
+                      <img
+                        src={checkoutSettings.manual_payment.qr_image_url}
+                        alt="Manual payment QR"
+                        className="mt-2 h-40 w-40 rounded border object-contain"
+                      />
+                    ) : (
+                      <p className="mt-1 text-xs text-slate-600">QR code not configured yet.</p>
+                    )}
+                    <p className="mt-2 text-xs text-slate-700">
+                      {checkoutSettings?.manual_payment.bank_name || "Bank"} · {checkoutSettings?.manual_payment.account_name || "Account Name"}
+                    </p>
+                    <p className="text-xs text-slate-700">
+                      {checkoutSettings?.manual_payment.account_number || "Account Number"}
+                      {checkoutSettings?.manual_payment.bank_code ? ` (${checkoutSettings.manual_payment.bank_code})` : ""}
+                    </p>
+                    {checkoutSettings?.manual_payment.instructions && (
+                      <p className="mt-2 text-xs text-slate-600">{checkoutSettings.manual_payment.instructions}</p>
+                    )}
+                  </>
+                ) : (
+                  <p className="mt-1 text-xs text-slate-600">Manual payment is currently unavailable.</p>
+                )}
                 <input
                   type="file"
                   accept="image/*,.pdf"
                   className="mt-3 block w-full text-sm"
                   onChange={(e) => setReceipt(e.target.files?.[0] ?? null)}
+                  disabled={!manualPaymentEnabled}
                 />
                 <button
                   type="button"
                   className="mt-3 rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700"
                   onClick={() => console.log("Manual receipt draft", { reservation, receipt })}
+                  disabled={!manualPaymentEnabled}
                 >
                   Save Manual Receipt (temporary)
                 </button>
@@ -389,6 +438,11 @@ export function CartModal() {
             <span>Delivery fee</span>
             <span>RM {deliveryFee.toFixed(2)}</span>
           </div>
+          {!!checkoutSettings?.delivery.rules && (
+            <p className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
+              {checkoutSettings.delivery.rules}
+            </p>
+          )}
           <div className="mt-2 flex justify-between border-t border-slate-200 pt-2 font-semibold text-slate-900">
             <span>Grand total</span>
             <span>RM {grandTotal.toFixed(2)}</span>

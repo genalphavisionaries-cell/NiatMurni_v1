@@ -124,6 +124,24 @@ export type FinanceTimelinePoint = {
   amount_cents: number;
 };
 
+export type AdminPaymentDeliverySettings = {
+  delivery: {
+    normal: { enabled: boolean; fee: number };
+    fast: { enabled: boolean; fee: number };
+    rules: string;
+  };
+  manual_payment: {
+    enabled: boolean;
+    methods: Array<"bank_transfer" | "qr" | "cash">;
+    qr_image_url: string;
+    account_name: string;
+    bank_name: string;
+    account_number: string;
+    bank_code: string;
+    instructions: string;
+  };
+};
+
 export type VoucherType = "fixed" | "percentage" | "free_delivery";
 export type VoucherStatus = "active" | "inactive";
 
@@ -328,6 +346,15 @@ export const adminApi = {
   },
   getTutorPayoutTimeline(period: "day" | "week" | "month" | "year" = "month"): Promise<{ period: string; data: FinanceTimelinePoint[] }> {
     return request("/api/admin/finance/tutor-payout-timeline", { params: { period } });
+  },
+  getPaymentDeliverySettings(): Promise<{ data: AdminPaymentDeliverySettings }> {
+    return request("/api/admin/settings/payment-delivery");
+  },
+  updatePaymentDeliverySettings(data: AdminPaymentDeliverySettings | FormData): Promise<{ data: AdminPaymentDeliverySettings }> {
+    return request("/api/admin/settings/payment-delivery", {
+      method: "PUT",
+      body: data instanceof FormData ? data : JSON.stringify(data),
+    });
   },
 
   // Vouchers

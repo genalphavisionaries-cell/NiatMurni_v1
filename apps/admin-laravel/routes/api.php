@@ -76,6 +76,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureAdminAccess::class
     Route::middleware('module:finance')->group(function () {
         Route::get('/settings/api-connections', [App\Http\Controllers\Api\Admin\AdminSettingsController::class, 'apiConnections'])->name('settings.api-connections.index');
         Route::put('/settings/api-connections', [App\Http\Controllers\Api\Admin\AdminSettingsController::class, 'updateApiConnections'])->name('settings.api-connections.update');
+        Route::get('/settings/payment-delivery', [App\Http\Controllers\Api\Admin\AdminSettingsController::class, 'paymentDeliverySettings'])->name('settings.payment-delivery.index');
+        Route::put('/settings/payment-delivery', [App\Http\Controllers\Api\Admin\AdminSettingsController::class, 'updatePaymentDeliverySettings'])->name('settings.payment-delivery.update');
     });
     Route::get('/dashboard/overview', [App\Http\Controllers\Api\Admin\DashboardController::class, 'overview'])->name('dashboard.overview');
 
