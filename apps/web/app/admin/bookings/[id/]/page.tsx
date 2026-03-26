@@ -4,7 +4,12 @@ export const metadata = {
   title: "Booking Details | Admin | Niat Murni",
 };
 
-export default function BookingDetailsPage({ params }: { params: { id: string } }) {
-  return <BookingDetails bookingId={Number(params.id)} />;
+export default async function BookingDetailsPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  return <BookingDetails bookingId={Number(id)} />;
 }
 

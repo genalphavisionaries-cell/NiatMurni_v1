@@ -38,6 +38,7 @@ export function AdminTwoTierHeader({ user }: AdminTwoTierHeaderProps) {
       case "Certificates":
         return "certificates";
       case "Payments":
+      case "Payments & Delivery":
         return "finance";
       case "CMS":
         return "cms";
