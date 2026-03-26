@@ -188,17 +188,23 @@ function ClassSessionForm({
     setErr(null);
     setSaving(true);
     try {
+      const startsDate = new Date(startsAt);
+      const endsDate = new Date(endsAt);
+      if (Number.isNaN(startsDate.getTime()) || Number.isNaN(endsDate.getTime())) {
+        throw new Error("Please provide valid start and end date/time.");
+      }
+
       const payload = {
         program_id: programId,
         trainer_id: trainerId ? parseInt(trainerId, 10) : null,
-        starts_at: new Date(startsAt).toISOString(),
-        ends_at: new Date(endsAt).toISOString(),
+        starts_at: startsDate.toISOString(),
+        ends_at: endsDate.toISOString(),
         mode,
         language,
         venue: venue || null,
         capacity,
         min_threshold: Math.min(capacity, 5),
-        status: initial?.status ?? "scheduled",
+        status: initial?.status ?? "confirmed",
       };
       if (initial) {
         await adminApi.updateClassSession(initial.id, payload);

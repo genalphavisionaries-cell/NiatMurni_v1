@@ -7,6 +7,7 @@ use App\Models\ClassSession;
 use App\Models\Tutor;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class ClassSessionController extends Controller
 {
@@ -57,7 +58,7 @@ class ClassSessionController extends Controller
             'location' => 'nullable|string|max:255',
             'capacity' => 'integer|min:1|max:1000',
             'min_threshold' => 'integer|min:0|max:1000',
-            'status' => 'string|in:scheduled,cancelled,completed,in_progress',
+            'status' => 'string|in:scheduled,confirmed,cancelled,completed,in_progress,ongoing,archived,draft',
         ]);
         $validated = $this->normalizeInput($validated);
         $validated['status'] = $validated['status'] ?? 'scheduled';
@@ -87,7 +88,7 @@ class ClassSessionController extends Controller
             'location' => 'nullable|string|max:255',
             'capacity' => 'integer|min:1|max:1000',
             'min_threshold' => 'integer|min:0|max:1000',
-            'status' => 'string|in:scheduled,cancelled,completed,in_progress',
+            'status' => 'string|in:scheduled,confirmed,cancelled,completed,in_progress,ongoing,archived,draft',
         ]);
         $validated = $this->normalizeInput($validated);
         if (isset($validated['ends_at']) && isset($validated['starts_at']) && $validated['ends_at'] < $validated['starts_at']) {
@@ -122,7 +123,11 @@ class ClassSessionController extends Controller
         unset($validated['trainer_id']);
 
         if (array_key_exists('min_threshold', $validated)) {
-            $validated['min_threshold_minutes'] = $validated['min_threshold'];
+            if (Schema::hasColumn('class_sessions', 'min_threshold_minutes')) {
+                $validated['min_threshold_minutes'] = $validated['min_threshold'];
+            } else {
+                $validated['min_threshold'] = $validated['min_threshold'];
+            }
             unset($validated['min_threshold']);
         }
 
@@ -138,6 +143,10 @@ class ClassSessionController extends Controller
         $trainerUser = $session->tutor?->user;
         $session->setAttribute('trainer_id', $trainerUser?->id);
         $session->setAttribute('product_id', $session->public_id ?: (string) $session->id);
+        $session->setAttribute(
+            'min_threshold',
+            $session->min_threshold_minutes ?? $session->getAttribute('min_threshold')
+        );
 
         if ($trainerUser !== null) {
             $session->setRelation('trainer', $trainerUser);
