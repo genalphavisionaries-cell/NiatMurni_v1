@@ -121,6 +121,20 @@ export type PublicCmsPayload = {
   floating_menu: PublicCmsFloatingMenu;
 };
 
+type LegacyCmsItem = {
+  title?: string;
+  subtitle?: string;
+  link_url?: string | null;
+  icon_url?: string | null;
+};
+
+type LegacyCmsSection = {
+  title?: string | null;
+  subtitle?: string | null;
+  content?: Record<string, unknown> | null;
+  items?: Record<string, LegacyCmsItem[]> | null;
+};
+
 const defaultFooterContactSocial = (): {
   footer: PublicCmsFooterBlock;
   contact: PublicCmsContactBlock;
@@ -242,6 +256,161 @@ function normalizeCmsPayload(data: PublicCmsPayload): PublicCmsPayload {
   };
 }
 
+function asRecord(v: unknown): Record<string, unknown> {
+  return v && typeof v === "object" ? (v as Record<string, unknown>) : {};
+}
+
+function asArray<T = unknown>(v: unknown): T[] {
+  return Array.isArray(v) ? (v as T[]) : [];
+}
+
+function fromLegacyCmsEnvelope(raw: unknown): PublicCmsPayload | null {
+  const envelope = asRecord(raw);
+  const data = asRecord(envelope.data ?? envelope);
+  const hasLegacySections =
+    "hero" in data ||
+    "header" in data ||
+    "footer" in data ||
+    "floating_menu" in data;
+
+  if (!hasLegacySections) return null;
+
+  const hero = asRecord((data.hero as LegacyCmsSection | undefined)?.content);
+  const usp = asRecord((data.usp as LegacyCmsSection | undefined)?.content);
+  const trust = asRecord((data.trust as LegacyCmsSection | undefined)?.content);
+  const promo = asRecord((data.promo as LegacyCmsSection | undefined)?.content);
+  const headerSection = (data.header as LegacyCmsSection | undefined) ?? {};
+  const footerSection = (data.footer as LegacyCmsSection | undefined) ?? {};
+  const floatingSection = (data.floating_menu as LegacyCmsSection | undefined) ?? {};
+
+  const headerItems = asArray<LegacyCmsItem>(headerSection.items?.menu_item);
+  const quickLinks = asArray<LegacyCmsItem>(footerSection.items?.quick_link);
+  const legalLinks = asArray<LegacyCmsItem>(footerSection.items?.legal_link);
+  const loginLinks = asArray<LegacyCmsItem>(footerSection.items?.footer_button);
+  const floatingItems = asArray<LegacyCmsItem>(floatingSection.items?.quick_link);
+  const floatingContent = asRecord(floatingSection.content);
+
+  return normalizeCmsPayload({
+    ...emptyPayload(),
+    site: {
+      ...emptyPayload().site,
+      logo_url: String((asRecord(headerSection.content).logo_url ?? "") || ""),
+      site_name: "",
+      primary_cta_label: String((asRecord(headerSection.content).cta as Record<string, unknown> | undefined)?.label ?? ""),
+      primary_cta_url: String((asRecord(headerSection.content).cta as Record<string, unknown> | undefined)?.url ?? ""),
+      favicon_url: "",
+      site_tagline: "",
+    },
+    contact: {
+      ...emptyPayload().contact,
+      email: String((asRecord(footerSection.content).contact as Record<string, unknown> | undefined)?.email ?? ""),
+      phone: String((asRecord(footerSection.content).contact as Record<string, unknown> | undefined)?.phone ?? ""),
+      address: String((asRecord(footerSection.content).contact as Record<string, unknown> | undefined)?.address ?? ""),
+    },
+    homepage_sections: [
+      {
+        section_key: "hero",
+        name: "Hero",
+        sort_order: 1,
+        title: typeof hero.headline === "string" ? hero.headline : null,
+        subtitle: typeof hero.subheadline === "string" ? hero.subheadline : null,
+        description: null,
+        image_url: null,
+        button_primary_label: null,
+        button_primary_url: null,
+        button_secondary_label: null,
+        button_secondary_url: null,
+        extra_data: null,
+      },
+      {
+        section_key: "why_choose_us",
+        name: "Why Choose Us",
+        sort_order: 2,
+        title: typeof usp.title === "string" ? usp.title : null,
+        subtitle: null,
+        description: typeof usp.description === "string" ? usp.description : null,
+        image_url: null,
+        button_primary_label: null,
+        button_primary_url: null,
+        button_secondary_label: null,
+        button_secondary_url: null,
+        extra_data: null,
+      },
+      {
+        section_key: "testimonials",
+        name: "Testimonials",
+        sort_order: 3,
+        title: typeof trust.title === "string" ? trust.title : null,
+        subtitle: null,
+        description: typeof trust.subtitle === "string" ? trust.subtitle : null,
+        image_url: null,
+        button_primary_label: null,
+        button_primary_url: null,
+        button_secondary_label: null,
+        button_secondary_url: null,
+        extra_data: null,
+      },
+      {
+        section_key: "cta",
+        name: "Promotions",
+        sort_order: 4,
+        title: typeof promo.title === "string" ? promo.title : null,
+        subtitle: null,
+        description: typeof promo.description === "string" ? promo.description : null,
+        image_url: null,
+        button_primary_label: null,
+        button_primary_url: null,
+        button_secondary_label: null,
+        button_secondary_url: null,
+        extra_data: null,
+      },
+    ],
+    navigation: {
+      header: headerItems.map((item, idx) => ({
+        id: idx + 1,
+        label: String(item.title ?? ""),
+        url: item.link_url ? String(item.link_url) : null,
+        open_in_new_tab: false,
+        is_button: false,
+        children: [],
+      })),
+      footer: quickLinks.map((item, idx) => ({
+        id: idx + 1,
+        label: String(item.title ?? ""),
+        url: item.link_url ? String(item.link_url) : null,
+        open_in_new_tab: false,
+        is_button: false,
+        children: [],
+      })),
+      footer_legal: legalLinks.map((item, idx) => ({
+        id: idx + 1,
+        label: String(item.title ?? ""),
+        url: item.link_url ? String(item.link_url) : null,
+        open_in_new_tab: false,
+        is_button: false,
+        children: [],
+      })),
+      footer_login: loginLinks.map((item, idx) => ({
+        id: idx + 1,
+        label: String(item.title ?? ""),
+        url: item.link_url ? String(item.link_url) : null,
+        open_in_new_tab: false,
+        is_button: false,
+        children: [],
+      })),
+    },
+    floating_menu: {
+      enabled: !!floatingContent.enabled,
+      items: floatingItems.map((item, idx) => ({
+        label: String(item.subtitle ?? item.title ?? `Item ${idx + 1}`),
+        url: item.link_url == null || item.link_url === "" ? null : String(item.link_url),
+        icon: item.icon_url ? String(item.icon_url) : undefined,
+        action: idx === 3 ? "whatsapp" : "link",
+      })),
+    },
+  });
+}
+
 export async function fetchPublicCms(): Promise<PublicCmsPayload | null> {
   const base = getPublicApiBase();
   if (!base) return null;
@@ -251,9 +420,17 @@ export async function fetchPublicCms(): Promise<PublicCmsPayload | null> {
       headers: { Accept: "application/json" },
     });
     if (!res.ok) return null;
-    const data = (await res.json()) as PublicCmsPayload;
-    if (!data?.site || !data?.navigation) return null;
-    return normalizeCmsPayload(data);
+    const raw = (await res.json()) as unknown;
+    const wrapped = asRecord(raw);
+    const candidate = asRecord(wrapped.data ?? wrapped);
+
+    if (candidate.site && candidate.navigation) {
+      return normalizeCmsPayload(candidate as unknown as PublicCmsPayload);
+    }
+
+    const mappedLegacy = fromLegacyCmsEnvelope(raw);
+    if (mappedLegacy) return mappedLegacy;
+    return null;
   } catch {
     return null;
   }

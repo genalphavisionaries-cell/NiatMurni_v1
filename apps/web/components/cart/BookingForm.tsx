@@ -3,9 +3,13 @@
 export type BookingFormValues = {
   full_name: string;
   phone: string;
+  phone_country_code: string;
   identity_no: string;
+  nationality: "malaysian" | "non_malaysian";
   email: string;
   company_name: string;
+  referral_code: string;
+  promo_code: string;
   delivery_type: "normal" | "fast";
   address_line_1: string;
   address_line_2: string;
@@ -42,10 +46,16 @@ export function BookingForm({ values, onChange, disabled }: Props) {
     "Putrajaya",
     "Labuan",
   ];
+  const PHONE_CODES = [
+    { label: "MY +60", value: "+60" },
+    { label: "SG +65", value: "+65" },
+    { label: "ID +62", value: "+62" },
+    { label: "TH +66", value: "+66" },
+  ];
 
   return (
-    <div className="space-y-3">
-      <h3 className="text-base font-semibold text-slate-900">Participant Details</h3>
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold text-slate-900">Participant Details</h3>
 
       <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
         <p className="text-sm text-slate-700">
@@ -70,7 +80,7 @@ export function BookingForm({ values, onChange, disabled }: Props) {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <label className="block text-sm">
           <span className="mb-1 block font-medium text-slate-700">Full Name *</span>
           <input
@@ -83,13 +93,27 @@ export function BookingForm({ values, onChange, disabled }: Props) {
         </label>
         <label className="block text-sm">
           <span className="mb-1 block font-medium text-slate-700">Phone *</span>
-          <input
-            className="w-full rounded-lg border border-slate-300 px-3 py-2"
-            placeholder="+60 12-345 6789"
-            value={values.phone}
-            onChange={(e) => set("phone", e.target.value)}
-            disabled={disabled}
-          />
+          <div className="grid grid-cols-[110px_minmax(0,1fr)] gap-2">
+            <select
+              className="rounded-lg border border-slate-300 px-2 py-2"
+              value={values.phone_country_code}
+              onChange={(e) => set("phone_country_code", e.target.value)}
+              disabled={disabled}
+            >
+              {PHONE_CODES.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+            <input
+              className="w-full rounded-lg border border-slate-300 px-3 py-2"
+              placeholder="123456789"
+              value={values.phone}
+              onChange={(e) => set("phone", e.target.value.replace(/[^\d\s-]/g, ""))}
+              disabled={disabled}
+            />
+          </div>
         </label>
         <label className="block text-sm">
           <span className="mb-1 block font-medium text-slate-700">Identity No *</span>
@@ -102,6 +126,18 @@ export function BookingForm({ values, onChange, disabled }: Props) {
           />
         </label>
         <label className="block text-sm">
+          <span className="mb-1 block font-medium text-slate-700">Nationality</span>
+          <select
+            className="w-full rounded-lg border border-slate-300 px-3 py-2"
+            value={values.nationality}
+            onChange={(e) => set("nationality", e.target.value as "malaysian" | "non_malaysian")}
+            disabled={disabled}
+          >
+            <option value="malaysian">Malaysian</option>
+            <option value="non_malaysian">Non-Malaysian</option>
+          </select>
+        </label>
+        <label className="block text-sm">
           <span className="mb-1 block font-medium text-slate-700">Email</span>
           <input
             className="w-full rounded-lg border border-slate-300 px-3 py-2"
@@ -109,6 +145,26 @@ export function BookingForm({ values, onChange, disabled }: Props) {
             type="email"
             value={values.email}
             onChange={(e) => set("email", e.target.value)}
+            disabled={disabled}
+          />
+        </label>
+        <label className="block text-sm">
+          <span className="mb-1 block font-medium text-slate-700">Referral Code</span>
+          <input
+            className="w-full rounded-lg border border-slate-300 px-3 py-2"
+            placeholder="Optional referral code"
+            value={values.referral_code}
+            onChange={(e) => set("referral_code", e.target.value)}
+            disabled={disabled}
+          />
+        </label>
+        <label className="block text-sm">
+          <span className="mb-1 block font-medium text-slate-700">Promo Code</span>
+          <input
+            className="w-full rounded-lg border border-slate-300 px-3 py-2"
+            placeholder="Optional promo code"
+            value={values.promo_code}
+            onChange={(e) => set("promo_code", e.target.value)}
             disabled={disabled}
           />
         </label>
@@ -124,7 +180,7 @@ export function BookingForm({ values, onChange, disabled }: Props) {
         </label>
       </div>
 
-      <div className="space-y-3 rounded-xl border border-slate-200 p-3">
+      <div className="space-y-3 rounded-xl border border-slate-200 p-4">
         <p className="text-sm font-medium text-slate-900">Delivery</p>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <label className="flex cursor-pointer items-center justify-between rounded-lg border border-slate-300 p-3 text-sm">

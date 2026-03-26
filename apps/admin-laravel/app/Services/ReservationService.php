@@ -84,13 +84,17 @@ class ReservationService
             $totalAmount = $courseAmount + $deliveryFee;
 
             // 7. Create reservation
-            $reservation = Reservation::query()->create([
+            $reservationData = [
                 'class_session_id' => $class->id,
                 'participant_id' => $participantId,
                 'employer_id' => $employerId,
                 'seats_reserved' => $seats,
                 'status' => Reservation::STATUS_RESERVED,
                 'expires_at' => Carbon::now()->addHours(24),
+            ];
+
+            // Runtime-safe for environments where latest reservation snapshot migration is not yet applied.
+            $optionalColumns = [
                 'full_name' => $payload['full_name'],
                 'identity_no' => $payload['identity_no'],
                 'phone' => $payload['phone'],
@@ -101,7 +105,15 @@ class ReservationService
                 'delivery_fee' => $deliveryFee,
                 'course_amount' => $courseAmount,
                 'total_amount' => $totalAmount,
-            ]);
+            ];
+
+            foreach ($optionalColumns as $column => $value) {
+                if (Schema::hasColumn('reservations', $column)) {
+                    $reservationData[$column] = $value;
+                }
+            }
+
+            $reservation = Reservation::query()->create($reservationData);
 
             return $reservation;
         });

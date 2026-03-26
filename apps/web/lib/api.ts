@@ -165,8 +165,11 @@ export type CreateReservationPayload = {
   full_name: string;
   identity_no: string;
   phone: string;
+  nationality?: "malaysian" | "non_malaysian";
   email?: string;
   company_name?: string;
+  referral_code?: string;
+  promo_code?: string;
   delivery_address?: string;
   delivery_type?: "normal" | "fast";
   delivery_fee?: number;
@@ -199,6 +202,10 @@ export type PublicCheckoutSettings = {
     bank_code?: string;
     instructions?: string;
   };
+  success_paid_message?: string;
+  success_pending_message?: string;
+  manual_payment_notes?: string;
+  portal_instruction?: string;
 };
 
 export async function registerForClass(
@@ -320,6 +327,10 @@ export async function fetchPublicCheckoutSettings(): Promise<PublicCheckoutSetti
         bank_code: typeof manual.bank_code === "string" ? manual.bank_code : "",
         instructions: typeof manual.instructions === "string" ? manual.instructions : "",
       },
+      success_paid_message: typeof checkout.success_paid_message === "string" ? checkout.success_paid_message : "",
+      success_pending_message: typeof checkout.success_pending_message === "string" ? checkout.success_pending_message : "",
+      manual_payment_notes: typeof checkout.manual_payment_notes === "string" ? checkout.manual_payment_notes : "",
+      portal_instruction: typeof checkout.portal_instruction === "string" ? checkout.portal_instruction : "",
     };
   } catch {
     return null;

@@ -102,6 +102,11 @@ class Booking extends Model
         return $this->hasMany(Payment::class);
     }
 
+    public function activePayment(): HasOne
+    {
+        return $this->hasOne(Payment::class)->latestOfMany('id');
+    }
+
     public function attendanceRecords(): HasMany
     {
         return $this->hasMany(AttendanceRecord::class);
@@ -129,6 +134,11 @@ class Booking extends Model
     public function tutorEarnings(): HasMany
     {
         return $this->hasMany(TutorEarning::class);
+    }
+
+    public function latestTutorEarning(): HasOne
+    {
+        return $this->hasOne(TutorEarning::class)->latestOfMany('id');
     }
 
     public function questionnaireResponses(): HasMany

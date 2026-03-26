@@ -15,13 +15,16 @@ class BookingController extends Controller
     {
         $query = Booking::query()
             ->with([
-                'participant.employer',
-                'reservation',
-                'payments',
-                'classSession.program',
-                'classSession.tutor.user',
-                'certificate',
-                'tutorEarnings',
+                'participant:id,full_name,nric_passport,phone,email,employer_id',
+                'participant.employer:id,name',
+                'reservation:id,seats_reserved',
+                'activePayment:id,booking_id,provider,method,status,amount_cents,receipt_url,paid_at',
+                'classSession:id,program_id,tutor_id,starts_at',
+                'classSession.program:id,name',
+                'classSession.tutor:id,user_id',
+                'classSession.tutor.user:id,name',
+                'certificate:id,booking_id,status,certificate_number,pdf_path',
+                'latestTutorEarning:id,booking_id,status',
             ])
             ->orderBy('created_at', 'desc');
         if ($request->filled('status')) {
@@ -68,9 +71,7 @@ class BookingController extends Controller
             $reservation = $booking->reservation;
             $booking->setAttribute('seat_count', (int) ($reservation->seats_reserved ?? 1));
 
-            $activePayment = $booking->payments
-                ->sortByDesc('id')
-                ->first();
+            $activePayment = $booking->activePayment;
             $booking->setAttribute('active_payment', $activePayment);
 
             $booking->setAttribute('payment_status', $activePayment?->status ?? $booking->payment_status);
@@ -89,7 +90,7 @@ class BookingController extends Controller
                 }
             }
 
-            $latestEarning = $booking->tutorEarnings?->sortByDesc('id')->first();
+            $latestEarning = $booking->latestTutorEarning;
             $booking->setAttribute('tutor_earning_status', $latestEarning?->status);
 
             return $booking;
@@ -101,21 +102,23 @@ class BookingController extends Controller
     public function show(Booking $booking): JsonResponse
     {
         $booking->load([
-            'participant.employer',
-            'reservation',
+            'participant:id,full_name,nric_passport,phone,email,employer_id',
+            'participant.employer:id,name',
+            'reservation:id,seats_reserved',
             'payments',
-            'classSession.program',
-            'classSession.tutor.user',
-            'certificate',
-            'tutorEarnings',
+            'activePayment:id,booking_id,provider,method,status,amount_cents,receipt_url,paid_at',
+            'classSession:id,program_id,tutor_id,starts_at',
+            'classSession.program:id,name',
+            'classSession.tutor:id,user_id',
+            'classSession.tutor.user:id,name',
+            'certificate:id,booking_id,status,certificate_number,pdf_path',
+            'latestTutorEarning:id,booking_id,status',
         ]);
 
         $reservation = $booking->reservation;
         $booking->setAttribute('seat_count', (int) ($reservation->seats_reserved ?? 1));
 
-        $activePayment = $booking->payments
-            ->sortByDesc('id')
-            ->first();
+        $activePayment = $booking->activePayment ?? $booking->payments->sortByDesc('id')->first();
         $booking->setAttribute('active_payment', $activePayment);
 
         $booking->setAttribute('payment_status', $activePayment?->status ?? $booking->payment_status);
@@ -134,7 +137,7 @@ class BookingController extends Controller
             }
         }
 
-        $latestEarning = $booking->tutorEarnings?->sortByDesc('id')->first();
+        $latestEarning = $booking->latestTutorEarning;
         $booking->setAttribute('tutor_earning_status', $latestEarning?->status);
 
         return response()->json($booking);
@@ -167,19 +170,22 @@ class BookingController extends Controller
         ]);
 
         $booking->load([
-            'participant.employer',
-            'reservation',
-            'payments',
-            'classSession.program',
-            'classSession.tutor.user',
-            'certificate',
-            'tutorEarnings',
+            'participant:id,full_name,nric_passport,phone,email,employer_id',
+            'participant.employer:id,name',
+            'reservation:id,seats_reserved',
+            'activePayment:id,booking_id,provider,method,status,amount_cents,receipt_url,paid_at',
+            'classSession:id,program_id,tutor_id,starts_at',
+            'classSession.program:id,name',
+            'classSession.tutor:id,user_id',
+            'classSession.tutor.user:id,name',
+            'certificate:id,booking_id,status,certificate_number,pdf_path',
+            'latestTutorEarning:id,booking_id,status',
         ]);
 
         $reservation = $booking->reservation;
         $booking->setAttribute('seat_count', (int) ($reservation->seats_reserved ?? 1));
 
-        $activePayment = $booking->payments->sortByDesc('id')->first();
+        $activePayment = $booking->activePayment;
         $booking->setAttribute('active_payment', $activePayment);
         $booking->setAttribute('payment_status', $activePayment?->status ?? $booking->payment_status);
         $booking->setAttribute(
@@ -197,7 +203,7 @@ class BookingController extends Controller
             }
         }
 
-        $latestEarning = $booking->tutorEarnings?->sortByDesc('id')->first();
+        $latestEarning = $booking->latestTutorEarning;
         $booking->setAttribute('tutor_earning_status', $latestEarning?->status);
 
         return response()->json($booking);

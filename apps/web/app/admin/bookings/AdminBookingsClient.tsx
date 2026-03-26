@@ -28,7 +28,7 @@ export function AdminBookingsClient() {
         to?: string;
         search?: string;
         per_page?: number;
-      } = { per_page: 50 };
+      } = { per_page: 20 };
       if (nextFilters.status) params.status = nextFilters.status;
       if (nextFilters.paymentMethod) params.payment_method = nextFilters.paymentMethod;
       if (nextFilters.from) params.from = nextFilters.from;
