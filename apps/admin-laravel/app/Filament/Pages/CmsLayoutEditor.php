@@ -9,6 +9,7 @@ use App\Services\CmsService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\Tabs\Tab;
@@ -64,51 +65,70 @@ class CmsLayoutEditor extends Page implements HasForms
         return $form
             ->schema([
                 Tabs::make('layoutTabs')
+                    ->columnSpanFull()
                     ->tabs([
                         Tab::make('Header')
+                            ->icon('heroicon-o-bars-3')
                             ->schema([
-                                TextInput::make('header.logo_url')
-                                    ->label('Logo URL')
-                                    ->maxLength(2048)
-                                    ->url(),
-                                Repeater::make('header.menu_items')
-                                    ->label('Menu items')
+                                Section::make('Logo')
                                     ->schema([
-                                        TextInput::make('label')->required()->maxLength(255),
-                                        TextInput::make('url')->maxLength(2048),
-                                        Select::make('type')
-                                            ->options(['page' => 'Page', 'anchor' => 'Anchor', 'external' => 'External'])
-                                            ->required(),
-                                        Toggle::make('has_children')->label('Has children'),
-                                    ])
+                                        TextInput::make('header.logo_url')
+                                            ->label('Logo URL')
+                                            ->maxLength(2048)
+                                            ->url()
+                                            ->columnSpanFull(),
+                                    ]),
+                                Section::make('Navigation Menu')
+                                    ->schema([
+                                        Repeater::make('header.menu_items')
+                                            ->label('')
+                                            ->schema([
+                                                TextInput::make('label')->required()->maxLength(255),
+                                                TextInput::make('url')->maxLength(2048),
+                                                Select::make('type')
+                                                    ->options(['page' => 'Page', 'anchor' => 'Anchor', 'external' => 'External'])
+                                                    ->required(),
+                                                Toggle::make('has_children')->label('Has children'),
+                                            ])
+                                            ->columns(2)
+                                            ->defaultItems(0),
+                                    ]),
+                                Section::make('Call to Action')
                                     ->columns(2)
-                                    ->defaultItems(0),
-                                TextInput::make('header.cta.label')->label('CTA label')->maxLength(255),
-                                TextInput::make('header.cta.url')->label('CTA URL')->maxLength(2048),
-                                ColorPicker::make('header.cta.bg_color')->label('CTA background'),
-                                ColorPicker::make('header.cta.text_color')->label('CTA text color'),
-                                Repeater::make('header.languages')
-                                    ->label('Languages')
                                     ->schema([
-                                        TextInput::make('code')->maxLength(10),
-                                        TextInput::make('label')->maxLength(50),
-                                        Toggle::make('active')->default(true),
-                                    ])
-                                    ->columns(3)
-                                    ->defaultItems(0),
+                                        TextInput::make('header.cta.label')->label('Label')->maxLength(255),
+                                        TextInput::make('header.cta.url')->label('URL')->maxLength(2048),
+                                        ColorPicker::make('header.cta.bg_color')->label('Background colour'),
+                                        ColorPicker::make('header.cta.text_color')->label('Text colour'),
+                                    ]),
+                                Section::make('Languages')
+                                    ->schema([
+                                        Repeater::make('header.languages')
+                                            ->label('')
+                                            ->schema([
+                                                TextInput::make('code')->maxLength(10),
+                                                TextInput::make('label')->maxLength(50),
+                                                Toggle::make('active')->default(true),
+                                            ])
+                                            ->columns(3)
+                                            ->defaultItems(0),
+                                    ]),
                             ]),
                         Tab::make('Footer')
+                            ->icon('heroicon-o-document-text')
                             ->schema([
                                 Tabs::make('footerInner')
+                                    ->columnSpanFull()
                                     ->tabs([
                                         Tab::make('Brand')
                                             ->schema([
                                                 TextInput::make('footer.brand.logo_url')->label('Logo URL')->maxLength(2048),
                                                 Textarea::make('footer.brand.description')->label('Description')->rows(4),
                                             ]),
-                                        Tab::make('Quick links')
+                                        Tab::make('Quick Links')
                                             ->schema([
                                                 Repeater::make('footer.quick_links')
+                                                    ->label('')
                                                     ->maxItems(8)
                                                     ->schema([
                                                         TextInput::make('label')->required(),
@@ -119,6 +139,7 @@ class CmsLayoutEditor extends Page implements HasForms
                                         Tab::make('Buttons')
                                             ->schema([
                                                 Repeater::make('footer.buttons')
+                                                    ->label('')
                                                     ->maxItems(3)
                                                     ->schema([
                                                         TextInput::make('label')->required(),
@@ -126,7 +147,7 @@ class CmsLayoutEditor extends Page implements HasForms
                                                     ])
                                                     ->columns(2),
                                             ]),
-                                        Tab::make('Payment trust')
+                                        Tab::make('Payment Trust')
                                             ->schema([
                                                 TextInput::make('footer.payment.title')->label('Title')->maxLength(255),
                                                 Textarea::make('footer.payment.icons_urls')
@@ -134,34 +155,45 @@ class CmsLayoutEditor extends Page implements HasForms
                                                     ->rows(4)
                                                     ->helperText('Paste full image URLs, one per line.'),
                                             ]),
-                                        Tab::make('Bottom')
+                                        Tab::make('Bottom Bar')
                                             ->schema([
                                                 Repeater::make('footer.legal_links')
+                                                    ->label('Legal Links')
                                                     ->schema([
                                                         TextInput::make('label')->required(),
                                                         TextInput::make('url')->required(),
                                                     ])
                                                     ->columns(2),
-                                                TextInput::make('footer.bottom.copyright')->label('Copyright')->maxLength(500),
+                                                TextInput::make('footer.bottom.copyright')->label('Copyright text')->maxLength(500),
                                                 TextInput::make('footer.bottom.ssl_badge_url')->label('SSL badge URL')->maxLength(2048),
                                             ]),
                                     ]),
                             ]),
                         Tab::make('Floating Menu')
+                            ->icon('heroicon-o-chat-bubble-oval-left')
                             ->schema([
-                                Toggle::make('floating.enabled')->label('Enabled')->default(false),
-                                Textarea::make('floating.style_json')
-                                    ->label('Style (JSON, optional)')
-                                    ->rows(3),
-                                Repeater::make('floating.items')
-                                    ->maxItems(3)
+                                Section::make('Settings')
+                                    ->columns(2)
                                     ->schema([
-                                        TextInput::make('icon')->maxLength(100),
-                                        TextInput::make('label')->maxLength(255),
-                                        TextInput::make('url')->maxLength(2048),
-                                    ])
-                                    ->columns(3)
-                                    ->defaultItems(0),
+                                        Toggle::make('floating.enabled')->label('Enabled')->default(false),
+                                        Textarea::make('floating.style_json')
+                                            ->label('Custom style (JSON, optional)')
+                                            ->rows(3)
+                                            ->columnSpanFull(),
+                                    ]),
+                                Section::make('Menu Items')
+                                    ->schema([
+                                        Repeater::make('floating.items')
+                                            ->label('')
+                                            ->maxItems(3)
+                                            ->schema([
+                                                TextInput::make('icon')->maxLength(100),
+                                                TextInput::make('label')->maxLength(255),
+                                                TextInput::make('url')->maxLength(2048),
+                                            ])
+                                            ->columns(3)
+                                            ->defaultItems(0),
+                                    ]),
                             ]),
                     ]),
             ])

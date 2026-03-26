@@ -8,8 +8,10 @@ use App\Models\CmsSection;
 use App\Services\CmsService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\ColorPicker;
+use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\Tabs\Tab;
 use Filament\Forms\Components\Textarea;
@@ -63,93 +65,169 @@ class CmsHomepageEditor extends Page implements HasForms
         return $form
             ->schema([
                 Tabs::make('homeTabs')
+                    ->columnSpanFull()
                     ->tabs([
                         Tab::make('Hero')
+                            ->icon('heroicon-o-sparkles')
                             ->schema([
-                                TextInput::make('hero.headline')->maxLength(500),
-                                Textarea::make('hero.subheadline')->rows(3),
-                                Repeater::make('hero.buttons')
+                                Section::make('Headline')
+                                    ->columns(2)
                                     ->schema([
-                                        TextInput::make('label')->required(),
-                                        TextInput::make('url')->required(),
-                                        ColorPicker::make('color'),
-                                    ])
-                                    ->columns(3)
-                                    ->defaultItems(0),
-                                Textarea::make('hero.background_urls')
-                                    ->label('Background image URLs (max 5, one per line)')
-                                    ->rows(5)
-                                    ->helperText('Up to 5 URLs; first line is primary.'),
+                                        TextInput::make('hero.headline')
+                                            ->label('Headline')
+                                            ->maxLength(500),
+                                        Textarea::make('hero.subheadline')
+                                            ->label('Sub-headline')
+                                            ->rows(3)
+                                            ->columnSpanFull(),
+                                    ]),
+                                Section::make('CTA Buttons')
+                                    ->schema([
+                                        Repeater::make('hero.buttons')
+                                            ->label('')
+                                            ->schema([
+                                                TextInput::make('label')->required(),
+                                                TextInput::make('url')->required(),
+                                                ColorPicker::make('color'),
+                                            ])
+                                            ->columns(3)
+                                            ->defaultItems(0),
+                                    ]),
+                                Section::make('Background Images')
+                                    ->schema([
+                                        Textarea::make('hero.background_urls')
+                                            ->label('Image URLs (max 5, one per line)')
+                                            ->rows(5)
+                                            ->helperText('Up to 5 URLs; first line is primary.'),
+                                    ]),
                             ]),
                         Tab::make('USP')
+                            ->icon('heroicon-o-star')
                             ->schema([
-                                TextInput::make('usp.title')->maxLength(255),
-                                Textarea::make('usp.description')->rows(3),
-                                Repeater::make('usp.points')
-                                    ->label('Points (max 4)')
-                                    ->maxItems(4)
+                                Section::make('Section Content')
+                                    ->columns(2)
                                     ->schema([
-                                        TextInput::make('icon')->maxLength(255),
-                                        TextInput::make('title')->maxLength(255),
-                                        Textarea::make('description')->rows(2),
-                                    ])
-                                    ->columns(1)
-                                    ->defaultItems(0),
-                                Textarea::make('usp.side_images_urls')
-                                    ->label('Right-side image URLs (one per line)')
-                                    ->rows(4),
+                                        TextInput::make('usp.title')
+                                            ->label('Title')
+                                            ->maxLength(255),
+                                        Textarea::make('usp.description')
+                                            ->label('Description')
+                                            ->rows(3)
+                                            ->columnSpanFull(),
+                                    ]),
+                                Section::make('USP Points')
+                                    ->schema([
+                                        Repeater::make('usp.points')
+                                            ->label('Points (max 4)')
+                                            ->maxItems(4)
+                                            ->schema([
+                                                TextInput::make('icon')->maxLength(255),
+                                                TextInput::make('title')->maxLength(255),
+                                                Textarea::make('description')->rows(2)->columnSpanFull(),
+                                            ])
+                                            ->columns(2)
+                                            ->defaultItems(0),
+                                    ]),
+                                Section::make('Side Images')
+                                    ->schema([
+                                        Textarea::make('usp.side_images_urls')
+                                            ->label('Right-side image URLs (one per line)')
+                                            ->rows(4),
+                                    ]),
                             ]),
                         Tab::make('Classes')
+                            ->icon('heroicon-o-academic-cap')
                             ->schema([
-                                TextInput::make('classes.title')->maxLength(255),
-                                Textarea::make('classes.description')->rows(3),
-                                TextInput::make('classes.button_text')->maxLength(100),
-                                TextInput::make('classes.button_url')->maxLength(2048),
-                                TextInput::make('classes.max_items')
-                                    ->numeric()
-                                    ->default(20)
-                                    ->minValue(1)
-                                    ->maxValue(100),
+                                Section::make('Section Content')
+                                    ->columns(2)
+                                    ->schema([
+                                        TextInput::make('classes.title')
+                                            ->label('Title')
+                                            ->maxLength(255),
+                                        TextInput::make('classes.max_items')
+                                            ->label('Max items shown')
+                                            ->numeric()
+                                            ->default(20)
+                                            ->minValue(1)
+                                            ->maxValue(100),
+                                        Textarea::make('classes.description')
+                                            ->label('Description')
+                                            ->rows(3)
+                                            ->columnSpanFull(),
+                                    ]),
+                                Section::make('Button')
+                                    ->columns(2)
+                                    ->schema([
+                                        TextInput::make('classes.button_text')
+                                            ->label('Button text')
+                                            ->maxLength(100),
+                                        TextInput::make('classes.button_url')
+                                            ->label('Button URL')
+                                            ->maxLength(2048),
+                                    ]),
                                 Placeholder::make('classes_note')
                                     ->label('')
                                     ->content('Class listings are loaded dynamically from the API — no manual class rows here.'),
                             ]),
                         Tab::make('Trust')
+                            ->icon('heroicon-o-shield-check')
                             ->schema([
-                                Repeater::make('trust.logos')
-                                    ->label('Partner logos (max 10)')
-                                    ->maxItems(10)
+                                Section::make('Partner Logos')
                                     ->schema([
-                                        TextInput::make('image_url')->label('Image URL')->maxLength(2048),
-                                        TextInput::make('title')->maxLength(255),
-                                    ])
-                                    ->columns(2)
-                                    ->defaultItems(0),
-                                TextInput::make('trust.google_rating_text')->label('Google rating text'),
-                                TextInput::make('trust.google_button_label')->label('Google button label'),
-                                TextInput::make('trust.google_button_url')->label('Google button URL')->maxLength(2048),
+                                        Repeater::make('trust.logos')
+                                            ->label('Logos (max 10)')
+                                            ->maxItems(10)
+                                            ->schema([
+                                                TextInput::make('image_url')->label('Image URL')->maxLength(2048),
+                                                TextInput::make('title')->label('Alt text')->maxLength(255),
+                                            ])
+                                            ->columns(2)
+                                            ->defaultItems(0),
+                                    ]),
+                                Section::make('Google Rating')
+                                    ->columns(3)
+                                    ->schema([
+                                        TextInput::make('trust.google_rating_text')->label('Rating text'),
+                                        TextInput::make('trust.google_button_label')->label('Button label'),
+                                        TextInput::make('trust.google_button_url')->label('Button URL')->maxLength(2048),
+                                    ]),
                                 Placeholder::make('trust_note')
                                     ->label('')
                                     ->content('Customer testimonials are managed under CMS → Testimonials.'),
                             ]),
                         Tab::make('Promo')
+                            ->icon('heroicon-o-megaphone')
                             ->schema([
-                                TextInput::make('promo.title')->maxLength(255),
-                                Textarea::make('promo.description')->rows(3),
-                                Textarea::make('promo.banner_urls')
-                                    ->label('Banner image URLs (max 3, one per line)')
-                                    ->rows(3),
-                                Repeater::make('promo.cards')
-                                    ->maxItems(3)
-                                    ->schema([
-                                        TextInput::make('image_url')->label('Image URL')->maxLength(2048),
-                                        TextInput::make('title')->maxLength(255),
-                                        Textarea::make('description')->rows(2),
-                                        TextInput::make('button_label')->maxLength(100),
-                                        TextInput::make('url')->maxLength(2048),
-                                    ])
+                                Section::make('Section Content')
                                     ->columns(2)
-                                    ->defaultItems(0),
+                                    ->schema([
+                                        TextInput::make('promo.title')
+                                            ->label('Title')
+                                            ->maxLength(255),
+                                        Textarea::make('promo.description')
+                                            ->label('Description')
+                                            ->rows(3)
+                                            ->columnSpanFull(),
+                                        Textarea::make('promo.banner_urls')
+                                            ->label('Banner image URLs (max 3, one per line)')
+                                            ->rows(3)
+                                            ->columnSpanFull(),
+                                    ]),
+                                Section::make('Promo Cards')
+                                    ->schema([
+                                        Repeater::make('promo.cards')
+                                            ->label('Cards (max 3)')
+                                            ->maxItems(3)
+                                            ->schema([
+                                                TextInput::make('image_url')->label('Image URL')->maxLength(2048),
+                                                TextInput::make('title')->maxLength(255),
+                                                Textarea::make('description')->rows(2)->columnSpanFull(),
+                                                TextInput::make('button_label')->maxLength(100),
+                                                TextInput::make('url')->label('Link URL')->maxLength(2048),
+                                            ])
+                                            ->columns(2)
+                                            ->defaultItems(0),
+                                    ]),
                             ]),
                     ]),
             ])
