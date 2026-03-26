@@ -59,10 +59,6 @@ export function CartModal() {
     console.warn("Missing price for class_session");
   }
 
-  if (!isOpen || !cart) return null;
-
-  const manualPaymentEnabled = checkoutSettings?.manual_payment.enabled ?? true;
-
   const resetModalState = () => {
     setStep(1);
     setError(null);
@@ -109,6 +105,11 @@ export function CartModal() {
   };
 
   const submitReservation = async (): Promise<boolean> => {
+    if (!cart) {
+      setError("Cart is empty.");
+      return false;
+    }
+
     setError(null);
     setSuccess(null);
     setLoading(true);
@@ -183,6 +184,10 @@ export function CartModal() {
     void loadCheckoutSettings();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, checkoutSettings]);
+
+  if (!isOpen || !cart) return null;
+
+  const manualPaymentEnabled = checkoutSettings?.manual_payment.enabled ?? true;
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center p-4">

@@ -67,7 +67,7 @@ export default async function HomePage() {
   // Legacy fallback: build a hero carousel-like section from homepage settings.
   // This removes the old booking panel and keeps the hero clean & consistent.
   const legacyHeroBg =
-    settings.hero.backgroundImageUrl ?? "/images/food-handling-hero.jpg";
+    settings.hero.backgroundImageUrl ?? "/images/food-handling-hero.svg";
   const legacyHeroSlides = [
     legacyHeroBg,
     settings.mainBanners?.[0]?.imageUrl ?? legacyHeroBg,
