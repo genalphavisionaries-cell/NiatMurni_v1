@@ -191,6 +191,8 @@ export type ClassSession = {
   id: number;
   program_id: number;
   trainer_id: number | null;
+  price?: number | null;
+  price_cents?: number | null;
   starts_at: string;
   ends_at: string;
   mode: string | null;

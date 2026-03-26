@@ -177,6 +177,13 @@ function ClassSessionForm({
   const [language, setLanguage] = useState(initial?.language ?? "en");
   const [venue, setVenue] = useState(initial?.venue ?? "");
   const [capacity, setCapacity] = useState(initial?.capacity ?? 30);
+  const [fee, setFee] = useState<number>(
+    initial?.price != null
+      ? Number(initial.price)
+      : initial?.price_cents != null
+        ? Number(initial.price_cents) / 100
+        : 0
+  );
   const [trainers, setTrainers] = useState<{ id: number; name: string }[]>([]);
 
   useEffect(() => {
@@ -203,6 +210,7 @@ function ClassSessionForm({
         language,
         venue: venue || null,
         capacity,
+        price: fee,
         min_threshold: Math.min(capacity, 5),
         status: initial?.status ?? "confirmed",
       };
@@ -312,6 +320,17 @@ function ClassSessionForm({
               min={1}
               value={capacity}
               onChange={(e) => setCapacity(Number(e.target.value))}
+              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Fee (RM)</label>
+            <input
+              type="number"
+              min={0}
+              step="0.01"
+              value={fee}
+              onChange={(e) => setFee(Number(e.target.value) || 0)}
               className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
             />
           </div>

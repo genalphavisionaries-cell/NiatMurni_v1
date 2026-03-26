@@ -17,7 +17,7 @@ class PublicController extends Controller
         $sessions = ClassSession::query()
             ->with(['program:id,name,is_active', 'tutor.user:id,name'])
             ->where('starts_at', '>=', $now)
-            ->whereIn('status', ['scheduled', 'confirmed', 'ongoing', 'in_progress'])
+            ->whereIn('status', ['draft', 'scheduled', 'confirmed', 'ongoing', 'in_progress'])
             ->whereHas('program', fn ($q) => $q->where('is_active', true))
             ->orderBy('starts_at')
             ->get();
@@ -28,8 +28,9 @@ class PublicController extends Controller
                 ->count();
             $capacity = (int) ($session->capacity ?? 0);
             $availableSlots = max($capacity - $bookedCount, 0);
-            $priceCents = $session->price_cents ?? null;
-            $programPrice = $session->program?->price;
+            $programBasePriceCents = $session->program?->base_price_cents ?? null;
+            $priceCents = $session->price_cents ?? $programBasePriceCents;
+            $price = $priceCents !== null ? ((float) $priceCents / 100) : ($session->program?->price ?? null);
 
             return [
                 'id' => (int) $session->id,
@@ -48,7 +49,7 @@ class PublicController extends Controller
                 'min_threshold' => (int) ($session->min_threshold_minutes ?? 0),
                 'status' => $session->status,
                 'zoom_join_url' => $session->zoom_join_url,
-                'price' => $programPrice,
+                'price' => $price,
                 'price_cents' => $priceCents,
             ];
         })->values();
@@ -91,8 +92,14 @@ class PublicController extends Controller
             'min_threshold' => (int) ($session->min_threshold_minutes ?? 0),
             'status' => $session->status,
             'zoom_join_url' => $session->zoom_join_url,
-            'price' => $session->program?->price,
-            'price_cents' => $session->price_cents,
+            'price' => $session->price_cents !== null
+                ? ((float) $session->price_cents / 100)
+                : (
+                    ($session->program?->base_price_cents ?? null) !== null
+                        ? ((float) $session->program->base_price_cents / 100)
+                        : $session->program?->price
+                ),
+            'price_cents' => $session->price_cents ?? $session->program?->base_price_cents,
             'tutor' => $session->tutor ? [
                 'id' => (int) $session->tutor->id,
                 'name' => $session->tutor->user?->name,
@@ -142,8 +149,14 @@ class PublicController extends Controller
                 'venue' => $session->venue,
                 'location' => $session->location,
                 'trainer_name' => $session->tutor?->user?->name,
-                'price' => $session->program?->price,
-                'price_cents' => $session->price_cents,
+                'price' => $session->price_cents !== null
+                    ? ((float) $session->price_cents / 100)
+                    : (
+                        ($session->program?->base_price_cents ?? null) !== null
+                            ? ((float) $session->program->base_price_cents / 100)
+                            : $session->program?->price
+                    ),
+                'price_cents' => $session->price_cents ?? $session->program?->base_price_cents,
             ] : null,
             // Backward-friendly key for existing frontend booking page adapter.
             'class_session_id' => $session ? (int) $session->id : null,

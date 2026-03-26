@@ -38,6 +38,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         if (seatCount <= 0) {
           return;
         }
+        const parsedPrice = Number(item.price_per_seat);
+        const safePrice = Number.isFinite(parsedPrice) ? parsedPrice : 0;
+        if (safePrice === 0) {
+          console.warn("Missing price for class_session");
+        }
         setCart((prev) => {
           if (prev) {
             setReplacementNotice("Your previous selection was replaced");
@@ -46,6 +51,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           }
           return {
             ...item,
+            price_per_seat: safePrice,
             seat_count: Math.max(1, seatCount),
           };
         });

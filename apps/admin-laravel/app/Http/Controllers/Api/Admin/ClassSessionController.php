@@ -58,6 +58,8 @@ class ClassSessionController extends Controller
             'location' => 'nullable|string|max:255',
             'capacity' => 'integer|min:1|max:1000',
             'min_threshold' => 'integer|min:0|max:1000',
+            'price' => 'nullable|numeric|min:0|max:999999.99',
+            'price_cents' => 'nullable|integer|min:0|max:99999999',
             'status' => 'string|in:scheduled,confirmed,cancelled,completed,in_progress,ongoing,archived,draft',
         ]);
         $validated = $this->normalizeInput($validated);
@@ -88,6 +90,8 @@ class ClassSessionController extends Controller
             'location' => 'nullable|string|max:255',
             'capacity' => 'integer|min:1|max:1000',
             'min_threshold' => 'integer|min:0|max:1000',
+            'price' => 'nullable|numeric|min:0|max:999999.99',
+            'price_cents' => 'nullable|integer|min:0|max:99999999',
             'status' => 'string|in:scheduled,confirmed,cancelled,completed,in_progress,ongoing,archived,draft',
         ]);
         $validated = $this->normalizeInput($validated);
@@ -135,6 +139,13 @@ class ClassSessionController extends Controller
             $validated['mode'] = 'physical';
         }
 
+        if (array_key_exists('price', $validated)) {
+            $validated['price_cents'] = $validated['price'] !== null
+                ? (int) round(((float) $validated['price']) * 100)
+                : null;
+            unset($validated['price']);
+        }
+
         return $validated;
     }
 
@@ -146,6 +157,10 @@ class ClassSessionController extends Controller
         $session->setAttribute(
             'min_threshold',
             $session->min_threshold_minutes ?? $session->getAttribute('min_threshold')
+        );
+        $session->setAttribute(
+            'price',
+            $session->price_cents !== null ? ((float) $session->price_cents / 100) : null
         );
 
         if ($trainerUser !== null) {

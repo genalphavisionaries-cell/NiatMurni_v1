@@ -1,5 +1,5 @@
 const LARAVEL_API_URL =
-  process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_LARAVEL_API_URL || "";
+  process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_LARAVEL_API_URL || "https://admin.niatmurniacademy.com";
 
 export type ClassSession = {
   id: number;
@@ -27,50 +27,62 @@ function asObject(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
 }
 
+async function parseJsonResponse(res: Response): Promise<unknown> {
+  const text = await res.text();
+  console.log("API raw response:", text);
+
+  const contentType = res.headers.get("content-type") ?? "";
+  const looksLikeJson = contentType.includes("application/json") || text.trim().startsWith("{") || text.trim().startsWith("[");
+  if (!looksLikeJson) {
+    throw new Error("Invalid API response");
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error("Invalid API response");
+  }
+}
+
 function normalizeClassSession(input: unknown): ClassSession | null {
-  const row = asObject(input);
-  if (!row) return null;
+  const classData = asObject(input);
+  if (!classData) return null;
+  console.log("Class data:", classData);
 
-  const program = asObject(row.program);
-  const trainer = asObject(row.trainer);
+  const program = asObject(classData.program);
+  const trainer = asObject(classData.trainer);
 
-  const id = Number(row.id);
-  const programId = Number(row.program_id);
-  const startsAt = typeof row.starts_at === "string" ? row.starts_at : "";
-  const endsAt = typeof row.ends_at === "string" ? row.ends_at : "";
+  const id = Number(classData.id);
+  const programId = Number(classData.program_id);
+  const startsAt = typeof classData.starts_at === "string" ? classData.starts_at : "";
+  const endsAt = typeof classData.ends_at === "string" ? classData.ends_at : "";
   if (!Number.isFinite(id) || !Number.isFinite(programId) || !startsAt || !endsAt) return null;
+
+  const classPrice =
+    classData.price ??
+    (classData.price_cents ? Number(classData.price_cents) / 100 : 0);
 
   return {
     id,
     program_id: programId,
     program_name:
-      (typeof row.program_name === "string" && row.program_name) ||
+      (typeof classData.program_name === "string" && classData.program_name) ||
       (typeof program?.name === "string" ? program.name : ""),
-    trainer_id: Number.isFinite(Number(row.trainer_id)) ? Number(row.trainer_id) : undefined,
+    trainer_id: Number.isFinite(Number(classData.trainer_id)) ? Number(classData.trainer_id) : undefined,
     trainer_name:
-      (typeof row.trainer_name === "string" && row.trainer_name) ||
+      (typeof classData.trainer_name === "string" && classData.trainer_name) ||
       (typeof trainer?.name === "string" ? trainer.name : ""),
-    price:
-      Number.isFinite(Number(row.price))
-        ? Number(row.price)
-        : Number.isFinite(Number(row.price_cents))
-          ? Number(row.price_cents) / 100
-          : 0,
-    price_per_seat:
-      Number.isFinite(Number(row.price))
-        ? Number(row.price)
-        : Number.isFinite(Number(row.price_cents))
-          ? Number(row.price_cents) / 100
-          : 0,
+    price: Number(classPrice),
+    price_per_seat: Number(classPrice),
     starts_at: startsAt,
     ends_at: endsAt,
-    mode: typeof row.mode === "string" ? row.mode : "",
-    language: typeof row.language === "string" ? row.language : "",
-    venue: typeof row.venue === "string" ? row.venue : typeof row.location === "string" ? row.location : undefined,
-    capacity: Number.isFinite(Number(row.capacity)) ? Number(row.capacity) : 0,
-    min_threshold: Number.isFinite(Number(row.min_threshold)) ? Number(row.min_threshold) : 0,
-    status: typeof row.status === "string" ? row.status : "",
-    zoom_join_url: typeof row.zoom_join_url === "string" ? row.zoom_join_url : undefined,
+    mode: typeof classData.mode === "string" ? classData.mode : "",
+    language: typeof classData.language === "string" ? classData.language : "",
+    venue: typeof classData.venue === "string" ? classData.venue : typeof classData.location === "string" ? classData.location : undefined,
+    capacity: Number.isFinite(Number(classData.capacity)) ? Number(classData.capacity) : 0,
+    min_threshold: Number.isFinite(Number(classData.min_threshold)) ? Number(classData.min_threshold) : 0,
+    status: typeof classData.status === "string" ? classData.status : "",
+    zoom_join_url: typeof classData.zoom_join_url === "string" ? classData.zoom_join_url : undefined,
   };
 }
 
@@ -97,13 +109,16 @@ export async function fetchUpcomingClasses(): Promise<ClassSession[]> {
   try {
     const res = await fetch(`${LARAVEL_API_URL}/api/public/classes/upcoming`, {
       signal: controller.signal,
+      headers: {
+        "Accept": "application/json",
+      },
     });
     clearTimeout(timeout);
     if (!res.ok) {
       if (res.status === 404) logMissingBackendApi("/api/public/classes/upcoming", res.status);
       return [];
     }
-    const data = await res.json();
+    const data = await parseJsonResponse(res);
     return extractClassList(data);
   } catch {
     clearTimeout(timeout);
@@ -118,12 +133,16 @@ export async function fetchClass(id: string): Promise<ClassSession | null> {
     return null;
   }
   try {
-    const res = await fetch(`${LARAVEL_API_URL}/api/public/classes/${id}`);
+    const res = await fetch(`${LARAVEL_API_URL}/api/public/classes/${id}`, {
+      headers: {
+        "Accept": "application/json",
+      },
+    });
     if (!res.ok) {
       if (res.status === 404) logMissingBackendApi(`/api/public/classes/${id}`, res.status);
       return null;
     }
-    const data = await res.json();
+    const data = await parseJsonResponse(res);
     return normalizeClassSession(data) ?? normalizeClassSession(asObject(data)?.data) ?? null;
   } catch {
     logMissingBackendApi(`/api/public/classes/${id}`);
@@ -168,17 +187,17 @@ export async function registerForClass(
 ): Promise<{ redirect_url: string }> {
   const res = await fetch(`${LARAVEL_API_URL}/api/register`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "Accept": "application/json" },
     body: JSON.stringify(payload),
   });
-  const data = await res.json();
+  const data = await parseJsonResponse(res) as Record<string, unknown>;
   if (!res.ok) {
-    throw new Error(data.error || data.message || "Registration failed");
+    throw new Error((data.error as string) || (data.message as string) || "Registration failed");
   }
   if (!data.redirect_url) {
     throw new Error("No payment URL returned");
   }
-  return { redirect_url: data.redirect_url };
+  return { redirect_url: String(data.redirect_url) };
 }
 
 export async function createReservation(
@@ -186,12 +205,12 @@ export async function createReservation(
 ): Promise<CreateReservationResponse> {
   const res = await fetch(`${LARAVEL_API_URL}/api/reservations`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "Accept": "application/json" },
     body: JSON.stringify(payload),
   });
-  const data = await res.json();
+  const data = await parseJsonResponse(res) as Record<string, unknown>;
   if (!res.ok) {
-    throw new Error(data.error || data.message || "Failed to create reservation");
+    throw new Error((data.error as string) || (data.message as string) || "Failed to create reservation");
   }
   return {
     reservation_id: Number(data.reservation_id),
@@ -205,12 +224,12 @@ export async function createPaymentCheckout(
 ): Promise<{ checkout_url: string }> {
   const res = await fetch(`${LARAVEL_API_URL}/api/payments/checkout`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "Accept": "application/json" },
     body: JSON.stringify(payload),
   });
-  const data = await res.json();
+  const data = await parseJsonResponse(res) as Record<string, unknown>;
   if (!res.ok) {
-    throw new Error(data.error || data.message || "Failed to create checkout session");
+    throw new Error((data.error as string) || (data.message as string) || "Failed to create checkout session");
   }
   if (!data.checkout_url) {
     throw new Error("Checkout URL was not returned.");
@@ -237,12 +256,16 @@ export async function fetchBooking(id: string): Promise<BookingResponse | null> 
     return null;
   }
   try {
-    const res = await fetch(`${LARAVEL_API_URL}/api/public/bookings/${id}`);
+  const res = await fetch(`${LARAVEL_API_URL}/api/public/bookings/${id}`, {
+    headers: {
+      "Accept": "application/json",
+    },
+  });
     if (!res.ok) {
       if (res.status === 404) logMissingBackendApi(`/api/public/bookings/${id}`, res.status);
       return null;
     }
-    const data = await res.json();
+    const data = await parseJsonResponse(res);
     const payload = asObject(data);
     const bookingObj = asObject(payload?.booking) ?? payload;
     if (!bookingObj) return null;
