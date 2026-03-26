@@ -113,6 +113,14 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureAdminAccess::class
         Route::get('/bookings', [App\Http\Controllers\Api\Admin\BookingController::class, 'index'])->name('bookings.index');
         Route::get('/bookings/{booking}', [App\Http\Controllers\Api\Admin\BookingController::class, 'show'])->name('bookings.show');
         Route::patch('/bookings/{booking}', [App\Http\Controllers\Api\Admin\BookingController::class, 'update'])->name('bookings.update');
+        Route::post('/bookings/override-status', [App\Http\Controllers\Api\Admin\BookingAdminController::class, 'overrideStatus'])
+            ->name('bookings.override-status');
+        Route::post('/bookings/issue-certificate', [App\Http\Controllers\Api\Admin\BookingAdminController::class, 'issueCertificate'])
+            ->name('bookings.issue-certificate');
+        Route::post('/bookings/reissue-certificate', [App\Http\Controllers\Api\Admin\BookingAdminController::class, 'reissueCertificate'])
+            ->name('bookings.reissue-certificate');
+        Route::post('/bookings/refund', [App\Http\Controllers\Api\Admin\BookingAdminController::class, 'refund'])
+            ->name('bookings.refund-admin');
     });
 
     // Participants
