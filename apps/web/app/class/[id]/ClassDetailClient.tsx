@@ -3,12 +3,15 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { fetchClass, type ClassSession } from "@/lib/api";
+import { useCart } from "@/components/cart/CartProvider";
 
 type Props = { id: string };
 
 export default function ClassDetailClient({ id }: Props) {
   const [classSession, setClassSession] = useState<ClassSession | null>(null);
   const [loading, setLoading] = useState(true);
+  const [seatCount, setSeatCount] = useState(1);
+  const { addToCart } = useCart();
 
   useEffect(() => {
     if (!id) return;
@@ -100,12 +103,35 @@ export default function ClassDetailClient({ id }: Props) {
         </div>
 
         <div className="mt-8">
-          <Link
-            href={`/class/${id}/register`}
-            className="inline-block rounded bg-amber-600 px-6 py-3 font-medium text-white hover:bg-amber-700"
-          >
-            Register
-          </Link>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              Seats
+              <input
+                type="number"
+                min={1}
+                max={3}
+                value={seatCount}
+                onChange={(e) => setSeatCount(Math.max(1, Math.min(3, Number(e.target.value) || 1)))}
+                className="w-20 rounded border border-stone-300 px-2 py-1"
+              />
+            </label>
+            <button
+              type="button"
+              onClick={() =>
+                addToCart(
+                  {
+                    class_session_id: classSession.id,
+                    class_title: classSession.program_name,
+                    price_per_seat: classSession.price ?? 0,
+                  },
+                  seatCount
+                )
+              }
+              className="inline-block rounded bg-amber-600 px-6 py-3 font-medium text-white hover:bg-amber-700"
+            >
+              Add to Cart
+            </button>
+          </div>
         </div>
       </section>
     </div>

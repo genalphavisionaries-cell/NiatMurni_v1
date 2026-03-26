@@ -124,6 +124,26 @@ export type FinanceTimelinePoint = {
   amount_cents: number;
 };
 
+export type VoucherType = "fixed" | "percentage" | "free_delivery";
+export type VoucherStatus = "active" | "inactive";
+
+export type Voucher = {
+  id: number;
+  code: string;
+  type: VoucherType;
+  value: string | null;
+  min_seats: number | null;
+  max_uses: number | null;
+  used_count: number;
+  valid_from: string | null;
+  valid_until: string | null;
+  applicable_class_session_id: number | null;
+  status: VoucherStatus;
+  created_at: string;
+  updated_at: string;
+  applicable_class_session?: ClassSession | null;
+};
+
 async function request<T>(
   path: string,
   options: RequestInit & { params?: Record<string, string> } = {}
@@ -203,6 +223,18 @@ export type Booking = {
   payment_status: string | null;
   payment_amount: string | null;
   paid_at: string | null;
+  created_at?: string;
+  updated_at?: string;
+  seat_count?: number;
+  active_payment?: {
+    id: number;
+    provider: "stripe" | "manual" | string;
+    method?: string | null;
+    status: string;
+    amount_cents?: number | null;
+    receipt_url?: string | null;
+    paid_at?: string | null;
+  } | null;
   participant?: Participant;
   class_session?: ClassSession;
 };
@@ -294,6 +326,47 @@ export const adminApi = {
   },
   getTutorPayoutTimeline(period: "day" | "week" | "month" | "year" = "month"): Promise<{ period: string; data: FinanceTimelinePoint[] }> {
     return request("/api/admin/finance/tutor-payout-timeline", { params: { period } });
+  },
+
+  // Vouchers
+  getVouchers(params?: { status?: VoucherStatus; search?: string; per_page?: number }): Promise<Paginated<Voucher>> {
+    const p: Record<string, string> = {};
+    if (params?.status) p.status = params.status;
+    if (params?.search) p.search = params.search;
+    if (params?.per_page != null) p.per_page = String(params.per_page);
+    return request<Paginated<Voucher>>("/api/admin/vouchers", { params: p });
+  },
+  createVoucher(data: {
+    code: string;
+    type: VoucherType;
+    value?: number | null;
+    min_seats?: number | null;
+    max_uses?: number | null;
+    valid_from?: string | null;
+    valid_until?: string | null;
+    applicable_class_session_id?: number | null;
+    status?: VoucherStatus;
+  }): Promise<{ data: Voucher }> {
+    return request("/api/admin/vouchers", { method: "POST", body: JSON.stringify(data) });
+  },
+  updateVoucher(id: number, data: {
+    code: string;
+    type: VoucherType;
+    value?: number | null;
+    min_seats?: number | null;
+    max_uses?: number | null;
+    valid_from?: string | null;
+    valid_until?: string | null;
+    applicable_class_session_id?: number | null;
+    status?: VoucherStatus;
+  }): Promise<{ data: Voucher }> {
+    return request(`/api/admin/vouchers/${id}`, { method: "PUT", body: JSON.stringify(data) });
+  },
+  deleteVoucher(id: number): Promise<{ message: string }> {
+    return request(`/api/admin/vouchers/${id}`, { method: "DELETE" });
+  },
+  toggleVoucher(id: number): Promise<{ data: Voucher }> {
+    return request(`/api/admin/vouchers/${id}/toggle`, { method: "POST" });
   },
 
   // Users (native Next admin user management)
@@ -431,10 +504,22 @@ export const adminApi = {
   },
 
   // Bookings
-  getBookings(params?: { status?: string; payment_status?: string; per_page?: number }): Promise<Paginated<Booking>> {
+  getBookings(params?: {
+    status?: string;
+    payment_status?: string;
+    payment_method?: string; // stripe/manual
+    from?: string; // YYYY-MM-DD
+    to?: string; // YYYY-MM-DD
+    search?: string;
+    per_page?: number;
+  }): Promise<Paginated<Booking>> {
     const p: Record<string, string> = {};
     if (params?.status) p.status = params.status;
     if (params?.payment_status) p.payment_status = params.payment_status;
+    if (params?.payment_method) p.payment_method = params.payment_method;
+    if (params?.from) p.from = params.from;
+    if (params?.to) p.to = params.to;
+    if (params?.search) p.search = params.search;
     if (params?.per_page != null) p.per_page = String(params.per_page);
     return request<Paginated<Booking>>("/api/admin/bookings", { params: p });
   },
@@ -443,6 +528,36 @@ export const adminApi = {
   },
   updateBooking(id: number, data: { status?: string; payment_status?: string }): Promise<Booking> {
     return request<Booking>(`/api/admin/bookings/${id}`, { method: "PATCH", body: JSON.stringify(data) });
+  },
+
+  changeBookingStatus(id: number, status: string): Promise<Booking> {
+    return request<Booking>(`/api/admin/bookings/${id}/status`, {
+      method: "POST",
+      body: JSON.stringify({ status }),
+    });
+  },
+
+  // Payments (manual admin flow)
+  approveManualPayment(id: number): Promise<{ message: string; data: { booking_id: number; payment_id: number; idempotent: boolean } }> {
+    return request(`/api/admin/payments/${id}/approve`, { method: "POST" });
+  },
+  rejectManualPayment(id: number, data?: { reason?: string }): Promise<{ message: string } | { message: string; data?: unknown }> {
+    return request(`/api/admin/payments/${id}/reject`, {
+      method: "POST",
+      body: data?.reason ? JSON.stringify({ reason: data.reason }) : undefined,
+    });
+  },
+
+  refundBooking(id: number): Promise<{ status?: string; payment?: unknown; message?: string; data?: unknown }> {
+    return request(`/api/admin/bookings/${id}/refund`, { method: "POST" });
+  },
+
+  // Certificate actions
+  issueCertificate(bookingId: number): Promise<{ message: string; data: { booking_id: number; certificate_number: string } }> {
+    return request(`/api/admin/bookings/issue-certificate`, { method: "POST", body: JSON.stringify({ booking_id: bookingId }) });
+  },
+  reissueCertificate(bookingId: number): Promise<{ message: string; data: { booking_id: number; certificate_number: string } }> {
+    return request(`/api/admin/bookings/reissue-certificate`, { method: "POST", body: JSON.stringify({ booking_id: bookingId }) });
   },
 
   // Participants

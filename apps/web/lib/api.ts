@@ -5,6 +5,7 @@ export type ClassSession = {
   id: number;
   program_id: number;
   program_name: string;
+  price?: number;
   trainer_id?: number;
   trainer_name: string;
   starts_at: string;
@@ -48,6 +49,12 @@ function normalizeClassSession(input: unknown): ClassSession | null {
     trainer_name:
       (typeof row.trainer_name === "string" && row.trainer_name) ||
       (typeof trainer?.name === "string" ? trainer.name : ""),
+    price:
+      Number.isFinite(Number(row.price))
+        ? Number(row.price)
+        : Number.isFinite(Number(row.price_cents))
+          ? Number(row.price_cents) / 100
+          : 0,
     starts_at: startsAt,
     ends_at: endsAt,
     mode: typeof row.mode === "string" ? row.mode : "",
@@ -126,6 +133,29 @@ export type RegisterPayload = {
   class_session_id: number;
 };
 
+export type CreateReservationPayload = {
+  class_session_id: number;
+  seat_count: number;
+  full_name: string;
+  identity_no: string;
+  phone: string;
+  email?: string;
+  company_name?: string;
+  delivery_address?: string;
+  delivery_type?: "normal" | "fast";
+  delivery_fee?: number;
+};
+
+export type CreateReservationResponse = {
+  reservation_id: number;
+  total_amount: number;
+  expires_at: string;
+};
+
+export type CheckoutPayload = {
+  reservation_id: number;
+};
+
 export async function registerForClass(
   payload: RegisterPayload
 ): Promise<{ redirect_url: string }> {
@@ -142,6 +172,43 @@ export async function registerForClass(
     throw new Error("No payment URL returned");
   }
   return { redirect_url: data.redirect_url };
+}
+
+export async function createReservation(
+  payload: CreateReservationPayload
+): Promise<CreateReservationResponse> {
+  const res = await fetch(`${LARAVEL_API_URL}/api/reservations`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error || data.message || "Failed to create reservation");
+  }
+  return {
+    reservation_id: Number(data.reservation_id),
+    total_amount: Number(data.total_amount),
+    expires_at: String(data.expires_at ?? ""),
+  };
+}
+
+export async function createPaymentCheckout(
+  payload: CheckoutPayload
+): Promise<{ checkout_url: string }> {
+  const res = await fetch(`${LARAVEL_API_URL}/api/payments/checkout`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error || data.message || "Failed to create checkout session");
+  }
+  if (!data.checkout_url) {
+    throw new Error("Checkout URL was not returned.");
+  }
+  return { checkout_url: String(data.checkout_url) };
 }
 
 export type BookingResponse = {

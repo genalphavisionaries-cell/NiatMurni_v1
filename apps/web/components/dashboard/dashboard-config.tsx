@@ -34,7 +34,15 @@ const adminNav: NavItem[] = [
   { label: "Participants", href: "/admin/participants", icon: Users },
   { label: "Tutors", href: "/admin/tutors", icon: GraduationCap },
   { label: "Certificates", href: "/admin/certificates", icon: Award },
-  { label: "Payments", href: "/admin/payments", icon: CreditCard },
+  {
+    label: "Payments & Delivery",
+    href: "/admin/payments",
+    icon: CreditCard,
+    children: [
+      { label: "Overview", href: "/admin/payments" },
+      { label: "Vouchers", href: "/admin/finance/vouchers" },
+    ],
+  },
   {
     label: "CMS",
     href: "/admin/cms",

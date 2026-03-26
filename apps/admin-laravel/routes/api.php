@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\CertificateVerificationController;
+use App\Http\Controllers\Api\ManualPaymentController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PublicController;
 use App\Http\Controllers\Api\ReservationController;
@@ -31,6 +32,8 @@ Route::prefix('public')->group(function () {
 // Payment / Stripe checkout (public endpoint)
 Route::post('/reservations', [ReservationController::class, 'store']);
 Route::post('/payments/checkout', [PaymentController::class, 'createCheckoutSession']);
+Route::post('/payments/manual/upload-receipt', [ManualPaymentController::class, 'uploadReceipt']);
+Route::post('/payments/manual/submit', [ManualPaymentController::class, 'submit']);
 
 // Stripe webhook (must remain public / unauthenticated)
 Route::post('/webhooks/stripe', [StripeWebhookController::class, 'handle']);
@@ -85,6 +88,14 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureAdminAccess::class
         Route::get('/finance/revenue-timeline', [AdminFinanceReportController::class, 'revenueTimeline']);
         Route::get('/finance/refund-timeline', [AdminFinanceReportController::class, 'refundTimeline']);
         Route::get('/finance/tutor-payout-timeline', [AdminFinanceReportController::class, 'tutorPayoutTimeline']);
+        Route::get('/payments', [App\Http\Controllers\Api\Admin\PaymentAdminController::class, 'index'])->name('payments.index');
+        Route::post('/payments/{id}/approve', [App\Http\Controllers\Api\Admin\PaymentAdminController::class, 'approve'])->name('payments.approve');
+        Route::post('/payments/{id}/reject', [App\Http\Controllers\Api\Admin\PaymentAdminController::class, 'reject'])->name('payments.reject');
+        Route::get('/vouchers', [App\Http\Controllers\Api\Admin\VoucherController::class, 'index'])->name('vouchers.index');
+        Route::post('/vouchers', [App\Http\Controllers\Api\Admin\VoucherController::class, 'store'])->name('vouchers.store');
+        Route::put('/vouchers/{id}', [App\Http\Controllers\Api\Admin\VoucherController::class, 'update'])->name('vouchers.update');
+        Route::delete('/vouchers/{id}', [App\Http\Controllers\Api\Admin\VoucherController::class, 'destroy'])->name('vouchers.destroy');
+        Route::post('/vouchers/{id}/toggle', [App\Http\Controllers\Api\Admin\VoucherController::class, 'toggle'])->name('vouchers.toggle');
     });
 
     // Programs
@@ -115,6 +126,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureAdminAccess::class
         Route::get('/bookings', [App\Http\Controllers\Api\Admin\BookingController::class, 'index'])->name('bookings.index');
         Route::get('/bookings/{booking}', [App\Http\Controllers\Api\Admin\BookingController::class, 'show'])->name('bookings.show');
         Route::patch('/bookings/{booking}', [App\Http\Controllers\Api\Admin\BookingController::class, 'update'])->name('bookings.update');
+        Route::post('/bookings/{booking}/status', [App\Http\Controllers\Api\Admin\BookingController::class, 'status'])
+            ->name('bookings.status');
         Route::post('/bookings/override-status', [App\Http\Controllers\Api\Admin\BookingAdminController::class, 'overrideStatus'])
             ->name('bookings.override-status');
         Route::post('/bookings/issue-certificate', [App\Http\Controllers\Api\Admin\BookingAdminController::class, 'issueCertificate'])

@@ -20,13 +20,25 @@ class Payment extends Model
         self::STATUS_REFUNDED,
     ];
 
+    public const PROVIDER_STRIPE = 'stripe';
+    public const PROVIDER_MANUAL = 'manual';
+
+    public const METHOD_CARD = 'card';
+    public const METHOD_BANK_TRANSFER = 'bank_transfer';
+    public const METHOD_QR = 'qr';
+    public const METHOD_CASH = 'cash';
+
     protected $fillable = [
         'booking_id',
+        'reservation_id',
         'provider',
+        'method',
         'provider_payment_id',
         'amount_cents',
         'currency',
         'status',
+        'receipt_url',
+        'admin_note',
         'paid_at',
         'refunded_at',
         'refund_amount_cents',
@@ -45,5 +57,10 @@ class Payment extends Model
     public function booking(): BelongsTo
     {
         return $this->belongsTo(Booking::class);
+    }
+
+    public function reservation(): BelongsTo
+    {
+        return $this->belongsTo(Reservation::class);
     }
 }

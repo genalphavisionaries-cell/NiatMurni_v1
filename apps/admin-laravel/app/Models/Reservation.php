@@ -16,6 +16,7 @@ class Reservation extends Model
 
     // Legacy compatibility during migration.
     public const LEGACY_STATUS_CONVERTED = 'converted';
+    public const LEGACY_STATUS_PENDING_PAYMENT_REVIEW = 'pending_payment_review';
 
     public const STANDARD_STATUSES = [
         self::STATUS_RESERVED,
@@ -26,6 +27,7 @@ class Reservation extends Model
     public const COMPATIBLE_STATUSES = [
         ...self::STANDARD_STATUSES,
         self::LEGACY_STATUS_CONVERTED,
+        self::LEGACY_STATUS_PENDING_PAYMENT_REVIEW,
     ];
 
     protected $fillable = [

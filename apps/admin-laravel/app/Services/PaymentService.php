@@ -104,7 +104,7 @@ class PaymentService
 
             if ($providerPaymentId !== null) {
                 $existingByProvider = Payment::query()
-                    ->where('provider', 'stripe')
+                    ->where('provider', Payment::PROVIDER_STRIPE)
                     ->where('provider_payment_id', $providerPaymentId)
                     ->first();
 
@@ -120,7 +120,7 @@ class PaymentService
             if ($reservation->converted_booking_id) {
                 $existingOnConverted = Payment::query()
                     ->where('booking_id', $reservation->converted_booking_id)
-                    ->where('provider', 'stripe')
+                    ->where('provider', Payment::PROVIDER_STRIPE)
                     ->where('status', Payment::STATUS_PAID)
                     ->first();
 
@@ -141,7 +141,9 @@ class PaymentService
 
             $payment = Payment::query()->create([
                 'booking_id' => $booking->id,
-                'provider' => 'stripe',
+                'reservation_id' => $reservation->id,
+                'provider' => Payment::PROVIDER_STRIPE,
+                'method' => Payment::METHOD_CARD,
                 'provider_payment_id' => $providerPaymentId,
                 'amount_cents' => (int) ($stripeData['amount_total'] ?? 0),
                 'currency' => (string) ($stripeData['currency'] ?? 'myr'),
@@ -179,7 +181,7 @@ class PaymentService
             $providerPaymentId = $this->extractProviderPaymentId($stripeData);
             if ($providerPaymentId !== null) {
                 $exists = Payment::query()
-                    ->where('provider', 'stripe')
+                    ->where('provider', Payment::PROVIDER_STRIPE)
                     ->where('provider_payment_id', $providerPaymentId)
                     ->exists();
                 if ($exists) {
@@ -192,6 +194,99 @@ class PaymentService
                     'status' => Reservation::STATUS_CANCELLED,
                 ]);
             }
+        });
+    }
+
+    /**
+     * Approve manual payment and finalize booking/payment lifecycle.
+     *
+     * @return array{booking_id:int,payment_id:int,idempotent:bool}
+     */
+    public function handleManualPayment(int $reservationId): array
+    {
+        return DB::transaction(function () use ($reservationId): array {
+            /** @var Reservation $reservation */
+            $reservation = Reservation::query()
+                ->lockForUpdate()
+                ->findOrFail($reservationId);
+
+            $pendingOrPaidManual = Payment::query()
+                ->where('provider', Payment::PROVIDER_MANUAL)
+                ->where('reservation_id', $reservationId)
+                ->orderByDesc('id')
+                ->lockForUpdate()
+                ->first();
+
+            if ($pendingOrPaidManual && (string) $pendingOrPaidManual->status === Payment::STATUS_PAID) {
+                return [
+                    'booking_id' => (int) $pendingOrPaidManual->booking_id,
+                    'payment_id' => (int) $pendingOrPaidManual->id,
+                    'idempotent' => true,
+                ];
+            }
+
+            if ($reservation->converted_booking_id) {
+                $existingPaid = Payment::query()
+                    ->where('booking_id', $reservation->converted_booking_id)
+                    ->where('provider', Payment::PROVIDER_MANUAL)
+                    ->where('status', Payment::STATUS_PAID)
+                    ->first();
+
+                if ($existingPaid) {
+                    return [
+                        'booking_id' => (int) $existingPaid->booking_id,
+                        'payment_id' => (int) $existingPaid->id,
+                        'idempotent' => true,
+                    ];
+                }
+            }
+
+            if ((string) $reservation->status === Reservation::LEGACY_STATUS_CONVERTED && $reservation->converted_booking_id) {
+                $booking = Booking::query()->findOrFail($reservation->converted_booking_id);
+            } else {
+                $booking = $this->reservationService->convertReservationToBooking($reservation->id);
+            }
+
+            $amountCents = (int) round((float) ($reservation->total_amount ?? 0) * 100);
+            if ($amountCents <= 0) {
+                $amountCents = (int) ($booking->total_amount_cents ?? 0);
+            }
+
+            if ($pendingOrPaidManual) {
+                $pendingOrPaidManual->update([
+                    'booking_id' => $booking->id,
+                    'status' => Payment::STATUS_PAID,
+                    'paid_at' => now(),
+                    'amount_cents' => $amountCents,
+                    'currency' => (string) ($pendingOrPaidManual->currency ?: 'myr'),
+                ]);
+                $payment = $pendingOrPaidManual->fresh();
+            } else {
+                $payment = Payment::query()->create([
+                    'booking_id' => $booking->id,
+                    'reservation_id' => $reservation->id,
+                    'provider' => Payment::PROVIDER_MANUAL,
+                    'method' => Payment::METHOD_BANK_TRANSFER,
+                    'amount_cents' => $amountCents,
+                    'currency' => 'myr',
+                    'status' => Payment::STATUS_PAID,
+                    'paid_at' => now(),
+                    'provider_payload' => ['source' => 'manual_approval'],
+                ]);
+            }
+
+            $booking->update([
+                'status' => Booking::STATUS_CONFIRMED,
+                'paid_at' => now(),
+            ]);
+
+            $this->createTutorEarningIfNeeded($booking, $reservation, $amountCents);
+
+            return [
+                'booking_id' => (int) $booking->id,
+                'payment_id' => (int) $payment->id,
+                'idempotent' => false,
+            ];
         });
     }
 
@@ -214,7 +309,7 @@ class PaymentService
                 /** @var Payment|null $payment */
                 $payment = Payment::query()
                     ->where('booking_id', $bookingId)
-                    ->where('provider', 'stripe')
+                    ->where('provider', Payment::PROVIDER_STRIPE)
                     ->orderByDesc('id')
                     ->lockForUpdate()
                     ->first();
