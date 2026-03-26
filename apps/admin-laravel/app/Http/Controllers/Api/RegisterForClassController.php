@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Participant;
-use App\Services\StripeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 /**
@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Validator;
  */
 class RegisterForClassController extends Controller
 {
-    public function __invoke(Request $request, StripeService $stripe): JsonResponse
+    public function __invoke(Request $request): JsonResponse
     {
         $validated = Validator::make($request->all(), [
             'full_name' => 'required|string|max:255',
@@ -52,27 +52,30 @@ class RegisterForClassController extends Controller
 
         if ($existing) {
             if ($existing->status === 'pending' || $existing->status === 'reserved') {
-                try {
-                    $url = $stripe->createCheckoutSessionForBooking($existing);
-                    return response()->json(['redirect_url' => $url]);
-                } catch (\Throwable $e) {
-                    return response()->json(['error' => 'Could not create payment session'], 500);
-                }
+                // DEPRECATED: Booking-based Stripe checkout disabled.
+                // Use reservation -> payment flow instead.
+                Log::warning('register.deprecated_stripe_flow', [
+                    'participant_id' => (int) $participant->id,
+                    'class_session_id' => (int) $validated['class_session_id'],
+                    'booking_id' => (int) $existing->id,
+                ]);
+
+                return response()->json([
+                    'error' => 'This flow is deprecated. Please use reservation-based checkout.',
+                ], 410);
             }
             return response()->json(['error' => 'Already registered for this class'], 409);
         }
 
-        $booking = Booking::create([
-            'participant_id' => $participant->id,
-            'class_session_id' => $validated['class_session_id'],
-            'status' => 'pending',
+        // DEPRECATED: Booking-based Stripe checkout disabled.
+        // Use reservation -> payment flow instead.
+        Log::warning('register.deprecated_stripe_flow', [
+            'participant_id' => (int) $participant->id,
+            'class_session_id' => (int) $validated['class_session_id'],
         ]);
 
-        try {
-            $url = $stripe->createCheckoutSessionForBooking($booking);
-            return response()->json(['redirect_url' => $url]);
-        } catch (\Throwable $e) {
-            return response()->json(['error' => 'Could not create payment session'], 500);
-        }
+        return response()->json([
+            'error' => 'This flow is deprecated. Please use reservation-based checkout.',
+        ], 410);
     }
 }

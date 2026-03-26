@@ -10,7 +10,7 @@ class BookingAdminService
 {
     public function __construct(
         private readonly CertificateLifecycleService $certificateLifecycleService,
-        private readonly StripeService $stripeService,
+        private readonly PaymentService $paymentService,
     ) {}
 
     public function issueCertificateEligibility(Booking $booking): bool
@@ -25,6 +25,7 @@ class BookingAdminService
     public function overrideStatus(Booking $booking, string $newStatus, string $reason, int $userId): array
     {
         $oldStatus = (string) $booking->status;
+        $normalizedNewStatus = Booking::normalizeStatus($newStatus);
 
         AuditLog::create([
             'user_id' => $userId,
@@ -33,10 +34,10 @@ class BookingAdminService
             'entity_id' => $booking->id,
             'reason' => $reason,
             'old_values' => ['status' => $oldStatus],
-            'new_values' => ['status' => $newStatus],
+            'new_values' => ['status' => $normalizedNewStatus],
         ]);
 
-        $booking->update(['status' => $newStatus]);
+        $booking->update(['status' => $normalizedNewStatus]);
 
         return [
             'booking_id' => (int) $booking->id,
@@ -87,23 +88,8 @@ class BookingAdminService
      */
     public function refund(Booking $booking, string $reason, int $userId): array
     {
-        $oldStatus = (string) $booking->status;
-
-        if (! $this->stripeService->refund($booking, $reason)) {
-            throw ValidationException::withMessages([
-                'booking_id' => ['Refund failed (check Stripe or payment intent).'],
-            ]);
-        }
-
-        AuditLog::create([
-            'user_id' => $userId,
-            'action' => 'booking_refund',
-            'entity_type' => 'booking',
-            'entity_id' => $booking->id,
-            'reason' => $reason,
-            'old_values' => ['status' => $oldStatus],
-            'new_values' => ['refunded' => true],
-        ]);
+        // Keep method for backward compatibility; canonical refund logic is centralized.
+        $this->paymentService->handleRefund((int) $booking->id);
 
         return [
             'booking_id' => (int) $booking->id,

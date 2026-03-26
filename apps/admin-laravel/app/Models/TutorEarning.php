@@ -7,6 +7,27 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class TutorEarning extends Model
 {
+    // STANDARD STATUS ENUM - DO NOT MODIFY WITHOUT SYSTEM REVIEW
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_ELIGIBLE = 'eligible';
+    public const STATUS_PAID = 'paid';
+    public const STATUS_CANCELLED = 'cancelled';
+
+    // Legacy compatibility during migration.
+    public const LEGACY_STATUS_PAYABLE = 'payable';
+
+    public const STANDARD_STATUSES = [
+        self::STATUS_PENDING,
+        self::STATUS_ELIGIBLE,
+        self::STATUS_PAID,
+        self::STATUS_CANCELLED,
+    ];
+
+    public const COMPATIBLE_STATUSES = [
+        ...self::STANDARD_STATUSES,
+        self::LEGACY_STATUS_PAYABLE,
+    ];
+
     protected $fillable = [
         'booking_id',
         'tutor_id',

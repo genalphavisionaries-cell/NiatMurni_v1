@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Services\BookingAdminService;
+use App\Services\PaymentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -12,26 +13,16 @@ use Illuminate\Validation\ValidationException;
 
 class BookingAdminController extends Controller
 {
-    private const STATUSES = [
-        'pending',
-        'reserved',
-        'paid',
-        'verified',
-        'completed',
-        'certified',
-        'cancelled',
-        'transferred',
-    ];
-
     public function __construct(
-        private readonly BookingAdminService $bookingAdminService
+        private readonly BookingAdminService $bookingAdminService,
+        private readonly PaymentService $paymentService,
     ) {}
 
     public function overrideStatus(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'booking_id' => ['required', 'integer', 'exists:bookings,id'],
-            'new_status' => ['required', 'string', Rule::in(self::STATUSES)],
+            'new_status' => ['required', 'string', Rule::in(Booking::COMPATIBLE_STATUSES)],
             'reason' => ['required', 'string'],
         ]);
 
@@ -40,7 +31,7 @@ class BookingAdminController extends Controller
 
         $result = $this->bookingAdminService->overrideStatus(
             $booking,
-            (string) $validated['new_status'],
+            Booking::normalizeStatus((string) $validated['new_status']),
             (string) $validated['reason'],
             (int) $request->user()->id,
         );
@@ -101,18 +92,18 @@ class BookingAdminController extends Controller
         /** @var Booking $booking */
         $booking = Booking::query()->findOrFail((int) $validated['booking_id']);
 
-        // Same guard as Filament visibility condition.
-        if ((string) $booking->status !== 'paid' || empty($booking->stripe_payment_intent_id)) {
+        // Allow paid/refunded to preserve idempotent refunds through PaymentService.
+        if (! in_array((string) $booking->status, [Booking::STATUS_REFUNDED, ...Booking::confirmedLikeStatuses()], true)) {
             throw ValidationException::withMessages([
                 'booking_id' => ['Booking is not eligible for admin-triggered refund.'],
             ]);
         }
 
-        $result = $this->bookingAdminService->refund(
-            $booking,
-            (string) $validated['reason'],
-            (int) $request->user()->id,
-        );
+        $this->paymentService->handleRefund((int) $booking->id);
+        $result = [
+            'booking_id' => (int) $booking->id,
+            'refunded' => true,
+        ];
 
         return response()->json([
             'message' => 'Refund initiated (audit logged).',

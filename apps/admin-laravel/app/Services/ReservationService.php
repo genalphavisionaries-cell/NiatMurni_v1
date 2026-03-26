@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Validator;
 
 class ReservationService
 {
@@ -17,7 +18,13 @@ class ReservationService
      *
      * @throws \InvalidArgumentException|\RuntimeException
      */
-    public function reserveSeats(int $classSessionId, int $participantId, ?int $employerId, int $seats): Reservation
+    public function reserveSeats(
+        int $classSessionId,
+        int $participantId,
+        ?int $employerId,
+        int $seats,
+        array $checkoutData = []
+    ): Reservation
     {
         if ($seats < 1) {
             throw new \InvalidArgumentException('Seats must be at least 1');
@@ -27,7 +34,19 @@ class ReservationService
             throw new \InvalidArgumentException('Cannot reserve more than 3 seats in one reservation');
         }
 
-        return DB::transaction(function () use ($classSessionId, $participantId, $employerId, $seats): Reservation {
+        // Reservation stores full checkout snapshot before payment
+        $payload = Validator::make($checkoutData, [
+            'full_name' => ['required', 'string', 'max:255'],
+            'identity_no' => ['required', 'string', 'max:255'],
+            'phone' => ['required', 'string', 'max:255'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'company_name' => ['nullable', 'string', 'max:255'],
+            'delivery_address' => ['nullable', 'string'],
+            'delivery_type' => ['nullable', 'string', 'in:normal,fast'],
+            'delivery_fee' => ['nullable', 'numeric', 'min:0'],
+        ])->validate();
+
+        return DB::transaction(function () use ($classSessionId, $participantId, $employerId, $seats, $payload): Reservation {
             /** @var ClassSession $class */
             $class = ClassSession::query()->findOrFail($classSessionId);
 
@@ -43,7 +62,7 @@ class ReservationService
             // 4. Count active reservations (status = reserved, not expired)
             $activeReservedSeats = Reservation::query()
                 ->where('class_session_id', $class->id)
-                ->where('status', 'reserved')
+                ->where('status', Reservation::STATUS_RESERVED)
                 ->where('expires_at', '>', Carbon::now())
                 ->sum('seats_reserved');
 
@@ -55,14 +74,30 @@ class ReservationService
                 throw new \RuntimeException('Not enough seats available');
             }
 
+            $courseAmount = $class->price !== null
+                ? (float) $class->price
+                : ((float) ($class->price_cents ?? 0) / 100);
+            $deliveryFee = (float) ($payload['delivery_fee'] ?? 0);
+            $totalAmount = $courseAmount + $deliveryFee;
+
             // 7. Create reservation
             $reservation = Reservation::query()->create([
                 'class_session_id' => $class->id,
                 'participant_id' => $participantId,
                 'employer_id' => $employerId,
                 'seats_reserved' => $seats,
-                'status' => 'reserved',
+                'status' => Reservation::STATUS_RESERVED,
                 'expires_at' => Carbon::now()->addHours(24),
+                'full_name' => $payload['full_name'],
+                'identity_no' => $payload['identity_no'],
+                'phone' => $payload['phone'],
+                'email' => $payload['email'] ?? null,
+                'company_name' => $payload['company_name'] ?? null,
+                'delivery_address' => $payload['delivery_address'] ?? null,
+                'delivery_type' => $payload['delivery_type'] ?? null,
+                'delivery_fee' => $deliveryFee,
+                'course_amount' => $courseAmount,
+                'total_amount' => $totalAmount,
             ]);
 
             return $reservation;
@@ -75,9 +110,9 @@ class ReservationService
     public function expireReservations(): int
     {
         return Reservation::query()
-            ->where('status', 'reserved')
+            ->where('status', Reservation::STATUS_RESERVED)
             ->where('expires_at', '<=', Carbon::now())
-            ->update(['status' => 'expired']);
+            ->update(['status' => Reservation::STATUS_EXPIRED]);
     }
 
     /**
@@ -91,7 +126,7 @@ class ReservationService
             /** @var Reservation $reservation */
             $reservation = Reservation::query()->lockForUpdate()->findOrFail($reservationId);
 
-            if ($reservation->status !== 'reserved') {
+            if ($reservation->status !== Reservation::STATUS_RESERVED) {
                 throw new \RuntimeException('Only active reserved reservations can be converted');
             }
 
@@ -108,7 +143,8 @@ class ReservationService
             ]);
 
             $reservation->update([
-                'status' => 'converted',
+                // Temporary legacy state for idempotent conversion checks.
+                'status' => Reservation::LEGACY_STATUS_CONVERTED,
                 'converted_booking_id' => $booking->id,
             ]);
 

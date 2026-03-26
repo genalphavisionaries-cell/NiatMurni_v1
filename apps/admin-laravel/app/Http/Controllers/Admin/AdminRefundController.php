@@ -3,21 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Services\RefundService;
-use Illuminate\Http\Request;
+use App\Services\PaymentService;
 
 class AdminRefundController extends Controller
 {
-    protected RefundService $refundService;
-
-    public function __construct(RefundService $refundService)
-    {
-        $this->refundService = $refundService;
-    }
+    public function __construct(private readonly PaymentService $paymentService) {}
 
     public function refund(int $bookingId)
     {
-        $payment = $this->refundService->refundBooking($bookingId);
+        $payment = $this->paymentService->handleRefund($bookingId);
 
         return response()->json([
             'status' => 'success',

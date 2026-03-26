@@ -12,7 +12,7 @@ class FinanceService
      */
     public function totalRevenue(): int
     {
-        return (int) Payment::where('status', 'paid')->sum('amount_cents');
+        return (int) Payment::where('status', Payment::STATUS_PAID)->sum('amount_cents');
     }
 
     /**
@@ -20,7 +20,7 @@ class FinanceService
      */
     public function totalRefunds(): int
     {
-        return (int) Payment::where('status', 'refunded')->sum('refund_amount_cents');
+        return (int) Payment::where('status', Payment::STATUS_REFUNDED)->sum('refund_amount_cents');
     }
 
     /**
@@ -32,11 +32,16 @@ class FinanceService
     }
 
     /**
-     * Total amount in cents from tutor_earnings where status is 'pending' or 'payable'.
+     * Total amount in cents from tutor_earnings where status is pending/eligible.
+     * Includes legacy 'payable' for backward compatibility.
      */
     public function tutorPayable(): int
     {
-        return (int) TutorEarning::whereIn('status', ['pending', 'payable'])->sum('amount_cents');
+        return (int) TutorEarning::whereIn('status', [
+            TutorEarning::STATUS_PENDING,
+            TutorEarning::STATUS_ELIGIBLE,
+            TutorEarning::LEGACY_STATUS_PAYABLE,
+        ])->sum('amount_cents');
     }
 
     /**
@@ -44,7 +49,7 @@ class FinanceService
      */
     public function totalTutorPaid(): int
     {
-        return (int) TutorEarning::where('status', 'paid')->sum('amount_cents');
+        return (int) TutorEarning::where('status', TutorEarning::STATUS_PAID)->sum('amount_cents');
     }
 
     /**

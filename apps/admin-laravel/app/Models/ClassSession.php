@@ -5,12 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class ClassSession extends Model
 {
     protected $table = 'class_sessions';
 
     protected $fillable = [
+        'public_id',
         'program_id',
         'tutor_id',
         'starts_at',
@@ -33,6 +35,15 @@ class ClassSession extends Model
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (ClassSession $session): void {
+            if (empty($session->public_id)) {
+                $session->public_id = (string) Str::uuid();
+            }
+        });
     }
 
     public function program(): BelongsTo

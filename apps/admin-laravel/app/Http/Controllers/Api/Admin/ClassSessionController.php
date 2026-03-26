@@ -137,6 +137,7 @@ class ClassSessionController extends Controller
     {
         $trainerUser = $session->tutor?->user;
         $session->setAttribute('trainer_id', $trainerUser?->id);
+        $session->setAttribute('product_id', $session->public_id ?: (string) $session->id);
 
         if ($trainerUser !== null) {
             $session->setRelation('trainer', $trainerUser);

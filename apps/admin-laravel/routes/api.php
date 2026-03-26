@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\CertificateVerificationController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PublicController;
+use App\Http\Controllers\Api\ReservationController;
 use App\Http\Controllers\Api\StripeWebhookController;
 use App\Http\Controllers\Admin\AdminBookingCompletionController;
 use App\Http\Controllers\Admin\AdminFinanceReportController;
@@ -28,6 +29,7 @@ Route::prefix('public')->group(function () {
 });
 
 // Payment / Stripe checkout (public endpoint)
+Route::post('/reservations', [ReservationController::class, 'store']);
 Route::post('/payments/checkout', [PaymentController::class, 'createCheckoutSession']);
 
 // Stripe webhook (must remain public / unauthenticated)

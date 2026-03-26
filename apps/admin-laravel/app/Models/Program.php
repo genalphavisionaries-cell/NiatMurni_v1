@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Program extends Model
 {
     protected $fillable = [
+        'public_id',
         'name',
         'slug',
         'description',
@@ -23,6 +25,15 @@ class Program extends Model
         return [
             'is_active' => 'boolean',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (Program $program): void {
+            if (empty($program->public_id)) {
+                $program->public_id = (string) Str::uuid();
+            }
+        });
     }
 
     public function classSessions(): HasMany

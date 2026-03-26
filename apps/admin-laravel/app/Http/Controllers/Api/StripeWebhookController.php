@@ -3,26 +3,18 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Payment;
-use App\Models\Reservation;
-use App\Models\TutorEarning;
-use App\Services\ReservationService;
+use App\Services\PaymentService;
 use App\Services\StripeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class StripeWebhookController extends Controller
 {
-    protected StripeService $stripe;
-
-    protected ReservationService $reservations;
-
     public function __construct(
-        StripeService $stripe,
-        ReservationService $reservations
+        private readonly StripeService $stripe,
+        private readonly PaymentService $payments,
     ) {
-        $this->stripe = $stripe;
-        $this->reservations = $reservations;
     }
 
     public function handle(Request $request): JsonResponse
@@ -30,81 +22,79 @@ class StripeWebhookController extends Controller
         $payload = $request->getContent();
         $signature = (string) $request->header('Stripe-Signature', '');
 
-        $event = $this->stripe->constructEvent($payload, $signature);
+        try {
+            $event = $this->stripe->constructEvent($payload, $signature);
+        } catch (\Throwable $e) {
+            Log::warning('stripe.webhook.invalid_signature', [
+                'message' => $e->getMessage(),
+            ]);
 
-        if ($event->type !== 'checkout.session.completed') {
+            return response()->json(['error' => 'Invalid Stripe signature'], 400);
+        }
+
+        $eventType = (string) ($event->type ?? 'unknown');
+        $eventId = (string) ($event->id ?? '');
+        $sessionData = (array) ($event->data->object ?? []);
+
+        Log::info('stripe.webhook.received', [
+            'event_id' => $eventId,
+            'event_type' => $eventType,
+        ]);
+
+        $reservationId = $this->extractReservationIdFromEvent($sessionData);
+
+        if (! $reservationId) {
+            Log::warning('stripe.webhook.missing_reservation_metadata', [
+                'event_id' => $eventId,
+                'event_type' => $eventType,
+            ]);
             return response()->json(['received' => true]);
         }
 
-        /** @var \Stripe\Checkout\Session $session */
-        $session = $event->data->object;
-
-        $reservationId = $session->metadata->reservation_id ?? null;
-
-        if (! $reservationId) {
-            return response()->json(['error' => 'Missing reservation_id in metadata'], 400);
+        if ($eventType === 'checkout.session.completed') {
+            $result = $this->payments->handleSuccessfulPayment($reservationId, $sessionData);
+            Log::info('stripe.webhook.processed_success', [
+                'event_id' => $eventId,
+                'reservation_id' => $reservationId,
+                'booking_id' => $result['booking_id'],
+                'payment_id' => $result['payment_id'],
+                'idempotent' => $result['idempotent'],
+            ]);
+            return response()->json(['status' => 'success']);
         }
 
-        // Load reservation (for seats_reserved) and then convert it to a booking.
-        $reservation = Reservation::with('classSession.tutor')->findOrFail((int) $reservationId);
-
-        $booking = $this->reservations->convertReservationToBooking((int) $reservationId);
-
-        Payment::create([
-            'booking_id' => $booking->id,
-            'provider' => 'stripe',
-            'provider_payment_id' => $session->payment_intent ?? null,
-            'amount_cents' => $session->amount_total ?? 0,
-            'currency' => $session->currency ?? 'myr',
-            'status' => 'paid',
-            'paid_at' => now(),
-            'provider_payload' => json_encode($session),
-        ]);
-
-        // Tutor earnings calculation based on tutor payout configuration.
-        $classSession = $booking->classSession;
-
-        if ($classSession && $classSession->tutor_id) {
-            $tutor = $classSession->tutor;
-
-            if ($tutor) {
-                $earningCents = 0;
-
-                switch ($tutor->payout_type) {
-                    case 'percent':
-                        if ($tutor->payout_percent) {
-                            $earningCents = (int) round(
-                                $session->amount_total * ($tutor->payout_percent / 100)
-                            );
-                        }
-                        break;
-
-                    case 'per_student':
-                        if ($tutor->payout_per_student_cents) {
-                            $seats = $reservation->seats_reserved ?? 1;
-                            $earningCents = $seats * $tutor->payout_per_student_cents;
-                        }
-                        break;
-
-                    case 'per_class':
-                        if ($tutor->payout_per_class_cents) {
-                            $earningCents = $tutor->payout_per_class_cents;
-                        }
-                        break;
-                }
-
-                if ($earningCents > 0) {
-                    TutorEarning::create([
-                        'booking_id' => $booking->id,
-                        'tutor_id' => $tutor->id,
-                        'amount_cents' => $earningCents,
-                        'status' => 'pending',
-                    ]);
-                }
-            }
+        if (in_array($eventType, [
+            'checkout.session.expired',
+            'checkout.session.async_payment_failed',
+            'payment_intent.payment_failed',
+        ], true)) {
+            $this->payments->handleFailedPayment($reservationId, $sessionData);
+            Log::info('stripe.webhook.processed_failed', [
+                'event_id' => $eventId,
+                'reservation_id' => $reservationId,
+                'event_type' => $eventType,
+            ]);
         }
 
-        return response()->json(['status' => 'success']);
+        return response()->json(['received' => true]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $stripeObject
+     */
+    private function extractReservationIdFromEvent(array $stripeObject): ?int
+    {
+        $metadata = $stripeObject['metadata'] ?? null;
+        if (! is_array($metadata)) {
+            return null;
+        }
+
+        $reservationId = $metadata['reservation_id'] ?? null;
+        if ($reservationId === null) {
+            return null;
+        }
+
+        $value = (int) $reservationId;
+        return $value > 0 ? $value : null;
     }
 }
-

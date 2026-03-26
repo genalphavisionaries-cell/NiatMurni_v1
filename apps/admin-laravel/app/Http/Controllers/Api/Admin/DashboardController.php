@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Booking;
 use App\Services\SettingService;
 use Carbon\Carbon;
 use Google\Analytics\Data\V1beta\Client\BetaAnalyticsDataClient;
@@ -86,7 +87,7 @@ class DashboardController extends Controller
                 if (Schema::hasColumn('bookings', 'payment_status')) {
                     $bookingsPaid = DB::table('bookings')->where('payment_status', 'paid')->count();
                 } elseif (Schema::hasColumn('bookings', 'status')) {
-                    $bookingsPaid = DB::table('bookings')->where('status', 'paid')->count();
+                    $bookingsPaid = DB::table('bookings')->whereIn('status', Booking::confirmedLikeStatuses())->count();
                 }
             }
         } catch (\Throwable) {
@@ -113,7 +114,7 @@ class DashboardController extends Controller
                     if (Schema::hasColumn('bookings', 'payment_status')) {
                         $baseRevenueQuery->where('payment_status', 'paid');
                     } elseif (Schema::hasColumn('bookings', 'status')) {
-                        $baseRevenueQuery->where('status', 'paid');
+                        $baseRevenueQuery->whereIn('status', Booking::confirmedLikeStatuses());
                     }
 
                     if (Schema::hasColumn('bookings', 'created_at')) {
@@ -322,7 +323,7 @@ class DashboardController extends Controller
                         if (Schema::hasColumn('bookings', 'payment_status')) {
                             $query->where('payment_status', 'paid');
                         } elseif (Schema::hasColumn('bookings', 'status')) {
-                            $query->where('status', 'paid');
+                            $query->whereIn('status', Booking::confirmedLikeStatuses());
                         }
                         $sum = (float) $query->sum($amountColumn);
                         $revenueDaily[$idx] = $this->isCentsAmountColumn($amountColumn) ? $this->fromCents($sum) : round($sum, 2);

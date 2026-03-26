@@ -9,6 +9,41 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Booking extends Model
 {
+    // STANDARD STATUS ENUM - DO NOT MODIFY WITHOUT SYSTEM REVIEW
+    public const STATUS_CONFIRMED = 'confirmed';
+    public const STATUS_COMPLETED = 'completed';
+    public const STATUS_NO_SHOW = 'no_show';
+    public const STATUS_FAILED = 'failed';
+    public const STATUS_REFUNDED = 'refunded';
+    public const STATUS_CANCELLED = 'cancelled';
+
+    // Legacy compatibility during migration.
+    public const LEGACY_STATUS_PENDING = 'pending';
+    public const LEGACY_STATUS_RESERVED = 'reserved';
+    public const LEGACY_STATUS_PAID = 'paid';
+    public const LEGACY_STATUS_VERIFIED = 'verified';
+    public const LEGACY_STATUS_CERTIFIED = 'certified';
+    public const LEGACY_STATUS_TRANSFERRED = 'transferred';
+
+    public const STANDARD_STATUSES = [
+        self::STATUS_CONFIRMED,
+        self::STATUS_COMPLETED,
+        self::STATUS_NO_SHOW,
+        self::STATUS_FAILED,
+        self::STATUS_REFUNDED,
+        self::STATUS_CANCELLED,
+    ];
+
+    public const COMPATIBLE_STATUSES = [
+        ...self::STANDARD_STATUSES,
+        self::LEGACY_STATUS_PENDING,
+        self::LEGACY_STATUS_RESERVED,
+        self::LEGACY_STATUS_PAID,
+        self::LEGACY_STATUS_VERIFIED,
+        self::LEGACY_STATUS_CERTIFIED,
+        self::LEGACY_STATUS_TRANSFERRED,
+    ];
+
     protected $fillable = [
         'participant_id',
         'class_session_id',
@@ -99,5 +134,23 @@ class Booking extends Model
     public function questionnaireResponses(): HasMany
     {
         return $this->hasMany(QuestionnaireResponse::class);
+    }
+
+    public static function normalizeStatus(string $status): string
+    {
+        return match ($status) {
+            self::LEGACY_STATUS_PAID => self::STATUS_CONFIRMED,
+            default => $status,
+        };
+    }
+
+    /**
+     * Statuses treated as revenue-confirmed bookings while legacy data exists.
+     *
+     * @return array<int, string>
+     */
+    public static function confirmedLikeStatuses(): array
+    {
+        return [self::STATUS_CONFIRMED, self::LEGACY_STATUS_PAID];
     }
 }

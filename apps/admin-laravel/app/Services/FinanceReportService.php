@@ -16,7 +16,7 @@ class FinanceReportService
     public function revenueByPeriod(string $period): array
     {
         $dateColumn = 'paid_at';
-        return $this->paymentAggregateByPeriod($dateColumn, 'paid', $period);
+        return $this->paymentAggregateByPeriod($dateColumn, Payment::STATUS_PAID, $period);
     }
 
     /**
@@ -31,7 +31,8 @@ class FinanceReportService
     }
 
     /**
-     * Tutor payouts (pending, payable, paid) grouped by period. Group by created_at.
+     * Tutor payouts (pending, eligible, paid) grouped by period. Group by created_at.
+     * Includes legacy 'payable' during migration.
      *
      * @return array<int, array{period: string, amount_cents: int}>
      */
@@ -46,7 +47,12 @@ class FinanceReportService
                 DB::raw($periodExpr . ' as period'),
                 DB::raw('SUM(amount_cents) as amount_cents')
             )
-            ->whereIn('status', ['pending', 'payable', 'paid'])
+            ->whereIn('status', [
+                TutorEarning::STATUS_PENDING,
+                TutorEarning::STATUS_ELIGIBLE,
+                TutorEarning::STATUS_PAID,
+                TutorEarning::LEGACY_STATUS_PAYABLE,
+            ])
             ->groupBy($groupBy)
             ->orderBy('period')
             ->get();
@@ -95,7 +101,7 @@ class FinanceReportService
                 DB::raw($periodExpr . ' as period'),
                 DB::raw('SUM(refund_amount_cents) as amount_cents')
             )
-            ->where('status', 'refunded')
+            ->where('status', Payment::STATUS_REFUNDED)
             ->whereNotNull($dateColumn)
             ->groupBy($groupBy)
             ->orderBy('period')

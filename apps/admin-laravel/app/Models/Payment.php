@@ -7,6 +7,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Payment extends Model
 {
+    // STANDARD STATUS ENUM - DO NOT MODIFY WITHOUT SYSTEM REVIEW
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_PAID = 'paid';
+    public const STATUS_FAILED = 'failed';
+    public const STATUS_REFUNDED = 'refunded';
+
+    public const STANDARD_STATUSES = [
+        self::STATUS_PENDING,
+        self::STATUS_PAID,
+        self::STATUS_FAILED,
+        self::STATUS_REFUNDED,
+    ];
+
     protected $fillable = [
         'booking_id',
         'provider',

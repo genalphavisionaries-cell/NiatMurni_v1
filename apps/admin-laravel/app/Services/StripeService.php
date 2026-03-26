@@ -103,8 +103,8 @@ class StripeService
     {
         $booking = Booking::where('stripe_payment_intent_id', $paymentIntentId)->first();
         if ($booking) {
-            if ($booking->status !== 'paid') {
-                $booking->update(['status' => 'paid', 'paid_at' => now()]);
+            if (! in_array((string) $booking->status, Booking::confirmedLikeStatuses(), true)) {
+                $booking->update(['status' => Booking::STATUS_CONFIRMED, 'paid_at' => now()]);
             }
             return $booking;
         }
@@ -121,7 +121,7 @@ class StripeService
         if (! $booking) {
             return null;
         }
-        if ($booking->status === 'paid') {
+        if (in_array((string) $booking->status, Booking::confirmedLikeStatuses(), true)) {
             return $booking;
         }
         try {
@@ -133,11 +133,11 @@ class StripeService
             if (is_string($paymentIntentId)) {
                 $booking->update([
                     'stripe_payment_intent_id' => $paymentIntentId,
-                    'status' => 'paid',
+                    'status' => Booking::STATUS_CONFIRMED,
                     'paid_at' => now(),
                 ]);
             } else {
-                $booking->update(['status' => 'paid', 'paid_at' => now()]);
+                $booking->update(['status' => Booking::STATUS_CONFIRMED, 'paid_at' => now()]);
             }
         } catch (ApiErrorException $e) {
             return null;
@@ -151,8 +151,8 @@ class StripeService
     public function markPaidByInvoiceId(string $invoiceId): int
     {
         $updated = Booking::where('stripe_invoice_id', $invoiceId)
-            ->where('status', '!=', 'paid')
-            ->update(['status' => 'paid', 'paid_at' => now()]);
+            ->whereNotIn('status', Booking::confirmedLikeStatuses())
+            ->update(['status' => Booking::STATUS_CONFIRMED, 'paid_at' => now()]);
         return $updated;
     }
 
@@ -167,7 +167,7 @@ class StripeService
         }
         $booking->update([
             'stripe_payment_intent_id' => $paymentIntentId,
-            'status' => 'paid',
+            'status' => Booking::STATUS_CONFIRMED,
             'paid_at' => now(),
         ]);
         return $booking;
