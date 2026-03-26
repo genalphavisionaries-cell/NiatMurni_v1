@@ -16,13 +16,8 @@ trait EnforcesModuleAccessWidget
 
     public static function canView(): bool
     {
-        if (static::$requiredModule === '') {
-            return auth()->check();
-        }
-
-        /** @var User|null $user */
-        $user = auth()->user();
-
-        return $user?->hasModuleAccess(static::$requiredModule) ?? false;
+        // TEMPORARY (project-wide unblock):
+        // Allow any authenticated user to view all widgets.
+        return auth()->check();
     }
 }

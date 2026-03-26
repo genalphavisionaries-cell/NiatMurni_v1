@@ -9,8 +9,16 @@ sed -i "s/listen 8080/listen ${PORT}/g"            /etc/nginx/sites-available/de
 sed -i "s/listen \[::\]:8080/listen [::]:${PORT}/g" /etc/nginx/sites-available/default
 
 # ── Application caches (background; must not delay nginx binding) ─────────────
-# php -d max_execution_time= avoids relying on GNU timeout(1) in minimal images.
+# Clear stale caches first to avoid serving old compiled routes/config from a
+# previous deploy, then rebuild.  php -d max_execution_time= avoids relying on
+# GNU timeout(1) in minimal images.
 (
+  echo "[entrypoint] clearing stale caches..."
+  php artisan config:clear 2>/dev/null || true
+  php artisan route:clear  2>/dev/null || true
+  php artisan view:clear   2>/dev/null || true
+  php artisan event:clear  2>/dev/null || true
+
   echo "[entrypoint] caching config..."
   php -d max_execution_time=30 artisan config:cache 2>/dev/null || echo "[entrypoint] config:cache skipped"
 

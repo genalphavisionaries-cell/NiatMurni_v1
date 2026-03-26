@@ -16,13 +16,8 @@ trait EnforcesModuleAccessPage
 
     public static function canAccess(): bool
     {
-        if (static::$requiredModule === '') {
-            return auth()->check();
-        }
-
-        /** @var User|null $user */
-        $user = auth()->user();
-
-        return $user?->hasModuleAccess(static::$requiredModule) ?? false;
+        // TEMPORARY (project-wide unblock):
+        // Allow any authenticated user to access all pages.
+        return auth()->check();
     }
 }

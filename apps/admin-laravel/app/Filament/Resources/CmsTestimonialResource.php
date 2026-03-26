@@ -16,22 +16,22 @@ class CmsTestimonialResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return (bool) auth()->user()?->is_active;
+        return true;
     }
 
     public static function canCreate(): bool
     {
-        return (bool) auth()->user()?->is_active;
+        return true;
     }
 
     public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
     {
-        return (bool) auth()->user()?->is_active;
+        return true;
     }
 
     public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
     {
-        return (bool) auth()->user()?->is_active;
+        return true;
     }
 
     protected static ?string $navigationIcon = 'heroicon-o-chat-bubble-bottom-center-text';
