@@ -6,6 +6,7 @@ export type ClassSession = {
   program_id: number;
   program_name: string;
   price?: number;
+  price_per_seat?: number;
   trainer_id?: number;
   trainer_name: string;
   starts_at: string;
@@ -50,6 +51,12 @@ function normalizeClassSession(input: unknown): ClassSession | null {
       (typeof row.trainer_name === "string" && row.trainer_name) ||
       (typeof trainer?.name === "string" ? trainer.name : ""),
     price:
+      Number.isFinite(Number(row.price))
+        ? Number(row.price)
+        : Number.isFinite(Number(row.price_cents))
+          ? Number(row.price_cents) / 100
+          : 0,
+    price_per_seat:
       Number.isFinite(Number(row.price))
         ? Number(row.price)
         : Number.isFinite(Number(row.price_cents))

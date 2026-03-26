@@ -38,7 +38,11 @@ export function CartModal() {
     email: "",
     company_name: "",
     delivery_type: "normal",
-    delivery_address: "",
+    address_line_1: "",
+    address_line_2: "",
+    postcode: "",
+    city: "",
+    state: "",
   });
 
   const courseTotal = useMemo(() => {
@@ -48,6 +52,11 @@ export function CartModal() {
 
   const deliveryFee = DELIVERY_FEES[form.delivery_type];
   const grandTotal = courseTotal + deliveryFee;
+  const pricePerSeat = Number.isFinite(cart?.price_per_seat) ? (cart?.price_per_seat ?? 0) : 0;
+
+  if (cart && !Number.isFinite(cart.price_per_seat)) {
+    console.warn("Missing price for class_session");
+  }
 
   if (!isOpen || !cart) return null;
 
@@ -64,8 +73,23 @@ export function CartModal() {
       email: "",
       company_name: "",
       delivery_type: "normal",
-      delivery_address: "",
+      address_line_1: "",
+      address_line_2: "",
+      postcode: "",
+      city: "",
+      state: "",
     });
+  };
+
+  const getDeliveryAddress = () => {
+    const parts = [
+      form.address_line_1.trim(),
+      form.address_line_2.trim(),
+      form.postcode.trim(),
+      form.city.trim(),
+      form.state.trim(),
+    ].filter(Boolean);
+    return parts.join(", ");
   };
 
   const submitReservation = async (): Promise<boolean> => {
@@ -81,7 +105,7 @@ export function CartModal() {
         phone: form.phone,
         email: form.email || undefined,
         company_name: form.company_name || undefined,
-        delivery_address: form.delivery_address || undefined,
+        delivery_address: getDeliveryAddress() || undefined,
         delivery_type: form.delivery_type,
         delivery_fee: deliveryFee,
       });
@@ -121,6 +145,14 @@ export function CartModal() {
         setError("Please fill in Full Name, Phone, and Identity No before continuing.");
         return;
       }
+      if (!form.address_line_1.trim() || !form.city.trim() || !form.state.trim()) {
+        setError("Please fill in Address Line 1, City, and State.");
+        return;
+      }
+      if (!/^\d{5}$/.test(form.postcode.trim())) {
+        setError("Postcode must be numeric and 5 digits.");
+        return;
+      }
       if (!reservation) {
         const ok = await submitReservation();
         if (!ok) return;
@@ -132,8 +164,9 @@ export function CartModal() {
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center p-4">
       <div className="pointer-events-none absolute inset-0 bg-black/45" />
-      <div className="pointer-events-auto relative z-50 max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl sm:p-6">
-        <div className="mb-4 flex items-center justify-between">
+      <div className="pointer-events-auto relative z-50 w-full max-w-4xl rounded-2xl bg-white shadow-2xl">
+        <div className="flex max-h-[90vh] flex-col">
+        <div className="sticky top-0 z-50 flex items-center justify-between border-b bg-white px-6 py-4">
           <div>
             <h2 className="text-lg font-semibold text-slate-900">Checkout</h2>
             <p className="text-xs text-slate-500">
@@ -165,6 +198,8 @@ export function CartModal() {
           </div>
         </div>
 
+        <div className="overflow-y-auto px-6 py-4">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-5">
           {replacementNotice && (
             <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
@@ -227,22 +262,6 @@ export function CartModal() {
           {step === 2 && (
             <>
               <BookingForm values={form} onChange={setForm} disabled={loading || !!reservation} />
-
-              <section className="rounded-2xl border border-slate-200 p-4 text-sm shadow-sm">
-                <h3 className="mb-2 text-base font-semibold text-slate-900">Total Summary</h3>
-                <div className="flex justify-between">
-                  <span>Course total</span>
-                  <span>RM {courseTotal.toFixed(2)}</span>
-                </div>
-                <div className="mt-1 flex justify-between">
-                  <span>Delivery fee</span>
-                  <span>RM {deliveryFee.toFixed(2)}</span>
-                </div>
-                <div className="mt-2 flex justify-between border-t border-slate-200 pt-2 font-semibold">
-                  <span>Grand total</span>
-                  <span>RM {grandTotal.toFixed(2)}</span>
-                </div>
-              </section>
             </>
           )}
 
@@ -345,6 +364,33 @@ export function CartModal() {
               </button>
             )}
           </div>
+        </div>
+        <aside className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm shadow-sm h-fit">
+          <h3 className="text-base font-semibold text-slate-900">Order Summary</h3>
+          <p className="text-sm text-slate-700">{cart.class_title}</p>
+          <div className="flex justify-between text-slate-600">
+            <span>Price per seat</span>
+            <span>RM {pricePerSeat.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between text-slate-600">
+            <span>Seat count</span>
+            <span>{cart.seat_count}</span>
+          </div>
+          <div className="flex justify-between text-slate-600">
+            <span>Course total</span>
+            <span>RM {courseTotal.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between text-slate-600">
+            <span>Delivery fee</span>
+            <span>RM {deliveryFee.toFixed(2)}</span>
+          </div>
+          <div className="mt-2 flex justify-between border-t border-slate-200 pt-2 font-semibold text-slate-900">
+            <span>Grand total</span>
+            <span>RM {grandTotal.toFixed(2)}</span>
+          </div>
+        </aside>
+        </div>
+        </div>
         </div>
       </div>
     </div>

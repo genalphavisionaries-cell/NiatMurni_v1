@@ -7,7 +7,11 @@ export type BookingFormValues = {
   email: string;
   company_name: string;
   delivery_type: "normal" | "fast";
-  delivery_address: string;
+  address_line_1: string;
+  address_line_2: string;
+  postcode: string;
+  city: string;
+  state: string;
 };
 
 type Props = {
@@ -19,6 +23,25 @@ type Props = {
 export function BookingForm({ values, onChange, disabled }: Props) {
   const set = <K extends keyof BookingFormValues>(key: K, value: BookingFormValues[K]) =>
     onChange({ ...values, [key]: value });
+
+  const STATES = [
+    "Selangor",
+    "Kuala Lumpur",
+    "Johor",
+    "Penang",
+    "Perak",
+    "Kedah",
+    "Kelantan",
+    "Terengganu",
+    "Pahang",
+    "Melaka",
+    "Negeri Sembilan",
+    "Sabah",
+    "Sarawak",
+    "Perlis",
+    "Putrajaya",
+    "Labuan",
+  ];
 
   return (
     <div className="space-y-3">
@@ -131,16 +154,67 @@ export function BookingForm({ values, onChange, disabled }: Props) {
             <span className="font-medium text-slate-700">RM 20</span>
           </label>
         </div>
-        <label className="block text-sm">
-          <span className="mb-1 block font-medium text-slate-700">Delivery Address</span>
-          <textarea
-            className="min-h-20 w-full rounded-lg border border-slate-300 px-3 py-2"
-            placeholder="Optional delivery address"
-            value={values.delivery_address}
-            onChange={(e) => set("delivery_address", e.target.value)}
-            disabled={disabled}
-          />
-        </label>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <label className="block text-sm sm:col-span-2">
+            <span className="mb-1 block font-medium text-slate-700">Address Line 1 *</span>
+            <input
+              className="w-full rounded-lg border border-slate-300 px-3 py-2"
+              placeholder="House / building / street"
+              value={values.address_line_1}
+              onChange={(e) => set("address_line_1", e.target.value)}
+              disabled={disabled}
+            />
+          </label>
+          <label className="block text-sm sm:col-span-2">
+            <span className="mb-1 block font-medium text-slate-700">Address Line 2</span>
+            <input
+              className="w-full rounded-lg border border-slate-300 px-3 py-2"
+              placeholder="Unit / floor / landmark (optional)"
+              value={values.address_line_2}
+              onChange={(e) => set("address_line_2", e.target.value)}
+              disabled={disabled}
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="mb-1 block font-medium text-slate-700">Postcode *</span>
+            <input
+              className="w-full rounded-lg border border-slate-300 px-3 py-2"
+              placeholder="5-digit postcode"
+              inputMode="numeric"
+              pattern="[0-9]{5}"
+              maxLength={5}
+              value={values.postcode}
+              onChange={(e) => set("postcode", e.target.value.replace(/\D/g, "").slice(0, 5))}
+              disabled={disabled}
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="mb-1 block font-medium text-slate-700">City *</span>
+            <input
+              className="w-full rounded-lg border border-slate-300 px-3 py-2"
+              placeholder="City"
+              value={values.city}
+              onChange={(e) => set("city", e.target.value)}
+              disabled={disabled}
+            />
+          </label>
+          <label className="block text-sm sm:col-span-2">
+            <span className="mb-1 block font-medium text-slate-700">State *</span>
+            <select
+              className="w-full rounded-lg border border-slate-300 px-3 py-2"
+              value={values.state}
+              onChange={(e) => set("state", e.target.value)}
+              disabled={disabled}
+            >
+              <option value="">Select state</option>
+              {STATES.map((stateName) => (
+                <option key={stateName} value={stateName}>
+                  {stateName}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
       </div>
     </div>
   );

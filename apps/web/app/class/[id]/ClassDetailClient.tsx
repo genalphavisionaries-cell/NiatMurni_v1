@@ -126,7 +126,7 @@ export default function ClassDetailClient({ id }: Props) {
                   {
                     class_session_id: classSession.id,
                     class_title: classSession.program_name,
-                    price_per_seat: classSession.price ?? 0,
+                    price_per_seat: classSession.price_per_seat ?? classSession.price ?? 0,
                   },
                   seatCount
                 )
