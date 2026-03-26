@@ -53,6 +53,24 @@ export type AdminProfile = {
   last_login_at?: string | null;
 };
 
+// CMS types (relational model)
+export type CmsHeroData = { headline: string; subheadline: string; buttons: { label: string; url: string; color?: string }[]; background_urls: string };
+export type CmsUspPoint = { icon: string; title: string; description: string };
+export type CmsUspData = { title: string; description: string; points: CmsUspPoint[]; side_images_urls: string };
+export type CmsClassesData = { title: string; description: string; button_text: string; button_url: string; max_items: number };
+export type CmsTrustLogo = { image_url: string; title: string };
+export type CmsTrustData = { logos: CmsTrustLogo[]; google_rating_text: string; google_button_label: string; google_button_url: string };
+export type CmsPromoCard = { image_url: string; title: string; description: string; button_label: string; url: string };
+export type CmsPromoData = { title: string; description: string; banner_urls: string; cards: CmsPromoCard[] };
+export type CmsMenuItem = { label: string; url: string; type: string; has_children: boolean };
+export type CmsHeaderData = { logo_url: string; menu_items: CmsMenuItem[]; cta: { label: string; url: string; bg_color: string; text_color: string }; languages: { code: string; label: string; active: boolean }[] };
+export type CmsFooterLink = { label: string; url: string };
+export type CmsFooterData = { brand: { logo_url: string; description: string }; quick_links: CmsFooterLink[]; buttons: CmsFooterLink[]; payment: { title: string; icons_urls: string }; legal_links: CmsFooterLink[]; bottom: { copyright: string; ssl_badge_url: string } };
+export type CmsFloatingItem = { icon: string; label: string; url: string };
+export type CmsFloatingData = { enabled: boolean; style_json: string; items: CmsFloatingItem[] };
+export type CmsHomepageData = { hero: CmsHeroData; usp: CmsUspData; classes: CmsClassesData; trust: CmsTrustData; promo: CmsPromoData; header: CmsHeaderData; footer: CmsFooterData; floating_menu: CmsFloatingData };
+export type CmsTestimonial = { id: number; name: string; image_url: string | null; rating: number; content: string; is_active: boolean; sort_order: number; created_at?: string; updated_at?: string };
+
 export type AdminSystemSettings = {
   site_name: string;
   logo_url: string;
@@ -322,7 +340,27 @@ export const adminApi = {
     return request(`/api/admin/users/${id}/reset-password`, { method: "POST", body: JSON.stringify(data) });
   },
 
-  // CMS
+  // CMS — new relational model (cms_pages / cms_sections / cms_items)
+  getCmsHomepage(): Promise<{ data: CmsHomepageData }> {
+    return request("/api/admin/cms/homepage");
+  },
+  updateCmsHomepage(payload: Partial<CmsHomepageData>): Promise<{ message: string }> {
+    return request("/api/admin/cms/homepage", { method: "PUT", body: JSON.stringify(payload) });
+  },
+  getCmsTestimonials(): Promise<{ data: CmsTestimonial[] }> {
+    return request("/api/admin/cms/testimonials");
+  },
+  createCmsTestimonial(data: Omit<CmsTestimonial, "id" | "created_at" | "updated_at">): Promise<{ data: CmsTestimonial; message: string }> {
+    return request("/api/admin/cms/testimonials", { method: "POST", body: JSON.stringify(data) });
+  },
+  updateCmsTestimonial(id: number, data: Partial<CmsTestimonial>): Promise<{ data: CmsTestimonial; message: string }> {
+    return request(`/api/admin/cms/testimonials/${id}`, { method: "PUT", body: JSON.stringify(data) });
+  },
+  deleteCmsTestimonial(id: number): Promise<{ message: string }> {
+    return request(`/api/admin/cms/testimonials/${id}`, { method: "DELETE" });
+  },
+
+  // Legacy CMS (old HomepageSetting singleton — kept for backward compat)
   updateHomepageSettings(payload: Record<string, unknown>): Promise<{ message: string; id: number }> {
     return request<{ message: string; id: number }>("/api/admin/homepage-settings", {
       method: "PUT",

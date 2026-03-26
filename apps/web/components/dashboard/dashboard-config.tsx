@@ -41,9 +41,10 @@ const adminNav: NavItem[] = [
     icon: FileText,
     children: [
       { label: "Homepage", href: "/admin/cms/homepage" },
-      { label: "Testimonials", href: "/admin/cms/testimonials" },
-      { label: "Logos", href: "/admin/cms/logos" },
+      { label: "Header & Nav", href: "/admin/cms/header" },
       { label: "Footer", href: "/admin/cms/footer" },
+      { label: "Testimonials", href: "/admin/cms/testimonials" },
+      { label: "Logos & Trust", href: "/admin/cms/logos" },
     ],
   },
   {

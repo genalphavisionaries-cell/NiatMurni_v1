@@ -1,211 +1,269 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FormSection, FormLabel, TextInput, Textarea } from "@/components/dashboard";
 import { adminApi } from "@/lib/admin-api";
-import type { HomepageSettings } from "@/lib/homepage-settings";
-import { defaultHomepageSettings } from "@/lib/homepage-settings";
+import type { CmsHeroData, CmsUspData, CmsClassesData, CmsPromoData } from "@/lib/admin-api";
 import { cn } from "@/lib/utils";
 
-type Props = { initial: HomepageSettings | null };
+type Tab = "hero" | "usp" | "classes" | "promo";
 
-function getInitial(s: HomepageSettings | null): HomepageSettings {
-  if (s && typeof s === "object") return { ...defaultHomepageSettings, ...s };
-  return defaultHomepageSettings;
-}
+const tabs: { key: Tab; label: string }[] = [
+  { key: "hero", label: "Hero" },
+  { key: "usp", label: "USP" },
+  { key: "classes", label: "Classes" },
+  { key: "promo", label: "Promo" },
+];
 
-/** Convert frontend HomepageSettings shape to backend snake_case payload */
-function toBackendPayload(s: HomepageSettings): Record<string, unknown> {
-  return {
-    site_name: s.siteName,
-    logo_url: s.logoUrl ?? undefined,
-    logo_alt: s.logoAlt,
-    header_nav: s.headerNav,
-    footer_columns: s.footerColumns,
-    footer_bottom: s.footerBottom,
-    footer_logo_url: s.footerLogoUrl ?? undefined,
-    footer_description: s.footerDescription ?? "",
-    footer_ssl_badge_url: s.footerSslBadgeUrl ?? undefined,
-    payment_method_icons: s.paymentMethodIcons ?? undefined,
-    hero: s.hero,
-    main_banners: s.mainBanners,
-    why_choose: {
-      title: s.whyChoose.title,
-      subtitle: s.whyChoose.subtitle,
-      image: s.whyChoose.image ?? undefined,
-      benefits: s.whyChoose.benefits,
-    },
-    social_proof: {
-      title: s.socialProof.title,
-      subtitle: s.socialProof.subtitle,
-      google_rating: s.socialProof.google_rating,
-      review_count: s.socialProof.review_count,
-      brand_logos: s.socialProof.brand_logos,
-      testimonials: s.socialProof.testimonials,
-    },
-  };
-}
+const emptyHero: CmsHeroData = { headline: "", subheadline: "", buttons: [], background_urls: "" };
+const emptyUsp: CmsUspData = { title: "", description: "", points: [], side_images_urls: "" };
+const emptyClasses: CmsClassesData = { title: "", description: "", button_text: "", button_url: "", max_items: 20 };
+const emptyPromo: CmsPromoData = { title: "", description: "", banner_urls: "", cards: [] };
 
-export function CmsHomepageClient({ initial }: Props) {
-  const [form, setForm] = useState<HomepageSettings>(() => getInitial(initial));
+export function CmsHomepageClient() {
+  const [activeTab, setActiveTab] = useState<Tab>("hero");
+  const [hero, setHero] = useState<CmsHeroData>(emptyHero);
+  const [usp, setUsp] = useState<CmsUspData>(emptyUsp);
+  const [classes, setClasses] = useState<CmsClassesData>(emptyClasses);
+  const [promo, setPromo] = useState<CmsPromoData>(emptyPromo);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  const update = <K extends keyof HomepageSettings>(key: K, value: HomepageSettings[K]) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
-  };
+  useEffect(() => {
+    adminApi
+      .getCmsHomepage()
+      .then((res) => {
+        const d = res.data;
+        setHero({ ...emptyHero, ...d.hero });
+        setUsp({ ...emptyUsp, ...d.usp });
+        setClasses({ ...emptyClasses, ...d.classes });
+        setPromo({ ...emptyPromo, ...d.promo });
+      })
+      .catch(() => setMessage({ type: "error", text: "Failed to load CMS data." }))
+      .finally(() => setLoading(false));
+  }, []);
 
-  const updateHero = <K extends keyof HomepageSettings["hero"]>(key: K, value: HomepageSettings["hero"][K]) => {
-    setForm((prev) => ({ ...prev, hero: { ...prev.hero, [key]: value } }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = async () => {
     setMessage(null);
     setSaving(true);
     try {
-      const payload = toBackendPayload(form);
-      await adminApi.updateHomepageSettings(payload);
-      setMessage({ type: "success", text: "Homepage settings saved." });
+      await adminApi.updateCmsHomepage({ hero, usp, classes, promo });
+      setMessage({ type: "success", text: "Homepage saved." });
     } catch (err) {
-      setMessage({ type: "error", text: err instanceof Error ? err.message : "Failed to save." });
+      setMessage({ type: "error", text: err instanceof Error ? err.message : "Save failed." });
     } finally {
       setSaving(false);
     }
   };
 
-  const s = form as HomepageSettings;
-  const hero = s?.hero ?? { headline: "", subheadline: "", ctaText: "", ctaHref: "", backgroundImageUrl: null, overlayOpacity: 0.4 };
+  if (loading) {
+    return <div className="py-12 text-center text-sm text-gray-500">Loading CMS data…</div>;
+  }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Homepage</h1>
-        <p className="mt-1 text-sm text-gray-500">Edit site branding, hero, and footer. Changes appear on the public homepage.</p>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">Homepage</h1>
+          <p className="mt-1 text-sm text-gray-500">Edit homepage sections. Changes appear on the public site.</p>
+        </div>
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="rounded-lg bg-[var(--primary)] px-5 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
+        >
+          {saving ? "Saving…" : "Save"}
+        </button>
       </div>
 
       {message && (
-        <div
-          className={cn(
-            "rounded-lg px-4 py-3 text-sm",
-            message.type === "success" ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"
-          )}
-        >
+        <div className={cn("rounded-lg px-4 py-3 text-sm", message.type === "success" ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800")}>
           {message.text}
         </div>
       )}
 
-      <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
-        <FormSection>
-          <div>
-            <FormLabel>Site name</FormLabel>
-            <TextInput
-              value={s?.siteName ?? ""}
-              onChange={(e) => update("siteName", e.target.value)}
-              placeholder="Niat Murni Academy"
-              className="mt-1"
-            />
-          </div>
-          <div>
-            <FormLabel>Logo URL</FormLabel>
-            <TextInput
-              value={s?.logoUrl ?? ""}
-              onChange={(e) => update("logoUrl", e.target.value || null)}
-              placeholder="https://… or path"
-              className="mt-1"
-            />
-          </div>
-          <div>
-            <FormLabel>Logo alt text</FormLabel>
-            <TextInput
-              value={s?.logoAlt ?? ""}
-              onChange={(e) => update("logoAlt", e.target.value)}
-              placeholder="Niat Murni Academy"
-              className="mt-1"
-            />
-          </div>
-        </FormSection>
+      {/* Tab bar */}
+      <div className="flex gap-1 rounded-lg border border-[var(--border)] bg-gray-50 p-1">
+        {tabs.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setActiveTab(t.key)}
+            className={cn(
+              "flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors",
+              activeTab === t.key ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-900"
+            )}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
 
+      {/* Tab content */}
       <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-medium text-gray-900">Hero section</h2>
-        <FormSection className="mt-4">
-          <div>
-            <FormLabel>Headline</FormLabel>
-            <TextInput
-              value={hero.headline}
-              onChange={(e) => updateHero("headline", e.target.value)}
-              placeholder="Professional Food Safety Training"
-              className="mt-1"
-            />
-          </div>
-          <div>
-            <FormLabel>Subheadline</FormLabel>
-            <Textarea
-              value={hero.subheadline}
-              onChange={(e) => updateHero("subheadline", e.target.value)}
-              placeholder="KKM-recognised courses…"
-              rows={2}
-              className="mt-1"
-            />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <FormLabel>CTA button text</FormLabel>
-              <TextInput
-                value={hero.ctaText}
-                onChange={(e) => updateHero("ctaText", e.target.value)}
-                placeholder="View Upcoming Classes"
-                className="mt-1"
-              />
+        {activeTab === "hero" && <HeroTab data={hero} onChange={setHero} />}
+        {activeTab === "usp" && <UspTab data={usp} onChange={setUsp} />}
+        {activeTab === "classes" && <ClassesTab data={classes} onChange={setClasses} />}
+        {activeTab === "promo" && <PromoTab data={promo} onChange={setPromo} />}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Hero ──────────────────────────────────────────────────────────── */
+function HeroTab({ data, onChange }: { data: CmsHeroData; onChange: (d: CmsHeroData) => void }) {
+  const set = <K extends keyof CmsHeroData>(k: K, v: CmsHeroData[K]) => onChange({ ...data, [k]: v });
+  return (
+    <FormSection>
+      <div>
+        <FormLabel>Headline</FormLabel>
+        <TextInput value={data.headline} onChange={(e) => set("headline", e.target.value)} className="mt-1" />
+      </div>
+      <div>
+        <FormLabel>Sub-headline</FormLabel>
+        <Textarea value={data.subheadline} onChange={(e) => set("subheadline", e.target.value)} rows={3} className="mt-1" />
+      </div>
+      <div>
+        <FormLabel>CTA Buttons</FormLabel>
+        <RepeaterButtons items={data.buttons} onChange={(b) => set("buttons", b)} />
+      </div>
+      <div>
+        <FormLabel>Background image URLs (one per line, max 5)</FormLabel>
+        <Textarea value={data.background_urls} onChange={(e) => set("background_urls", e.target.value)} rows={4} className="mt-1" />
+      </div>
+    </FormSection>
+  );
+}
+
+/* ─── USP ───────────────────────────────────────────────────────────── */
+function UspTab({ data, onChange }: { data: CmsUspData; onChange: (d: CmsUspData) => void }) {
+  const set = <K extends keyof CmsUspData>(k: K, v: CmsUspData[K]) => onChange({ ...data, [k]: v });
+  return (
+    <FormSection>
+      <div>
+        <FormLabel>Title</FormLabel>
+        <TextInput value={data.title} onChange={(e) => set("title", e.target.value)} className="mt-1" />
+      </div>
+      <div>
+        <FormLabel>Description</FormLabel>
+        <Textarea value={data.description} onChange={(e) => set("description", e.target.value)} rows={3} className="mt-1" />
+      </div>
+      <div>
+        <FormLabel>USP Points (max 4)</FormLabel>
+        {data.points.map((p, i) => (
+          <div key={i} className="mt-3 grid grid-cols-3 gap-3 rounded-lg border border-gray-200 p-3">
+            <TextInput placeholder="Icon" value={p.icon} onChange={(e) => { const pts = [...data.points]; pts[i] = { ...pts[i], icon: e.target.value }; set("points", pts); }} />
+            <TextInput placeholder="Title" value={p.title} onChange={(e) => { const pts = [...data.points]; pts[i] = { ...pts[i], title: e.target.value }; set("points", pts); }} />
+            <div className="flex gap-2">
+              <TextInput placeholder="Description" value={p.description} onChange={(e) => { const pts = [...data.points]; pts[i] = { ...pts[i], description: e.target.value }; set("points", pts); }} className="flex-1" />
+              <button onClick={() => set("points", data.points.filter((_, j) => j !== i))} className="text-red-500 hover:text-red-700 text-sm">✕</button>
             </div>
-            <div>
-              <FormLabel>CTA button link</FormLabel>
-              <TextInput
-                value={hero.ctaHref}
-                onChange={(e) => updateHero("ctaHref", e.target.value)}
-                placeholder="#classes"
-                className="mt-1"
-              />
+          </div>
+        ))}
+        {data.points.length < 4 && (
+          <button onClick={() => set("points", [...data.points, { icon: "", title: "", description: "" }])} className="mt-2 text-sm text-blue-600 hover:underline">+ Add point</button>
+        )}
+      </div>
+      <div>
+        <FormLabel>Side image URLs (one per line)</FormLabel>
+        <Textarea value={data.side_images_urls} onChange={(e) => set("side_images_urls", e.target.value)} rows={3} className="mt-1" />
+      </div>
+    </FormSection>
+  );
+}
+
+/* ─── Classes ───────────────────────────────────────────────────────── */
+function ClassesTab({ data, onChange }: { data: CmsClassesData; onChange: (d: CmsClassesData) => void }) {
+  const set = <K extends keyof CmsClassesData>(k: K, v: CmsClassesData[K]) => onChange({ ...data, [k]: v });
+  return (
+    <FormSection>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <FormLabel>Title</FormLabel>
+          <TextInput value={data.title} onChange={(e) => set("title", e.target.value)} className="mt-1" />
+        </div>
+        <div>
+          <FormLabel>Max items shown</FormLabel>
+          <TextInput type="number" value={data.max_items} onChange={(e) => set("max_items", Number(e.target.value) || 20)} className="mt-1" />
+        </div>
+      </div>
+      <div>
+        <FormLabel>Description</FormLabel>
+        <Textarea value={data.description} onChange={(e) => set("description", e.target.value)} rows={3} className="mt-1" />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <FormLabel>Button text</FormLabel>
+          <TextInput value={data.button_text} onChange={(e) => set("button_text", e.target.value)} className="mt-1" />
+        </div>
+        <div>
+          <FormLabel>Button URL</FormLabel>
+          <TextInput value={data.button_url} onChange={(e) => set("button_url", e.target.value)} className="mt-1" />
+        </div>
+      </div>
+      <p className="text-sm text-gray-500">Class listings are loaded dynamically from the API.</p>
+    </FormSection>
+  );
+}
+
+/* ─── Promo ──────────────────────────────────────────────────────────── */
+function PromoTab({ data, onChange }: { data: CmsPromoData; onChange: (d: CmsPromoData) => void }) {
+  const set = <K extends keyof CmsPromoData>(k: K, v: CmsPromoData[K]) => onChange({ ...data, [k]: v });
+  return (
+    <FormSection>
+      <div>
+        <FormLabel>Title</FormLabel>
+        <TextInput value={data.title} onChange={(e) => set("title", e.target.value)} className="mt-1" />
+      </div>
+      <div>
+        <FormLabel>Description</FormLabel>
+        <Textarea value={data.description} onChange={(e) => set("description", e.target.value)} rows={3} className="mt-1" />
+      </div>
+      <div>
+        <FormLabel>Banner image URLs (one per line, max 3)</FormLabel>
+        <Textarea value={data.banner_urls} onChange={(e) => set("banner_urls", e.target.value)} rows={3} className="mt-1" />
+      </div>
+      <div>
+        <FormLabel>Promo Cards (max 3)</FormLabel>
+        {data.cards.map((c, i) => (
+          <div key={i} className="mt-3 space-y-2 rounded-lg border border-gray-200 p-4">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <TextInput placeholder="Title" value={c.title} onChange={(e) => { const cards = [...data.cards]; cards[i] = { ...cards[i], title: e.target.value }; set("cards", cards); }} />
+              <TextInput placeholder="Image URL" value={c.image_url} onChange={(e) => { const cards = [...data.cards]; cards[i] = { ...cards[i], image_url: e.target.value }; set("cards", cards); }} />
+            </div>
+            <Textarea placeholder="Description" value={c.description} onChange={(e) => { const cards = [...data.cards]; cards[i] = { ...cards[i], description: e.target.value }; set("cards", cards); }} rows={2} />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <TextInput placeholder="Button label" value={c.button_label} onChange={(e) => { const cards = [...data.cards]; cards[i] = { ...cards[i], button_label: e.target.value }; set("cards", cards); }} />
+              <div className="flex gap-2">
+                <TextInput placeholder="Link URL" value={c.url} onChange={(e) => { const cards = [...data.cards]; cards[i] = { ...cards[i], url: e.target.value }; set("cards", cards); }} className="flex-1" />
+                <button onClick={() => set("cards", data.cards.filter((_, j) => j !== i))} className="text-red-500 hover:text-red-700 text-sm">✕</button>
+              </div>
             </div>
           </div>
-        </FormSection>
+        ))}
+        {data.cards.length < 3 && (
+          <button onClick={() => set("cards", [...data.cards, { image_url: "", title: "", description: "", button_label: "", url: "" }])} className="mt-2 text-sm text-blue-600 hover:underline">+ Add card</button>
+        )}
       </div>
+    </FormSection>
+  );
+}
 
-      <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-medium text-gray-900">Footer</h2>
-        <FormSection className="mt-4">
-          <div>
-            <FormLabel>Footer bottom text</FormLabel>
-            <TextInput
-              value={s?.footerBottom ?? ""}
-              onChange={(e) => update("footerBottom", e.target.value)}
-              placeholder="© Niat Murni Academy."
-              className="mt-1"
-            />
+/* ─── Shared: repeater for hero buttons ──────────────────────────────── */
+function RepeaterButtons({ items, onChange }: { items: { label: string; url: string; color?: string }[]; onChange: (items: { label: string; url: string; color?: string }[]) => void }) {
+  return (
+    <div className="mt-1 space-y-2">
+      {items.map((b, i) => (
+        <div key={i} className="grid grid-cols-3 gap-2 rounded-lg border border-gray-200 p-3">
+          <TextInput placeholder="Label" value={b.label} onChange={(e) => { const next = [...items]; next[i] = { ...next[i], label: e.target.value }; onChange(next); }} />
+          <TextInput placeholder="URL" value={b.url} onChange={(e) => { const next = [...items]; next[i] = { ...next[i], url: e.target.value }; onChange(next); }} />
+          <div className="flex gap-2">
+            <TextInput placeholder="Colour" value={b.color ?? ""} onChange={(e) => { const next = [...items]; next[i] = { ...next[i], color: e.target.value }; onChange(next); }} className="flex-1" />
+            <button onClick={() => onChange(items.filter((_, j) => j !== i))} className="text-red-500 hover:text-red-700 text-sm">✕</button>
           </div>
-          <div>
-            <FormLabel>Footer description</FormLabel>
-            <Textarea
-              value={s?.footerDescription ?? ""}
-              onChange={(e) => update("footerDescription", e.target.value)}
-              placeholder="Short description"
-              rows={2}
-              className="mt-1"
-            />
-          </div>
-        </FormSection>
-      </div>
-
-      <div className="flex items-center gap-3">
-        <button
-          type="submit"
-          disabled={saving}
-          className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
-        >
-          {saving ? "Saving…" : "Save changes"}
-        </button>
-      </div>
-    </form>
+        </div>
+      ))}
+      <button onClick={() => onChange([...items, { label: "", url: "", color: "" }])} className="text-sm text-blue-600 hover:underline">+ Add button</button>
+    </div>
   );
 }
