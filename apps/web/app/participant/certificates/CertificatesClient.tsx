@@ -10,7 +10,7 @@ import { DataTable } from "@/components/dashboard";
 import type { ColumnDef } from "@tanstack/react-table";
 
 const columns: ColumnDef<ParticipantCertificate>[] = [
-  { accessorKey: "certificate_number", header: "Certificate No." },
+  { accessorKey: "id", header: "Certificate ID" },
   { accessorKey: "program_name", header: "Program" },
   {
     accessorKey: "issue_date",

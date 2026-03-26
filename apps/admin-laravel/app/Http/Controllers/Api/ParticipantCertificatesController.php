@@ -34,9 +34,8 @@ class ParticipantCertificatesController extends Controller
             ->map(function ($booking) use ($baseUrl) {
                 $cert = $booking->certificate;
                 return [
-                    'certificate_number' => $cert->certificate_number,
+                    'id' => $cert->id,
                     'program_name' => $booking->classSession?->program?->name ?? '—',
-                    'issued_at' => $cert->issued_at?->toIso8601String(),
                     'issue_date' => $cert->issued_at?->format('d M Y'),
                     'download_url' => $baseUrl . '/api/certificate/download/' . $cert->verification_token,
                 ];
@@ -44,6 +43,6 @@ class ParticipantCertificatesController extends Controller
             ->values()
             ->all();
 
-        return response()->json(['certificates' => $certificates]);
+        return response()->json($certificates);
     }
 }

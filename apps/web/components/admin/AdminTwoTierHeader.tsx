@@ -32,6 +32,7 @@ export function AdminTwoTierHeader({ user }: AdminTwoTierHeaderProps) {
       case "Bookings":
         return "bookings";
       case "Participants":
+      case "Support":
         return "participants";
       case "Tutors":
         return "tutors";

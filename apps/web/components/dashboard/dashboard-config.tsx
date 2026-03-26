@@ -32,6 +32,7 @@ const adminNav: NavItem[] = [
   { label: "Classes", href: "/admin/classes", icon: Calendar },
   { label: "Bookings", href: "/admin/bookings", icon: BookOpen },
   { label: "Participants", href: "/admin/participants", icon: Users },
+  { label: "Support", href: "/admin/support", icon: HelpCircle },
   { label: "Tutors", href: "/admin/tutors", icon: GraduationCap },
   { label: "Certificates", href: "/admin/certificates", icon: Award },
   {

@@ -51,4 +51,9 @@ class Participant extends Model
     {
         return $this->hasMany(QuestionnaireResponse::class);
     }
+
+    public function supportTickets(): HasMany
+    {
+        return $this->hasMany(SupportTicket::class);
+    }
 }
