@@ -11,63 +11,13 @@ import { adminApi } from "@/lib/admin-api";
 const MAX_VISIBLE_NAV = 6;
 
 type AdminTwoTierHeaderProps = {
-  user: { name: string; email: string; role?: string; modules?: string[]; module_access?: string[] } | null;
+  user: { name: string; email: string } | null;
 };
 
 export function AdminTwoTierHeader({ user }: AdminTwoTierHeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const adminRole = user?.role ?? "";
-  const assignedModules = user?.module_access ?? user?.modules ?? [];
-  const canAccessModule = (module: string) => {
-    if (adminRole === "super_admin") return true;
-    return assignedModules.includes(module);
-  };
-  const moduleForItem = (item: NavItem): string | null => {
-    switch (item.label) {
-      case "Programs":
-        return "programs";
-      case "Classes":
-        return "classes";
-      case "Bookings":
-        return "bookings";
-      case "Participants":
-      case "Support":
-        return "participants";
-      case "Tutors":
-        return "tutors";
-      case "Certificates":
-        return "certificates";
-      case "Payments":
-      case "Payments & Delivery":
-        return "finance";
-      case "CMS":
-        return "cms";
-      case "Settings":
-        return "settings";
-      default:
-        return null;
-    }
-  };
-  const navItems = getNavForRole("admin")
-    .filter((item) => {
-      if (item.label === "Dashboard") return true;
-      const module = moduleForItem(item);
-      return module ? canAccessModule(module) : true;
-    })
-    .map((item) => {
-      if (item.label !== "Settings" || !item.children) return item;
-
-      const children = item.children
-        .map((c) => (c.label === "Users" ? { ...c, href: "/admin/users" } : c))
-        .filter((c) => {
-          if (c.label === "Users") return adminRole === "super_admin";
-          if (c.label === "System") return canAccessModule("finance");
-          return true;
-        });
-
-      return { ...item, children };
-    });
+  const navItems = getNavForRole("admin");
   const [searchFocused, setSearchFocused] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -77,7 +27,6 @@ export function AdminTwoTierHeader({ user }: AdminTwoTierHeaderProps) {
 
   const visible = navItems.slice(0, MAX_VISIBLE_NAV);
   const overflow = navItems.slice(MAX_VISIBLE_NAV);
-  const showAccessHint = adminRole !== "super_admin" && assignedModules.length > 0 && navItems.length <= 2;
   const [overflowOpen, setOverflowOpen] = useState(false);
   const overflowRef = useRef<HTMLDivElement>(null);
 
@@ -180,7 +129,7 @@ export function AdminTwoTierHeader({ user }: AdminTwoTierHeaderProps) {
                   <p className="truncate text-xs text-[var(--text-secondary)]">{user?.email}</p>
                 </div>
                 <Link
-                  href="/admin/settings/profile"
+                  href="/admin/settings/users"
                   className="block px-4 py-2 text-sm text-[var(--text-primary)] hover:bg-gray-50"
                   onClick={() => setProfileOpen(false)}
                 >
@@ -248,11 +197,6 @@ export function AdminTwoTierHeader({ user }: AdminTwoTierHeaderProps) {
           )}
         </div>
       </nav>
-      {showAccessHint && (
-        <div className="border-b border-[var(--border)] bg-[var(--card-bg)] px-4 py-2 text-xs text-[var(--text-secondary)]">
-          Menu customized based on your access
-        </div>
-      )}
 
       {/* Mobile collapsible menu */}
       {mobileMenuOpen && (
