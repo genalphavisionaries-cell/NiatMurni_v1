@@ -8,11 +8,7 @@ import { login } from "@/lib/api";
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const requestedRedirect = searchParams.get("redirect");
-  const redirect =
-    requestedRedirect && requestedRedirect.startsWith("/dashboard")
-      ? requestedRedirect
-      : "/dashboard";
+  const redirect = searchParams.get("redirect") || "/dashboard";
 
   const [loginInput, setLoginInput] = useState("");
   const [password, setPassword] = useState("");
