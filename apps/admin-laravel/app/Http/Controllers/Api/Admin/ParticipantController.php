@@ -119,9 +119,6 @@ class ParticipantController extends Controller
         if (! $user) {
             return response()->json(['message' => 'Participant account is not linked to a user.'], 422);
         }
-        if ($user->role !== 'participant') {
-            return response()->json(['message' => 'Linked user is not a participant account.'], 422);
-        }
 
         $tempPassword = Str::random(12);
         $user->update([
@@ -148,19 +145,10 @@ class ParticipantController extends Controller
         if (! $user) {
             return response()->json(['message' => 'Participant account is not linked to a user.'], 422);
         }
-        if ($user->role !== 'participant') {
-            return response()->json(['message' => 'Linked user is not a participant account.'], 422);
-        }
-
-        $email = $user->email ?: $participant->email;
-        $phone = $user->phone ?: $participant->phone;
-        if (! $email && ! $phone) {
-            return response()->json(['message' => 'Participant has no email or phone for verification resend.'], 422);
-        }
 
         $this->participantAuthService->requestFirstTimeLogin(
-            $email,
-            $phone
+            $user->email ?: $participant->email,
+            $user->phone ?: $participant->phone
         );
 
         return response()->json([
@@ -179,9 +167,6 @@ class ParticipantController extends Controller
         $user = $participant->user;
         if (! $user) {
             return response()->json(['message' => 'Participant account is not linked to a user.'], 422);
-        }
-        if ($user->role !== 'participant') {
-            return response()->json(['message' => 'Linked user is not a participant account.'], 422);
         }
 
         $user->update(['is_active' => false]);
