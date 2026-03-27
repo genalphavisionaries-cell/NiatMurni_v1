@@ -18,6 +18,10 @@ export type ClassSession = {
   min_threshold: number;
   status: string;
   zoom_join_url?: string;
+  /** True when API returned recent completed sessions (no upcoming). Registration disabled in UI. */
+  recent_past?: boolean;
+  /** Seats left (from API); preferred over raw capacity for display. */
+  available_slots?: number;
 };
 
 const BUILD_FETCH_TIMEOUT_MS = 5000;
@@ -28,15 +32,18 @@ function asObject(value: unknown): Record<string, unknown> | null {
 }
 
 async function parseJsonResponse(res: Response): Promise<unknown> {
-  const text = await res.text();
-  console.log("API raw response:", text);
-
   const contentType = res.headers.get("content-type") ?? "";
-  const looksLikeJson = contentType.includes("application/json") || text.trim().startsWith("{") || text.trim().startsWith("[");
+  if (contentType.includes("application/json")) {
+    return res.json();
+  }
+  const text = await res.text();
+  if (process.env.NODE_ENV === "development") {
+    console.log("API raw response:", text.length > 800 ? `${text.slice(0, 800)}…` : text);
+  }
+  const looksLikeJson = text.trim().startsWith("{") || text.trim().startsWith("[");
   if (!looksLikeJson) {
     throw new Error("Invalid API response");
   }
-
   try {
     return JSON.parse(text);
   } catch {
@@ -47,7 +54,6 @@ async function parseJsonResponse(res: Response): Promise<unknown> {
 function normalizeClassSession(input: unknown): ClassSession | null {
   const classData = asObject(input);
   if (!classData) return null;
-  console.log("Class data:", classData);
 
   const program = asObject(classData.program);
   const trainer = asObject(classData.trainer);
@@ -55,7 +61,10 @@ function normalizeClassSession(input: unknown): ClassSession | null {
   const id = Number(classData.id);
   const programId = Number(classData.program_id);
   const startsAt = typeof classData.starts_at === "string" ? classData.starts_at : "";
-  const endsAt = typeof classData.ends_at === "string" ? classData.ends_at : "";
+  let endsAt = typeof classData.ends_at === "string" ? classData.ends_at : "";
+  if (!endsAt && startsAt) {
+    endsAt = startsAt;
+  }
   if (!Number.isFinite(id) || !Number.isFinite(programId) || !startsAt || !endsAt) return null;
 
   const classPrice =
@@ -80,9 +89,13 @@ function normalizeClassSession(input: unknown): ClassSession | null {
     language: typeof classData.language === "string" ? classData.language : "",
     venue: typeof classData.venue === "string" ? classData.venue : typeof classData.location === "string" ? classData.location : undefined,
     capacity: Number.isFinite(Number(classData.capacity)) ? Number(classData.capacity) : 0,
+    available_slots: Number.isFinite(Number(classData.available_slots))
+      ? Number(classData.available_slots)
+      : undefined,
     min_threshold: Number.isFinite(Number(classData.min_threshold)) ? Number(classData.min_threshold) : 0,
     status: typeof classData.status === "string" ? classData.status : "",
     zoom_join_url: typeof classData.zoom_join_url === "string" ? classData.zoom_join_url : undefined,
+    recent_past: classData.recent_past === true,
   };
 }
 
@@ -110,7 +123,7 @@ export async function fetchUpcomingClasses(): Promise<ClassSession[]> {
     const res = await fetch(`${LARAVEL_API_URL}/api/public/classes/upcoming`, {
       signal: controller.signal,
       headers: {
-        "Accept": "application/json",
+        Accept: "application/json",
       },
     });
     clearTimeout(timeout);

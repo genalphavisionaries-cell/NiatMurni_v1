@@ -10,51 +10,81 @@ use Illuminate\Support\Carbon;
 
 class PublicController extends Controller
 {
+    /**
+     * Public upcoming / highlight classes for the homepage.
+     *
+     * - Primary: sessions that have not ended yet (ends_at >= now), excluding cancelled.
+     * - Fallback: if none, return up to 6 most recently ended sessions (recent completed / past),
+     *   so the homepage never looks empty when history exists.
+     */
     public function upcomingClasses(): JsonResponse
     {
         $now = Carbon::now();
 
         $sessions = ClassSession::query()
             ->with(['program:id,name,is_active', 'tutor.user:id,name'])
-            ->where('starts_at', '>=', $now)
-            ->whereIn('status', ['draft', 'scheduled', 'confirmed', 'ongoing', 'in_progress'])
+            ->where('ends_at', '>=', $now)
+            ->where('status', '!=', 'cancelled')
             ->whereHas('program', fn ($q) => $q->where('is_active', true))
             ->orderBy('starts_at')
             ->get();
 
-        $data = $sessions->map(function (ClassSession $session): array {
-            $bookedCount = (int) $session->bookings()
-                ->whereNotIn('status', ['cancelled'])
-                ->count();
-            $capacity = (int) ($session->capacity ?? 0);
-            $availableSlots = max($capacity - $bookedCount, 0);
-            $programBasePriceCents = $session->program?->base_price_cents ?? null;
-            $priceCents = $session->price_cents ?? $programBasePriceCents;
-            $price = $priceCents !== null ? ((float) $priceCents / 100) : ($session->program?->price ?? null);
+        $recentPast = false;
 
-            return [
-                'id' => (int) $session->id,
-                'program_id' => (int) $session->program_id,
-                'program_name' => (string) ($session->program?->name ?? ''),
-                'title' => (string) ($session->program?->name ?? ''),
-                'trainer_name' => $session->tutor?->user?->name,
-                'starts_at' => optional($session->starts_at)->toIso8601String(),
-                'ends_at' => optional($session->ends_at)->toIso8601String(),
-                'mode' => $session->mode,
-                'language' => $session->language,
-                'venue' => $session->venue,
-                'location' => $session->location,
-                'capacity' => $capacity,
-                'available_slots' => $availableSlots,
-                'min_threshold' => (int) ($session->min_threshold_minutes ?? 0),
-                'status' => $session->status,
-                'zoom_join_url' => $session->zoom_join_url,
-                'price' => $price,
-                'price_cents' => $priceCents,
-            ];
+        if ($sessions->isEmpty()) {
+            $sessions = ClassSession::query()
+                ->with(['program:id,name,is_active', 'tutor.user:id,name'])
+                ->where('ends_at', '<', $now)
+                ->where('status', '!=', 'cancelled')
+                ->whereHas('program', fn ($q) => $q->where('is_active', true))
+                ->orderByDesc('ends_at')
+                ->limit(6)
+                ->get();
+            $recentPast = true;
+        }
+
+        $data = $sessions->map(function (ClassSession $session) use ($recentPast): array {
+            return $this->mapClassSessionForPublic($session, $recentPast);
         })->values();
 
         return response()->json(['data' => $data]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function mapClassSessionForPublic(ClassSession $session, bool $recentPast): array
+    {
+        $bookedCount = (int) $session->bookings()
+            ->whereNotIn('status', ['cancelled'])
+            ->count();
+        $capacity = (int) ($session->capacity ?? 0);
+        $availableSlots = max($capacity - $bookedCount, 0);
+        $programBasePriceCents = $session->program?->base_price_cents ?? null;
+        $priceCents = $session->price_cents ?? $programBasePriceCents;
+        $price = $priceCents !== null ? ((float) $priceCents / 100) : ($session->program?->price ?? null);
+
+        return [
+            'id' => (int) $session->id,
+            'program_id' => (int) $session->program_id,
+            'program_name' => (string) ($session->program?->name ?? ''),
+            'title' => (string) ($session->program?->name ?? ''),
+            'trainer_name' => $session->tutor?->user?->name,
+            'starts_at' => optional($session->starts_at)->toIso8601String(),
+            'ends_at' => optional($session->ends_at)->toIso8601String(),
+            'mode' => $session->mode,
+            'language' => $session->language,
+            'venue' => $session->venue,
+            'location' => $session->location,
+            'capacity' => $capacity,
+            'available_slots' => $availableSlots,
+            'min_threshold' => (int) ($session->min_threshold_minutes ?? 0),
+            'status' => $session->status,
+            'zoom_join_url' => $session->zoom_join_url,
+            'price' => $price,
+            'price_cents' => $priceCents,
+            'recent_past' => $recentPast,
+        ];
     }
 
     public function classDetail(int $id): JsonResponse

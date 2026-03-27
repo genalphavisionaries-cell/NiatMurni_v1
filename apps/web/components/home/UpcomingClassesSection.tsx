@@ -15,6 +15,8 @@ type HeroClassItem = {
   slots: number;
   mode: string;
   language: string;
+  /** From API: showing recent completed sessions (no upcoming). */
+  recentPast: boolean;
 };
 
 function formatClassDate(dateStr: string) {
@@ -97,15 +99,21 @@ function toHeroItem(c: ClassSession): HeroClassItem {
   const timeStr = starts.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: true })
     + " – "
     + ends.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: true });
+  const slots =
+    typeof c.available_slots === "number" && Number.isFinite(c.available_slots)
+      ? c.available_slots
+      : c.capacity ?? 15;
+
   return {
     id: String(c.id),
     date: dateStr,
     dateSort: c.starts_at.slice(0, 10),
     day: dayNames[starts.getDay()],
     time: timeStr,
-    slots: c.capacity ?? 15,
+    slots,
     mode: c.mode ?? "online", // pass raw value; modeLabel() normalises on display
     language: c.language ?? "B. Melayu",
+    recentPast: c.recent_past === true,
   };
 }
 
@@ -146,6 +154,7 @@ export default function UpcomingClassesSection() {
   const displayList: HeroClassItem[] = useMemo(() => {
     return apiClasses.map(toHeroItem).slice(0, MAX_CLASSES);
   }, [apiClasses]);
+  const isRecentCompletedFallback = displayList.length > 0 && displayList.every((x) => x.recentPast);
 
   const firstRecommendedId = displayList[0]?.id;
 
@@ -180,7 +189,9 @@ export default function UpcomingClassesSection() {
             Kelas Terkini
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-[#64748B]">
-            Daftar untuk sesi seterusnya. Online dan bersemuka tersedia.
+            {isRecentCompletedFallback
+              ? "Tiada sesi akan datang buat masa ini. Paparan ini menunjukkan 6 sesi terkini yang telah selesai."
+              : "Daftar untuk sesi seterusnya. Online dan bersemuka tersedia."}
           </p>
         </div>
 
@@ -209,7 +220,7 @@ export default function UpcomingClassesSection() {
                         item={c}
                         isNext={firstRecommendedId === c.id}
                         onAddToCart={(qty) => {
-                          if (qty <= 0) return;
+                          if (qty <= 0 || c.recentPast) return;
                           setSelectedCart({ classId: c.id, qty });
                           setCartOpen(true);
                         }}
@@ -228,7 +239,7 @@ export default function UpcomingClassesSection() {
                               item={c}
                               isNext={firstRecommendedId === c.id}
                               onAddToCart={(qty) => {
-                                if (qty <= 0) return;
+                                if (qty <= 0 || c.recentPast) return;
                                 setSelectedCart({ classId: c.id, qty });
                                 setCartOpen(true);
                               }}
@@ -290,7 +301,9 @@ export default function UpcomingClassesSection() {
                   Pilih Kelas Lain
                 </Link>
                 <div className="hidden text-xs text-[#64748B] md:block">
-                  * Daftar akan dibawa ke halaman booking.
+                  {isRecentCompletedFallback
+                    ? "* Sesi ini untuk rujukan. Pendaftaran dibuka semula apabila jadual baharu tersedia."
+                    : "* Daftar akan dibawa ke halaman booking."}
                 </div>
               </div>
 
@@ -382,7 +395,8 @@ function UpcomingClassCard({
   const [qty, setQty] = useState(0);
   const seatsLeft = item.slots ?? 0;
   const max = Math.max(0, seatsLeft);
-  const disabled = seatsLeft <= 0 || qty <= 0;
+  const pastSession = item.recentPast;
+  const disabled = pastSession || seatsLeft <= 0 || qty <= 0;
   const { dayNumber, month, year } = formatClassDate(item.date);
   const timeText = item.time.replace(/\s*–\s*/g, " – ");
   const monthShort = month ? toMalayMonthShort(month) : "";
@@ -459,15 +473,21 @@ function UpcomingClassCard({
 
           {/* Action: qty + Daftar */}
           <div className="flex items-center gap-1.5">
-            <div className="scale-[0.88] origin-right">
-              <QuantitySelector
-                compact
-                min={0}
-                max={max}
-                defaultValue={0}
-                onChange={(n) => setQty(n)}
-              />
-            </div>
+            {pastSession ? (
+              <div className="rounded-md border border-slate-300 px-2 py-1 text-[11px] font-semibold text-slate-500">
+                —
+              </div>
+            ) : (
+              <div className="scale-[0.88] origin-right">
+                <QuantitySelector
+                  compact
+                  min={0}
+                  max={max}
+                  defaultValue={0}
+                  onChange={(n) => setQty(n)}
+                />
+              </div>
+            )}
             <button
               type="button"
               disabled={disabled}
@@ -481,10 +501,12 @@ function UpcomingClassCard({
                   : "bg-[#0F3B7B] text-white hover:bg-[#0b2e5f]"
               }`}
             >
-              Daftar
+              {pastSession ? "Selesai" : "Daftar"}
             </button>
           </div>
-          {qty <= 0 && seatsLeft > 0 ? (
+          {pastSession ? (
+            <p className="text-[10px] font-medium text-slate-500">Sesi rujukan (kelas selesai)</p>
+          ) : qty <= 0 && seatsLeft > 0 ? (
             <p className="text-[10px] font-medium text-amber-600">Please select number of seats</p>
           ) : null}
         </div>
