@@ -45,7 +45,7 @@ export default function HeroLayout({
   const slides = useMemo(() => {
     const fallback = heroBackgroundUrls?.filter(Boolean) ?? [];
     if (fallback.length) return fallback;
-    return ["/images/food-handling-hero.svg"];
+    return ["/images/food-handling-hero.jpg"];
   }, [heroBackgroundUrls]);
 
   const heroSection: PublicCmsHomepageSection = useMemo(() => {
@@ -54,7 +54,7 @@ export default function HeroLayout({
     const secondaryUrl = heroSecondaryUrl ?? "/#classes";
     const secondaryLabel = heroSecondaryLabel ?? "Lihat Kelas";
 
-    const bg = slides[0] ?? "/images/food-handling-hero.svg";
+    const bg = slides[0] ?? "/images/food-handling-hero.jpg";
     const extra = {
       overlay_opacity: String(heroOverlayOpacity ?? 0.25),
       slides_json: JSON.stringify(

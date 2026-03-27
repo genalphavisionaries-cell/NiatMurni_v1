@@ -4,6 +4,8 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AdminTwoTierHeader } from "@/components/admin/AdminTwoTierHeader";
 
+// WARNING: Do not import dashboard-shell or DashboardAuthGate here.
+// Admin UI is isolated under /admin/* and must only use admin components.
 export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [user, setUser] = useState<{ name: string; email: string } | null>(null);

@@ -6,6 +6,8 @@ import { Sidebar } from "@/components/dashboard-shell/Sidebar";
 import { BottomNav } from "@/components/dashboard-shell/BottomNav";
 import { DashboardAuthGate } from "@/components/dashboard-shell/DashboardAuthGate";
 
+// WARNING: Do not mix admin components into dashboard layout.
+// Participant dashboard is isolated under /dashboard/* routes only.
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <DashboardAuthGate>
