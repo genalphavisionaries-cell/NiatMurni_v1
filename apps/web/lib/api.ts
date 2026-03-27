@@ -26,6 +26,20 @@ export type ClassSession = {
 const BUILD_FETCH_TIMEOUT_MS = 5000;
 const MISSING_BACKEND_PREFIX = "[backend missing]";
 
+/**
+ * Build absolute URL for Laravel `routes/api.php` paths (e.g. `/api/public/...`).
+ * When `NEXT_PUBLIC_API_URL` already ends with `/api`, do not append `/api` again.
+ */
+function laravelApiUrl(pathFromRoot: string): string {
+  const base = (API_BASE ?? "").replace(/\/$/, "");
+  if (!base) return "";
+  const p = pathFromRoot.startsWith("/") ? pathFromRoot : `/${pathFromRoot}`;
+  if (base.endsWith("/api")) {
+    return p.startsWith("/api") ? `${base}${p.slice(4)}` : `${base}${p}`;
+  }
+  return `${base}${p}`;
+}
+
 function asObject(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
 }
@@ -112,26 +126,43 @@ function logMissingBackendApi(endpoint: string, status?: number) {
 }
 
 export async function fetchUpcomingClasses(): Promise<ClassSession[]> {
+  console.log(
+    "API URL:",
+    `${process.env.NEXT_PUBLIC_API_URL ?? ""}/api/public/classes/upcoming`
+  );
+
   if (!API_BASE) {
     logMissingBackendApi("/api/public/classes/upcoming");
     return [];
   }
+
+  const fetchUrl = laravelApiUrl("/api/public/classes/upcoming");
+  console.log("fetchUpcomingClasses resolved URL:", fetchUrl);
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), BUILD_FETCH_TIMEOUT_MS);
   try {
-    const res = await fetch(`${API_BASE}/api/public/classes/upcoming`, {
+    const res = await fetch(fetchUrl, {
       signal: controller.signal,
       headers: {
         Accept: "application/json",
       },
     });
     clearTimeout(timeout);
+    console.log("Status:", res.status);
+
     if (!res.ok) {
+      const errBody = await res.text();
+      console.log("RAW API DATA:", errBody);
       if (res.status === 404) logMissingBackendApi("/api/public/classes/upcoming", res.status);
       return [];
     }
+
     const data = await parseJsonResponse(res);
-    return extractClassList(data);
+    console.log("RAW API DATA:", data);
+    const mappedClasses = extractClassList(data);
+    console.log("FINAL CLASSES:", mappedClasses);
+    return mappedClasses;
   } catch {
     clearTimeout(timeout);
     logMissingBackendApi("/api/public/classes/upcoming");
@@ -145,7 +176,7 @@ export async function fetchClass(id: string): Promise<ClassSession | null> {
     return null;
   }
   try {
-    const res = await fetch(`${API_BASE}/api/public/classes/${id}`, {
+    const res = await fetch(laravelApiUrl(`/api/public/classes/${id}`), {
       headers: {
         "Accept": "application/json",
       },
@@ -234,7 +265,7 @@ export async function registerForClass(
 export async function createReservation(
   payload: CreateReservationPayload
 ): Promise<CreateReservationResponse> {
-  const res = await fetch(`${API_BASE}/api/reservations`, {
+  const res = await fetch(laravelApiUrl("/api/reservations"), {
     method: "POST",
     headers: { "Content-Type": "application/json", "Accept": "application/json" },
     body: JSON.stringify(payload),
@@ -254,7 +285,7 @@ export async function createReservation(
 export async function createPaymentCheckout(
   payload: CheckoutPayload
 ): Promise<{ checkout_url: string }> {
-  const res = await fetch(`${API_BASE}/api/payments/checkout`, {
+  const res = await fetch(laravelApiUrl("/api/payments/checkout"), {
     method: "POST",
     headers: { "Content-Type": "application/json", "Accept": "application/json" },
     body: JSON.stringify(payload),
@@ -296,7 +327,7 @@ export async function submitManualPaymentForBooking(
 
 export async function fetchPublicCheckoutSettings(): Promise<PublicCheckoutSettings | null> {
   try {
-    const res = await fetch(`${API_BASE}/api/public/settings`, {
+    const res = await fetch(laravelApiUrl("/api/public/settings"), {
       headers: { Accept: "application/json" },
     });
     if (!res.ok) return null;
@@ -357,7 +388,7 @@ export async function fetchBooking(id: string): Promise<BookingResponse | null> 
     return null;
   }
   try {
-  const res = await fetch(`${API_BASE}/api/public/bookings/${id}`, {
+  const res = await fetch(laravelApiUrl(`/api/public/bookings/${id}`), {
     headers: {
       "Accept": "application/json",
     },
