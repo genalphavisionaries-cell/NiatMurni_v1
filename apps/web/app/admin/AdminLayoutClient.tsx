@@ -21,7 +21,11 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
         .me()
         .then((res) => {
           if (!cancelled) {
-            setUser(res.user);
+            if (res.user) {
+              setUser({ name: res.user.name, email: res.user.email });
+            } else {
+              window.location.href = "/admin/login?redirect=" + encodeURIComponent(pathname || "/admin");
+            }
           }
         })
         .catch(() => {
