@@ -34,9 +34,9 @@ Client components under booking/class no longer use a top-level `<main>` (avoid 
 |------|--------|
 | **`/`** (home) | Already has full CMS vs legacy homepage logic |
 | **`/admin/**`** | Separate admin shell (`admin/layout.tsx`) |
-| **`/participant/**`** | Portal layout + auth flows |
+| **`/user/**`** | Portal layout + auth flows |
 | **`/tutor/**`** | Tutor portal layout |
-| **`/admin/login`**, **`/participant/login`** | Focused login UIs, not marketing shell |
+| **`/admin/login`**, **`/user/login`** | Focused login UIs, not marketing shell |
 
 ## Remaining inconsistency (later)
 

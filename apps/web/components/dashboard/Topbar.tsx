@@ -19,7 +19,7 @@ export function Topbar({ role, sidebarCollapsed, onMenuClick }: TopbarProps) {
   const [searchFocused, setSearchFocused] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
 
-  const basePath = role === "admin" ? "/admin" : role === "tutor" ? "/tutor" : "/participant";
+  const basePath = role === "admin" ? "/admin" : role === "tutor" ? "/tutor" : "/user";
 
   const handleLogout = () => {
     setUserOpen(false);

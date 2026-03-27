@@ -8,7 +8,7 @@ import WhatsAppChatWidget from "./WhatsAppChatWidget";
 
 /**
  * Loads floating bottom nav + WhatsApp widget from public APIs.
- * Mount once on public/marketing layouts (not admin/participant/tutor).
+ * Mount once on public/marketing layouts (not admin/user/tutor).
  */
 export default function PublicFloatingLayer() {
   const [menu, setMenu] = useState(() => ({

@@ -38,7 +38,7 @@ export function Sidebar({ role, collapsed, onToggleCollapse, mobileOpen = false,
         <div className="flex h-14 shrink-0 items-center justify-between border-b border-[var(--border)] px-3">
           {!collapsed && (
             <Link
-              href={role === "admin" ? "/admin" : role === "tutor" ? "/tutor" : "/participant"}
+              href={role === "admin" ? "/admin" : role === "tutor" ? "/tutor" : "/user"}
               className="font-semibold text-gray-900"
             >
               Niat Murni

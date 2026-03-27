@@ -1,17 +1,14 @@
-export const metadata = {
-  title: "Profile | Participant | Niat Murni",
-};
+"use client";
 
-export default function ParticipantProfilePage() {
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Profile</h1>
-        <p className="mt-1 text-sm text-gray-500">Your participant profile</p>
-      </div>
-      <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
-        <p className="text-sm text-gray-500">Profile form (Go API or Laravel).</p>
-      </div>
-    </div>
-  );
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
+export default function LegacyParticipantProfileRedirectPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace("/user/profile");
+  }, [router]);
+
+  return null;
 }

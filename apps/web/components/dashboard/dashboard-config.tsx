@@ -76,11 +76,11 @@ const tutorNav: NavItem[] = [
 ];
 
 const participantNav: NavItem[] = [
-  { label: "Dashboard", href: "/participant", icon: LayoutDashboard },
-  { label: "My Courses", href: "/participant/courses", icon: BookOpen },
-  { label: "Certificates", href: "/participant/certificates", icon: Award },
-  { label: "Profile", href: "/participant/profile", icon: User },
-  { label: "Support", href: "/participant/support", icon: HelpCircle },
+  { label: "Dashboard", href: "/user", icon: LayoutDashboard },
+  { label: "My Courses", href: "/user/courses", icon: BookOpen },
+  { label: "Certificates", href: "/user/certificates", icon: Award },
+  { label: "Profile", href: "/user/profile", icon: User },
+  { label: "Support", href: "/user/support", icon: HelpCircle },
 ];
 
 export function getNavForRole(role: DashboardRole): NavItem[] {

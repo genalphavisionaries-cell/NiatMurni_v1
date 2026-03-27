@@ -338,7 +338,7 @@ export function CartModal() {
                     deliveryMethod: form.delivery_type,
                   }}
                   onGoPortal={() => {
-                    window.location.href = "/participant/login";
+                    window.location.href = "/user/login";
                   }}
                   onBackHome={() => {
                     window.location.href = "/";

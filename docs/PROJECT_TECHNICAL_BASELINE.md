@@ -1,6 +1,6 @@
 # Niat Murni v1 - Technical Baseline (Current State)
 
-Last updated: 2026-03-27  
+Last updated: 2026-03-26  
 Purpose: canonical reference for current active architecture, route boundaries, modules, and auth flows.  
 Scope: current finalized code state only.
 
@@ -10,7 +10,7 @@ Scope: current finalized code state only.
 
 This repository is a monorepo. The currently active production web experience is built around:
 
-- `apps/web` - Next.js frontend (public site + admin UI + participant/tutor portals)
+- `apps/web` - Next.js frontend (public site + admin UI + user/tutor portals)
 - `apps/admin-laravel` - Laravel backend API + auth + CMS data source + business services
 
 Other folders (e.g. `services/core-go`, `apps/web-next`) exist in repo history/structure but are not the primary active web app used by `apps/web` for the current stage.
@@ -28,7 +28,7 @@ Other folders (e.g. `services/core-go`, `apps/web-next`) exist in repo history/s
 - API access via fetch clients:
   - `apps/web/lib/api.ts`
   - `apps/web/lib/admin-api.ts`
-  - `apps/web/lib/participant-api.ts`
+  - `apps/web/lib/user-api.ts`
   - `apps/web/lib/public-cms.ts`
 
 ### Backend (`apps/admin-laravel`)
@@ -82,15 +82,16 @@ Key references:
   - `/admin/cms/*`
   - `/admin/settings/*`
 
-### Participant portal (current route family)
-- Namespace: `/participant/*`
+### User portal (current route family)
+- Namespace: `/user/*`
 - Examples:
-  - `/participant`
-  - `/participant/login`
-  - `/participant/courses`
-  - `/participant/certificates`
-  - `/participant/profile`
-  - `/participant/support`
+  - `/user`
+  - `/user/login`
+  - `/user/courses`
+  - `/user/certificates`
+  - `/user/profile`
+  - `/user/support`
+  - Legacy compatibility: `/participant/*` -> `/user/*` redirect
 
 ### Tutor portal
 - Namespace: `/tutor/*`
@@ -115,7 +116,7 @@ Key references:
 ### Participant/Tutor dashboard shell
 - `apps/web/components/dashboard/DashboardLayout.tsx`
 - Used by:
-  - `apps/web/app/participant/layout.tsx`
+  - `apps/web/app/user/layout.tsx`
   - `apps/web/app/tutor/layout.tsx`
 
 ### Public shell
@@ -133,7 +134,10 @@ Key references:
 - Checks cookie: `admin_session` (`apps/web/lib/auth.ts`)
 - Redirects unauthenticated admin access to `/admin/login?redirect=...`
 
-Note: participant/tutor route protection is currently handled by page/layout logic and API auth checks, not a dedicated `/participant` middleware matcher in current code.
+Current middleware route scope:
+- `/admin/*` uses `admin_session` cookie and redirects to `/admin/login`.
+- `/user/*` uses `participant_session` cookie and redirects to `/user/login`.
+- `/participant/*` is temporarily redirected to `/user/*` for backward compatibility.
 
 ## Backend auth mechanisms
 - Sanctum is active for protected API groups.
@@ -245,7 +249,7 @@ Important files:
 - Users
 - Settings
 
-### Participant modules (current family under `/participant`)
+### User modules (current family under `/user`)
 - Login
 - Dashboard home
 - Courses
@@ -305,7 +309,7 @@ Laravel side (examples):
 
 Use this document as baseline guardrails:
 
-- Keep route namespaces clearly separated (`/admin`, `/participant`, `/tutor`, public).
+- Keep route namespaces clearly separated (`/admin`, `/user`, `/tutor`, public).
 - Do not mix layout components across namespaces.
 - Preserve CMS fetch + merge flow in homepage unless explicitly redesigning architecture.
 - Any auth/middleware change must be documented with:
@@ -437,14 +441,14 @@ Files:
 - User-level role/module helpers:
   - `apps/admin-laravel/app/Models/User.php`
 
-### Participant login flow (current active path family)
-1. Frontend `/participant/login` calls participant API login client.
+### User login flow (frontend route family)
+1. Frontend `/user/login` calls user API client.
 2. Backend validates participant user and sets participant auth cookies.
 3. Protected participant endpoints are under `auth:sanctum` in `/api/participant/*`.
 
 Files:
-- `apps/web/app/participant/login/page.tsx`
-- `apps/web/lib/participant-api.ts`
+- `apps/web/app/user/login/page.tsx`
+- `apps/web/lib/user-api.ts`
 - `apps/admin-laravel/app/Http/Controllers/Api/ParticipantAuthController.php`
 
 ---

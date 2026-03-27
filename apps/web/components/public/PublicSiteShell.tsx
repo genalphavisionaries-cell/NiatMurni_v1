@@ -13,7 +13,7 @@ type Props = {
 
 /**
  * Shared CMS-driven public site chrome: theme CSS vars, header, footer.
- * Use on marketing/booking flows; not for /admin, /participant, /tutor shells.
+ * Use on marketing/booking flows; not for /admin, /user, /tutor shells.
  */
 export default async function PublicSiteShell({
   children,
