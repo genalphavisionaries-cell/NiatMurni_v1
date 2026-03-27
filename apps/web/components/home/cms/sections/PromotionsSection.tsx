@@ -11,6 +11,21 @@ type PromoItem = {
   button_url?: string;
 };
 
+const DEFAULT_PROMOS: PromoItem[] = [
+  {
+    title: "Sijil Sah KKM",
+    description: "Daftar sekarang untuk latihan pengendalian makanan yang diakreditkan.",
+  },
+  {
+    title: "Pilihan Online & Fizikal",
+    description: "Pilih mod delivery yang sesuai dengan jadual anda.",
+  },
+  {
+    title: "Kelas Cepat & Mudah",
+    description: "Proses pendaftaran ringkas dan respons pantas.",
+  },
+];
+
 function PlaceholderPromoImage({ index }: { index: number }) {
   const gradients = [
     "from-[#2563EB] to-[#1D4ED8]",
@@ -36,32 +51,23 @@ export default function PromotionsSection({
 }: {
   section: PublicCmsHomepageSection;
 }) {
-  const rawTitle =
-    cmsString(section.title) ??
-    extraString(section.extra_data, "title") ??
-    extraString(section.extra_data, "headline");
-  const topBanner = cmsString(section.subtitle) ?? extraString(section.extra_data, "banner_text");
-  const title = rawTitle ?? "Cadangan Promosi";
+  const topBanner = cmsString(section.subtitle) ?? extraString(section.extra_data, "banner_text") ?? "Promosi Terhad";
+  const title = cmsString(section.title) ?? "Cadangan Promosi";
   const description = cmsString(section.description) ?? extraString(section.extra_data, "description_2");
 
-  const promosJson =
-    extraString(section.extra_data, "promos_json") ??
-    extraString(section.extra_data, "cards_json");
-  const promos = parseJsonSafe<PromoItem[]>(promosJson) ?? [];
+  const promos =
+    parseJsonSafe<PromoItem[]>(extraString(section.extra_data, "promos_json")) ??
+    DEFAULT_PROMOS;
 
   const visible = promos.filter((p) => cmsString(p.title) || cmsString(p.description)).slice(0, 3);
-  const hasContent = !!rawTitle || !!topBanner || !!description || visible.length > 0;
-  if (!hasContent) return null;
 
   return (
     <section id="promotions" className="bg-surface py-16 sm:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-10 flex flex-col items-center text-center">
-          {topBanner ? (
-            <div className="inline-flex items-center rounded-full bg-[#FEF3C7] px-4 py-2 text-sm font-semibold text-[#92400E]">
-              {topBanner}
-            </div>
-          ) : null}
+          <div className="inline-flex items-center rounded-full bg-[#FEF3C7] px-4 py-2 text-sm font-semibold text-[#92400E]">
+            {topBanner}
+          </div>
           <h2 className="mt-4 text-3xl font-bold tracking-tight text-[#0F172A] sm:text-4xl">
             {title}
           </h2>
