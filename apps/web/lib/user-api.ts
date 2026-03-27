@@ -4,13 +4,9 @@
  */
 
 function getBaseURL(): string {
-  if (typeof window === "undefined") return "";
-  const env = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_LARAVEL_API_URL;
+  const env = process.env.NEXT_PUBLIC_API_URL;
   if (env && (env.startsWith("http://") || env.startsWith("https://"))) return env.replace(/\/$/, "");
-  const origin = window.location?.origin;
-  if (origin && origin !== "null" && (origin.startsWith("http://") || origin.startsWith("https://")))
-    return origin;
-  return "http://localhost:8000";
+  return "";
 }
 
 export type ParticipantCertificate = {
@@ -36,9 +32,7 @@ async function request<T>(
   const { params, ...init } = options;
   const base = getBaseURL();
   if (!base)
-    throw new Error(
-      "User API base URL is not configured. Set NEXT_PUBLIC_API_URL or NEXT_PUBLIC_LARAVEL_API_URL."
-    );
+    throw new Error("User API base URL is not configured. Set NEXT_PUBLIC_API_URL.");
   const url = new URL(path.startsWith("/") ? path : `/${path}`, base);
   if (params) {
     Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));

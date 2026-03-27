@@ -1,13 +1,10 @@
 /**
  * Public structured CMS from Laravel GET /api/public/cms.
- * Base URL: same as homepage settings (NEXT_PUBLIC_ADMIN_API_URL or NEXT_PUBLIC_LARAVEL_API_URL).
+ * Base URL: NEXT_PUBLIC_API_URL only.
  */
 
 export const getPublicApiBase = (): string => {
-  const env =
-    process.env.NEXT_PUBLIC_ADMIN_API_URL ||
-    process.env.NEXT_PUBLIC_LARAVEL_API_URL ||
-    process.env.NEXT_PUBLIC_API_URL;
+  const env = process.env.NEXT_PUBLIC_API_URL;
   if (env?.trim() && (env.startsWith("http://") || env.startsWith("https://"))) {
     return env.replace(/\/$/, "");
   }

@@ -1,20 +1,12 @@
 /**
  * Admin API client for Laravel backend.
- * Base URL: NEXT_PUBLIC_API_URL (fallback: NEXT_PUBLIC_LARAVEL_API_URL).
+ * Base URL: NEXT_PUBLIC_API_URL only.
  * Uses credentials (cookies) for auth.
  */
 
-function getBaseURL(): string {
-  if (typeof window === "undefined") return "";
-  const env = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_LARAVEL_API_URL;
-  if (env && (env.startsWith("http://") || env.startsWith("https://"))) return env.replace(/\/$/, "");
-  const origin = window.location?.origin;
-  if (origin && origin !== "null" && (origin.startsWith("http://") || origin.startsWith("https://")))
-    return origin;
-  return "http://localhost:8000";
-}
+import { getApiBase } from "./config";
 
-export const adminApiBaseURL = getBaseURL();
+export const adminApiBaseURL = getApiBase();
 
 export type AdminUser = {
   id: number;
@@ -167,8 +159,8 @@ async function request<T>(
   options: RequestInit & { params?: Record<string, string> } = {}
 ): Promise<T> {
   const { params, ...init } = options;
-  const base = getBaseURL();
-  if (!base) throw new Error("Admin API base URL is not configured. Set NEXT_PUBLIC_API_URL or NEXT_PUBLIC_LARAVEL_API_URL.");
+  const base = getApiBase();
+  if (!base) throw new Error("Admin API base URL is not configured. Set NEXT_PUBLIC_API_URL.");
   const url = new URL(path, base);
   if (params) {
     Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
@@ -261,9 +253,22 @@ export type Booking = {
 
 export const adminApi = {
   login(email: string, password: string): Promise<LoginResponse> {
-    return request<LoginResponse>("/api/admin/login", {
+    const data = { email, password };
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+    console.log("LOGIN API:", `${API_BASE}/api/admin/login`);
+    return fetch(`${API_BASE}/api/admin/login`, {
       method: "POST",
-      body: JSON.stringify({ email, password }),
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    }).then(async (res) => {
+      const json = (await res.json().catch(() => ({}))) as LoginResponse & { message?: string };
+      if (!res.ok) {
+        throw new Error(json.message || `Request failed: ${res.status}`);
+      }
+      return json as LoginResponse;
     });
   },
 

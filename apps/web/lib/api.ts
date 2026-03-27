@@ -1,5 +1,4 @@
-const LARAVEL_API_URL =
-  process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_LARAVEL_API_URL || "https://admin.niatmurniacademy.com";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 export type ClassSession = {
   id: number;
@@ -113,14 +112,14 @@ function logMissingBackendApi(endpoint: string, status?: number) {
 }
 
 export async function fetchUpcomingClasses(): Promise<ClassSession[]> {
-  if (!LARAVEL_API_URL) {
+  if (!API_BASE) {
     logMissingBackendApi("/api/public/classes/upcoming");
     return [];
   }
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), BUILD_FETCH_TIMEOUT_MS);
   try {
-    const res = await fetch(`${LARAVEL_API_URL}/api/public/classes/upcoming`, {
+    const res = await fetch(`${API_BASE}/api/public/classes/upcoming`, {
       signal: controller.signal,
       headers: {
         Accept: "application/json",
@@ -141,12 +140,12 @@ export async function fetchUpcomingClasses(): Promise<ClassSession[]> {
 }
 
 export async function fetchClass(id: string): Promise<ClassSession | null> {
-  if (!LARAVEL_API_URL) {
+  if (!API_BASE) {
     logMissingBackendApi(`/api/public/classes/${id}`);
     return null;
   }
   try {
-    const res = await fetch(`${LARAVEL_API_URL}/api/public/classes/${id}`, {
+    const res = await fetch(`${API_BASE}/api/public/classes/${id}`, {
       headers: {
         "Accept": "application/json",
       },
@@ -217,7 +216,7 @@ export type PublicCheckoutSettings = {
 export async function registerForClass(
   payload: RegisterPayload
 ): Promise<{ redirect_url: string }> {
-  const res = await fetch(`${LARAVEL_API_URL}/api/register`, {
+  const res = await fetch(`${API_BASE}/api/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "Accept": "application/json" },
     body: JSON.stringify(payload),
@@ -235,7 +234,7 @@ export async function registerForClass(
 export async function createReservation(
   payload: CreateReservationPayload
 ): Promise<CreateReservationResponse> {
-  const res = await fetch(`${LARAVEL_API_URL}/api/reservations`, {
+  const res = await fetch(`${API_BASE}/api/reservations`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "Accept": "application/json" },
     body: JSON.stringify(payload),
@@ -255,7 +254,7 @@ export async function createReservation(
 export async function createPaymentCheckout(
   payload: CheckoutPayload
 ): Promise<{ checkout_url: string }> {
-  const res = await fetch(`${LARAVEL_API_URL}/api/payments/checkout`, {
+  const res = await fetch(`${API_BASE}/api/payments/checkout`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "Accept": "application/json" },
     body: JSON.stringify(payload),
@@ -278,7 +277,7 @@ export async function submitManualPaymentForBooking(
   form.set("receipt", receipt);
   form.set("payment_method", "manual");
 
-  const res = await fetch(`${LARAVEL_API_URL}/api/bookings/${bookingId}/manual-payment`, {
+  const res = await fetch(`${API_BASE}/api/bookings/${bookingId}/manual-payment`, {
     method: "POST",
     headers: { Accept: "application/json" },
     body: form,
@@ -297,7 +296,7 @@ export async function submitManualPaymentForBooking(
 
 export async function fetchPublicCheckoutSettings(): Promise<PublicCheckoutSettings | null> {
   try {
-    const res = await fetch(`${LARAVEL_API_URL}/api/public/settings`, {
+    const res = await fetch(`${API_BASE}/api/public/settings`, {
       headers: { Accept: "application/json" },
     });
     if (!res.ok) return null;
@@ -353,12 +352,12 @@ export type BookingResponse = {
 };
 
 export async function fetchBooking(id: string): Promise<BookingResponse | null> {
-  if (!LARAVEL_API_URL) {
+  if (!API_BASE) {
     logMissingBackendApi(`/api/public/bookings/${id}`);
     return null;
   }
   try {
-  const res = await fetch(`${LARAVEL_API_URL}/api/public/bookings/${id}`, {
+  const res = await fetch(`${API_BASE}/api/public/bookings/${id}`, {
     headers: {
       "Accept": "application/json",
     },

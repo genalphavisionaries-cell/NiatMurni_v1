@@ -1,5 +1,5 @@
 /**
- * Homepage settings shape — to be loaded from admin API when NEXT_PUBLIC_ADMIN_API_URL is set.
+ * Homepage settings shape — to be loaded from Laravel when NEXT_PUBLIC_API_URL is set.
  * All sections are optional; defaults used when missing.
  */
 
@@ -209,7 +209,7 @@ export const defaultHomepageSettings: HomepageSettings = {
   },
 };
 
-const ADMIN_API = process.env.NEXT_PUBLIC_ADMIN_API_URL;
+const ADMIN_API = process.env.NEXT_PUBLIC_API_URL;
 
 function deepMerge<T extends object>(defaults: T, overrides: Partial<T> | null | undefined): T {
   if (overrides == null || typeof overrides !== "object") return defaults;
@@ -227,7 +227,7 @@ function deepMerge<T extends object>(defaults: T, overrides: Partial<T> | null |
 }
 
 /**
- * Fetch homepage settings from admin API when NEXT_PUBLIC_ADMIN_API_URL is set.
+ * Fetch homepage settings from Laravel when NEXT_PUBLIC_API_URL is set.
  * Falls back to defaultHomepageSettings on failure or when env is not set.
  */
 export async function getHomepageSettings(): Promise<HomepageSettings> {
