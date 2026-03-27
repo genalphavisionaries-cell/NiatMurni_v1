@@ -140,10 +140,6 @@ export type AdminPaymentDeliverySettings = {
     bank_code: string;
     instructions: string;
   };
-  success_paid_message: string;
-  success_pending_message: string;
-  manual_payment_notes: string;
-  portal_instruction: string;
 };
 
 export type VoucherType = "fixed" | "percentage" | "free_delivery";

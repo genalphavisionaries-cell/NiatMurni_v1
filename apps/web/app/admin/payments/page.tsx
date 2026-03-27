@@ -41,10 +41,6 @@ export default function AdminPaymentsPage() {
       bank_code: "",
       instructions: "",
     },
-    success_paid_message: "",
-    success_pending_message: "",
-    manual_payment_notes: "",
-    portal_instruction: "",
   });
   const [qrFile, setQrFile] = useState<File | null>(null);
 
@@ -54,15 +50,17 @@ export default function AdminPaymentsPage() {
       setLoading(true);
       setError(null);
       try {
-        const [revenueRes, refundsRes, payoutsRes] = await Promise.all([
+        const [revenueRes, refundsRes, payoutsRes, settingsRes] = await Promise.all([
           adminApi.getRevenueTimeline(period),
           adminApi.getRefundTimeline(period),
           adminApi.getTutorPayoutTimeline(period),
+          adminApi.getPaymentDeliverySettings(),
         ]);
         if (cancelled) return;
         setRevenue(revenueRes.data ?? []);
         setRefunds(refundsRes.data ?? []);
         setPayouts(payoutsRes.data ?? []);
+        setPaymentDeliverySettings(settingsRes.data);
       } catch (e) {
         if (!cancelled) {
           setRevenue([]);
@@ -72,6 +70,7 @@ export default function AdminPaymentsPage() {
         }
       } finally {
         if (!cancelled) setLoading(false);
+        if (!cancelled) setSettingsLoading(false);
       }
     };
     void run();
@@ -79,31 +78,6 @@ export default function AdminPaymentsPage() {
       cancelled = true;
     };
   }, [period]);
-
-  useEffect(() => {
-    let cancelled = false;
-    const runSettings = async () => {
-      setSettingsLoading(true);
-      try {
-        const settingsRes = await adminApi.getPaymentDeliverySettings();
-        if (!cancelled) {
-          setPaymentDeliverySettings(settingsRes.data);
-        }
-      } catch (e) {
-        if (!cancelled) {
-          setError(e instanceof Error ? e.message : "Failed to load payment/delivery settings");
-        }
-      } finally {
-        if (!cancelled) {
-          setSettingsLoading(false);
-        }
-      }
-    };
-    void runSettings();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const savePaymentDeliverySettings = async () => {
     setError(null);
@@ -128,10 +102,6 @@ export default function AdminPaymentsPage() {
         form.set("manual_payment[account_number]", paymentDeliverySettings.manual_payment.account_number ?? "");
         form.set("manual_payment[bank_code]", paymentDeliverySettings.manual_payment.bank_code ?? "");
         form.set("manual_payment[instructions]", paymentDeliverySettings.manual_payment.instructions ?? "");
-        form.set("success_paid_message", paymentDeliverySettings.success_paid_message ?? "");
-        form.set("success_pending_message", paymentDeliverySettings.success_pending_message ?? "");
-        form.set("manual_payment_notes", paymentDeliverySettings.manual_payment_notes ?? "");
-        form.set("portal_instruction", paymentDeliverySettings.portal_instruction ?? "");
         form.set("manual_payment[qr_image]", qrFile);
         res = await adminApi.updatePaymentDeliverySettings(form);
       } else {
@@ -481,54 +451,6 @@ export default function AdminPaymentsPage() {
                   rows={4}
                   className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
                   placeholder="Tell users how to transfer and what reference to include."
-                />
-              </label>
-            </div>
-
-            <div className="rounded-lg border border-gray-200 p-4 space-y-3">
-              <p className="text-sm font-semibold text-gray-900">Checkout Success Messages</p>
-              <label className="block text-sm text-gray-700">
-                Paid Success Message
-                <textarea
-                  value={paymentDeliverySettings.success_paid_message}
-                  onChange={(e) =>
-                    setPaymentDeliverySettings((prev) => ({ ...prev, success_paid_message: e.target.value }))
-                  }
-                  rows={3}
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                />
-              </label>
-              <label className="block text-sm text-gray-700">
-                Pending Verification Message
-                <textarea
-                  value={paymentDeliverySettings.success_pending_message}
-                  onChange={(e) =>
-                    setPaymentDeliverySettings((prev) => ({ ...prev, success_pending_message: e.target.value }))
-                  }
-                  rows={3}
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                />
-              </label>
-              <label className="block text-sm text-gray-700">
-                Manual Payment Notes
-                <textarea
-                  value={paymentDeliverySettings.manual_payment_notes}
-                  onChange={(e) =>
-                    setPaymentDeliverySettings((prev) => ({ ...prev, manual_payment_notes: e.target.value }))
-                  }
-                  rows={2}
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                />
-              </label>
-              <label className="block text-sm text-gray-700">
-                Portal Instruction
-                <textarea
-                  value={paymentDeliverySettings.portal_instruction}
-                  onChange={(e) =>
-                    setPaymentDeliverySettings((prev) => ({ ...prev, portal_instruction: e.target.value }))
-                  }
-                  rows={2}
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
                 />
               </label>
             </div>

@@ -36,13 +36,9 @@ export function CartModal() {
   const [form, setForm] = useState<BookingFormValues>({
     full_name: "",
     phone: "",
-    phone_country_code: "+60",
     identity_no: "",
-    nationality: "malaysian",
     email: "",
     company_name: "",
-    referral_code: "",
-    promo_code: "",
     delivery_type: "normal",
     address_line_1: "",
     address_line_2: "",
@@ -78,13 +74,9 @@ export function CartModal() {
     setForm({
       full_name: "",
       phone: "",
-      phone_country_code: "+60",
       identity_no: "",
-      nationality: "malaysian",
       email: "",
       company_name: "",
-      referral_code: "",
-      promo_code: "",
       delivery_type: "normal",
       address_line_1: "",
       address_line_2: "",
@@ -133,12 +125,9 @@ export function CartModal() {
         seat_count: cart.seat_count,
         full_name: form.full_name,
         identity_no: form.identity_no,
-        phone: `${form.phone_country_code} ${form.phone}`.trim(),
-        nationality: form.nationality,
+        phone: form.phone,
         email: form.email || undefined,
         company_name: form.company_name || undefined,
-        referral_code: form.referral_code || undefined,
-        promo_code: form.promo_code || undefined,
         delivery_address: getDeliveryAddress() || undefined,
         delivery_type: form.delivery_type,
         delivery_fee: deliveryFee,
@@ -232,19 +221,14 @@ export function CartModal() {
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center p-4">
       <div className="pointer-events-none absolute inset-0 bg-black/45" />
-      <div className="pointer-events-auto relative z-50 w-full max-w-[1100px] rounded-xl bg-white shadow-sm">
+      <div className="pointer-events-auto relative z-50 w-full max-w-4xl rounded-2xl bg-white shadow-2xl">
         <div className="flex max-h-[90vh] flex-col">
-        <div className="sticky top-0 z-50 flex items-center justify-between border-b bg-white px-8 py-4">
+        <div className="sticky top-0 z-50 flex items-center justify-between border-b bg-white px-6 py-4">
           <div>
-            <h2 className="text-xl font-semibold text-slate-900">Checkout</h2>
+            <h2 className="text-lg font-semibold text-slate-900">Checkout</h2>
             <p className="text-xs text-slate-500">
               Step {step} of 3 · {step === 1 ? "Cart Summary" : step === 2 ? "Participant Details" : "Payment Method"}
             </p>
-            <div className="mt-2 flex items-center gap-1.5">
-              {[1, 2, 3].map((n) => (
-                <span key={n} className={`h-1.5 w-8 rounded-full ${step >= n ? "bg-blue-600" : "bg-slate-200"}`} />
-              ))}
-            </div>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -271,7 +255,7 @@ export function CartModal() {
           </div>
         </div>
 
-        <div className="overflow-y-auto px-8 py-6">
+        <div className="overflow-y-auto px-6 py-4">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-5">
           {replacementNotice && (
@@ -290,7 +274,7 @@ export function CartModal() {
           )}
 
           {step === 1 && (
-            <section className="rounded-xl border border-slate-200 p-6 text-sm shadow-sm">
+            <section className="rounded-2xl border border-slate-200 p-4 text-sm shadow-sm">
               <h3 className="mb-2 text-base font-semibold text-slate-900">Cart Summary</h3>
               <p className="text-sm text-slate-700">{cart.class_title}</p>
               <div className="mt-3 flex items-center gap-2">
@@ -342,7 +326,7 @@ export function CartModal() {
           {success && <p className="rounded-lg bg-emerald-50 p-2 text-sm text-emerald-700">{success}</p>}
 
           {step === 3 && reservation && (
-            <section className="space-y-4 rounded-xl border border-slate-200 p-6 shadow-sm">
+            <section className="space-y-3 rounded-2xl border border-slate-200 p-4 shadow-sm">
               {paymentStatus ? (
                 <PaymentSuccessPanel
                   paymentStatus={paymentStatus}
@@ -352,11 +336,6 @@ export function CartModal() {
                     seatCount: cart.seat_count,
                     totalAmount: grandTotal,
                     deliveryMethod: form.delivery_type,
-                  }}
-                  messages={{
-                    paid: checkoutSettings?.success_paid_message,
-                    pending: checkoutSettings?.success_pending_message,
-                    portalInstruction: checkoutSettings?.portal_instruction,
                   }}
                   onGoPortal={() => {
                     window.location.href = "/participant/login";
@@ -373,7 +352,7 @@ export function CartModal() {
                   <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm">
                     <p className="font-medium text-emerald-800">Secure Payment Powered by Stripe</p>
                     <p className="mt-1 text-xs text-emerald-700">
-                      Your payment is encrypted and protected.
+                      [ STRIPE ] Your payment is encrypted and protected.
                     </p>
                   </div>
                   {!showManualPayment && (
@@ -427,11 +406,6 @@ export function CartModal() {
                           </p>
                           {checkoutSettings?.manual_payment.instructions && (
                             <p className="mt-2 text-xs text-slate-600">{checkoutSettings.manual_payment.instructions}</p>
-                          )}
-                          {!!checkoutSettings?.manual_payment_notes && (
-                            <p className="mt-2 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-600">
-                              {checkoutSettings.manual_payment_notes}
-                            </p>
                           )}
                         </>
                       ) : (
@@ -501,7 +475,7 @@ export function CartModal() {
             )}
           </div>
         </div>
-        <aside className="sticky top-24 h-fit space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-6 text-sm shadow-sm">
+        <aside className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm shadow-sm h-fit">
           <h3 className="text-base font-semibold text-slate-900">Order Summary</h3>
           <p className="text-sm text-slate-700">{cart.class_title}</p>
           {pricePerSeat === 0 && (

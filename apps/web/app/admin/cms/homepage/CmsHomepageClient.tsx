@@ -3,24 +3,22 @@
 import { useEffect, useState } from "react";
 import { FormSection, FormLabel, TextInput, Textarea } from "@/components/dashboard";
 import { adminApi } from "@/lib/admin-api";
-import type { CmsHeroData, CmsUspData, CmsClassesData, CmsPromoData, CmsFloatingData } from "@/lib/admin-api";
+import type { CmsHeroData, CmsUspData, CmsClassesData, CmsPromoData } from "@/lib/admin-api";
 import { cn } from "@/lib/utils";
 
-type Tab = "hero" | "usp" | "classes" | "promo" | "floating";
+type Tab = "hero" | "usp" | "classes" | "promo";
 
 const tabs: { key: Tab; label: string }[] = [
   { key: "hero", label: "Hero" },
   { key: "usp", label: "USP" },
   { key: "classes", label: "Classes" },
   { key: "promo", label: "Promo" },
-  { key: "floating", label: "Floating Menu" },
 ];
 
 const emptyHero: CmsHeroData = { headline: "", subheadline: "", buttons: [], background_urls: "" };
 const emptyUsp: CmsUspData = { title: "", description: "", points: [], side_images_urls: "" };
 const emptyClasses: CmsClassesData = { title: "", description: "", button_text: "", button_url: "", max_items: 20 };
 const emptyPromo: CmsPromoData = { title: "", description: "", banner_urls: "", cards: [] };
-const emptyFloating: CmsFloatingData = { enabled: false, style_json: "", items: [] };
 
 export function CmsHomepageClient() {
   const [activeTab, setActiveTab] = useState<Tab>("hero");
@@ -28,7 +26,6 @@ export function CmsHomepageClient() {
   const [usp, setUsp] = useState<CmsUspData>(emptyUsp);
   const [classes, setClasses] = useState<CmsClassesData>(emptyClasses);
   const [promo, setPromo] = useState<CmsPromoData>(emptyPromo);
-  const [floating, setFloating] = useState<CmsFloatingData>(emptyFloating);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -42,7 +39,6 @@ export function CmsHomepageClient() {
         setUsp({ ...emptyUsp, ...d.usp });
         setClasses({ ...emptyClasses, ...d.classes });
         setPromo({ ...emptyPromo, ...d.promo });
-        setFloating({ ...emptyFloating, ...d.floating_menu });
       })
       .catch(() => setMessage({ type: "error", text: "Failed to load CMS data." }))
       .finally(() => setLoading(false));
@@ -52,7 +48,7 @@ export function CmsHomepageClient() {
     setMessage(null);
     setSaving(true);
     try {
-      await adminApi.updateCmsHomepage({ hero, usp, classes, promo, floating_menu: floating });
+      await adminApi.updateCmsHomepage({ hero, usp, classes, promo });
       setMessage({ type: "success", text: "Homepage saved." });
     } catch (err) {
       setMessage({ type: "error", text: err instanceof Error ? err.message : "Save failed." });
@@ -109,7 +105,6 @@ export function CmsHomepageClient() {
         {activeTab === "usp" && <UspTab data={usp} onChange={setUsp} />}
         {activeTab === "classes" && <ClassesTab data={classes} onChange={setClasses} />}
         {activeTab === "promo" && <PromoTab data={promo} onChange={setPromo} />}
-        {activeTab === "floating" && <FloatingTab data={floating} onChange={setFloating} />}
       </div>
     </div>
   );
@@ -270,95 +265,5 @@ function RepeaterButtons({ items, onChange }: { items: { label: string; url: str
       ))}
       <button onClick={() => onChange([...items, { label: "", url: "", color: "" }])} className="text-sm text-blue-600 hover:underline">+ Add button</button>
     </div>
-  );
-}
-
-function FloatingTab({ data, onChange }: { data: CmsFloatingData; onChange: (d: CmsFloatingData) => void }) {
-  const set = <K extends keyof CmsFloatingData>(k: K, v: CmsFloatingData[K]) => onChange({ ...data, [k]: v });
-  const items = data.items ?? [];
-
-  return (
-    <FormSection>
-      <div className="flex items-center gap-2">
-        <input
-          id="floating-enabled"
-          type="checkbox"
-          checked={!!data.enabled}
-          onChange={(e) => set("enabled", e.target.checked)}
-          className="h-4 w-4"
-        />
-        <label htmlFor="floating-enabled" className="text-sm font-medium text-gray-900">
-          Enable floating bottom menu on public site
-        </label>
-      </div>
-
-      <div>
-        <FormLabel>Menu items (exactly 4 for display)</FormLabel>
-        {items.map((item, i) => (
-          <div key={i} className="mt-2 grid grid-cols-3 gap-2 rounded-lg border border-gray-200 p-3">
-            <TextInput
-              placeholder="Icon hint (home/book/mail/whatsapp)"
-              value={item.icon}
-              onChange={(e) => {
-                const next = [...items];
-                next[i] = { ...next[i], icon: e.target.value };
-                set("items", next);
-              }}
-            />
-            <TextInput
-              placeholder="Label"
-              value={item.label}
-              onChange={(e) => {
-                const next = [...items];
-                next[i] = { ...next[i], label: e.target.value };
-                set("items", next);
-              }}
-            />
-            <div className="flex gap-2">
-              <TextInput
-                placeholder="URL (leave blank for WhatsApp button)"
-                value={item.url}
-                onChange={(e) => {
-                  const next = [...items];
-                  next[i] = { ...next[i], url: e.target.value };
-                  set("items", next);
-                }}
-                className="flex-1"
-              />
-              <button
-                type="button"
-                onClick={() => set("items", items.filter((_, j) => j !== i))}
-                className="text-sm text-red-500 hover:text-red-700"
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-        ))}
-        {items.length < 4 && (
-          <button
-            type="button"
-            onClick={() => set("items", [...items, { icon: "", label: "", url: "" }])}
-            className="mt-2 text-sm text-blue-600 hover:underline"
-          >
-            + Add item
-          </button>
-        )}
-        <p className="mt-2 text-xs text-gray-500">
-          Tip: First 3 items are links. 4th item is used as WhatsApp trigger in the public floating menu.
-        </p>
-      </div>
-
-      <div>
-        <FormLabel>Advanced style JSON (optional)</FormLabel>
-        <Textarea
-          rows={4}
-          value={data.style_json}
-          onChange={(e) => set("style_json", e.target.value)}
-          placeholder='{"bg":"#ffffff","text":"#0f172a"}'
-          className="mt-1 font-mono text-xs"
-        />
-      </div>
-    </FormSection>
   );
 }

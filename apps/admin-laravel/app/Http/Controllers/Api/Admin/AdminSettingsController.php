@@ -197,10 +197,6 @@ class AdminSettingsController extends Controller
                     'bank_code' => (string) ($settings->get('payment_delivery', 'manual_payment_bank_code', '') ?? ''),
                     'instructions' => (string) ($settings->get('payment_delivery', 'manual_payment_instructions', '') ?? ''),
                 ],
-                'success_paid_message' => (string) ($settings->get('payment_delivery', 'checkout_success_paid_message', '') ?? ''),
-                'success_pending_message' => (string) ($settings->get('payment_delivery', 'checkout_success_pending_message', '') ?? ''),
-                'manual_payment_notes' => (string) ($settings->get('payment_delivery', 'checkout_manual_payment_notes', '') ?? ''),
-                'portal_instruction' => (string) ($settings->get('payment_delivery', 'checkout_portal_instruction', '') ?? ''),
             ],
         ]);
     }
@@ -227,10 +223,6 @@ class AdminSettingsController extends Controller
             'manual_payment.account_number' => ['nullable', 'string', 'max:255'],
             'manual_payment.bank_code' => ['nullable', 'string', 'max:100'],
             'manual_payment.instructions' => ['nullable', 'string', 'max:3000'],
-            'success_paid_message' => ['nullable', 'string', 'max:5000'],
-            'success_pending_message' => ['nullable', 'string', 'max:5000'],
-            'manual_payment_notes' => ['nullable', 'string', 'max:3000'],
-            'portal_instruction' => ['nullable', 'string', 'max:3000'],
         ]);
 
         $delivery = $validated['delivery'] ?? [];
@@ -257,10 +249,6 @@ class AdminSettingsController extends Controller
         $settings->set('payment_delivery', 'manual_payment_account_number', (string) ($manual['account_number'] ?? ''), false, $actorId);
         $settings->set('payment_delivery', 'manual_payment_bank_code', (string) ($manual['bank_code'] ?? ''), false, $actorId);
         $settings->set('payment_delivery', 'manual_payment_instructions', (string) ($manual['instructions'] ?? ''), false, $actorId);
-        $settings->set('payment_delivery', 'checkout_success_paid_message', (string) ($validated['success_paid_message'] ?? ''), false, $actorId);
-        $settings->set('payment_delivery', 'checkout_success_pending_message', (string) ($validated['success_pending_message'] ?? ''), false, $actorId);
-        $settings->set('payment_delivery', 'checkout_manual_payment_notes', (string) ($validated['manual_payment_notes'] ?? ''), false, $actorId);
-        $settings->set('payment_delivery', 'checkout_portal_instruction', (string) ($validated['portal_instruction'] ?? ''), false, $actorId);
 
         return $this->paymentDeliverySettings($settings);
     }

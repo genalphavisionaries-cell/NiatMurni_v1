@@ -73,10 +73,6 @@ class PublicSettingsController extends Controller
                 'bank_code' => (string) ($settings->get('payment_delivery', 'manual_payment_bank_code', '') ?? ''),
                 'instructions' => (string) ($settings->get('payment_delivery', 'manual_payment_instructions', '') ?? ''),
             ],
-            'success_paid_message' => (string) ($settings->get('payment_delivery', 'checkout_success_paid_message', '') ?? ''),
-            'success_pending_message' => (string) ($settings->get('payment_delivery', 'checkout_success_pending_message', '') ?? ''),
-            'manual_payment_notes' => (string) ($settings->get('payment_delivery', 'checkout_manual_payment_notes', '') ?? ''),
-            'portal_instruction' => (string) ($settings->get('payment_delivery', 'checkout_portal_instruction', '') ?? ''),
         ];
 
         return response()->json([

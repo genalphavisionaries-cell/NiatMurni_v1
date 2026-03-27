@@ -15,7 +15,6 @@ type HeroClassItem = {
   slots: number;
   mode: string;
   language: string;
-  price_per_seat: number;
 };
 
 function formatClassDate(dateStr: string) {
@@ -107,7 +106,6 @@ function toHeroItem(c: ClassSession): HeroClassItem {
     slots: c.capacity ?? 15,
     mode: c.mode ?? "online", // pass raw value; modeLabel() normalises on display
     language: c.language ?? "B. Melayu",
-    price_per_seat: Number(c.price_per_seat ?? c.price ?? 0),
   };
 }
 
@@ -126,6 +124,8 @@ export default function UpcomingClassesSection() {
   const [mobileVisible, setMobileVisible] = useState(MOBILE_INITIAL);
   const [desktopVisible, setDesktopVisible] = useState(DESKTOP_INITIAL);
 
+  const [cartOpen, setCartOpen] = useState(false);
+  const [selectedCart, setSelectedCart] = useState<{ classId: string; qty: number } | null>(null);
   const { addToCart } = useCart();
 
   useEffect(() => {
@@ -174,7 +174,7 @@ export default function UpcomingClassesSection() {
 
   return (
     <section id="classes" className="scroll-mt-20 bg-[#EFF6FF] py-16 sm:py-20">
-      <div className="mx-auto max-w-[1100px] px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <h2 className="text-3xl font-bold tracking-tight text-[#0F172A] sm:text-4xl">
             Kelas Terkini
@@ -210,16 +210,8 @@ export default function UpcomingClassesSection() {
                         isNext={firstRecommendedId === c.id}
                         onAddToCart={(qty) => {
                           if (qty <= 0) return;
-                          const classSession = classById.get(c.id);
-                          if (!classSession) return;
-                          addToCart(
-                            {
-                              class_session_id: classSession.id,
-                              class_title: classSession.program_name,
-                              price_per_seat: classSession.price_per_seat ?? classSession.price ?? 0,
-                            },
-                            qty
-                          );
+                          setSelectedCart({ classId: c.id, qty });
+                          setCartOpen(true);
                         }}
                       />
                     ))}
@@ -237,16 +229,8 @@ export default function UpcomingClassesSection() {
                               isNext={firstRecommendedId === c.id}
                               onAddToCart={(qty) => {
                                 if (qty <= 0) return;
-                                const classSession = classById.get(c.id);
-                                if (!classSession) return;
-                                addToCart(
-                                  {
-                                    class_session_id: classSession.id,
-                                    class_title: classSession.program_name,
-                                    price_per_seat: classSession.price_per_seat ?? classSession.price ?? 0,
-                                  },
-                                  qty
-                                );
+                                setSelectedCart({ classId: c.id, qty });
+                                setCartOpen(true);
                               }}
                             />
                           ))}
@@ -298,7 +282,7 @@ export default function UpcomingClassesSection() {
               ) : null}
 
               {/* Secondary CTA */}
-            <div className="mt-10 flex flex-col items-center justify-center gap-3 md:flex-row">
+              <div className="mt-10 flex flex-col items-center justify-center gap-3 md:flex-row">
                 <Link
                   href="/#classes"
                   className="inline-flex items-center justify-center rounded-xl bg-[#2563EB] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1D4ED8]"
@@ -306,13 +290,81 @@ export default function UpcomingClassesSection() {
                   Pilih Kelas Lain
                 </Link>
                 <div className="hidden text-xs text-[#64748B] md:block">
-                  * Selepas proceed, anda akan terus ke checkout popup.
+                  * Daftar akan dibawa ke halaman booking.
                 </div>
               </div>
 
             </>
           )}
         </div>
+
+        {/* Cart popup */}
+        {cartOpen ? (
+          <div className="fixed inset-0 z-40 flex items-end justify-center p-4 sm:items-center">
+            <div className="pointer-events-none absolute inset-0 bg-black/40" />
+            <div className="pointer-events-auto relative z-50 w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl">
+              <div className="flex items-start justify-between gap-4 border-b border-[#E5E7EB] p-6">
+                <div>
+                  <h3 className="text-lg font-bold text-[#0F172A]">Keranjang Pendaftaran</h3>
+                  <p className="mt-1 text-sm text-[#64748B]">
+                    {selectedCart?.qty ?? 0} seat dipilih. Pilih kelas untuk teruskan checkout.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  aria-label="Close cart"
+                  className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm font-semibold text-[#0F172A] hover:bg-[#F8FAFC]"
+                  onClick={() => setCartOpen(false)}
+                >
+                  Tutup
+                </button>
+              </div>
+
+              <div className="p-6">
+                {selectedCart ? (
+                  <ul className="space-y-3">
+                    <li className="flex items-center justify-between gap-4 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-[#0F172A]">
+                          {classById.get(selectedCart.classId)?.program_name ?? `Kelas sesi #${selectedCart.classId}`}
+                        </p>
+                        <p className="text-xs text-[#64748B] mt-1">
+                          Kuantiti: {selectedCart.qty}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        className="inline-flex shrink-0 items-center justify-center rounded-lg bg-[#2563EB] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1D4ED8]"
+                        onClick={() => {
+                          const classSession = classById.get(selectedCart.classId);
+                          if (!classSession) return;
+                          console.log("Clicked Continue Checkout");
+                          addToCart(
+                            {
+                              class_session_id: classSession.id,
+                              class_title: classSession.program_name,
+                              price_per_seat: classSession.price_per_seat ?? classSession.price ?? 0,
+                            },
+                            selectedCart.qty
+                          );
+                          setCartOpen(false);
+                        }}
+                      >
+                        Continue Checkout
+                      </button>
+                    </li>
+                  </ul>
+                ) : (
+                  <p className="text-sm text-[#64748B]">Keranjang anda kosong.</p>
+                )}
+
+                <p className="mt-4 text-xs text-[#64748B]">
+                  Nota: Buat masa ini, “cart popup” adalah pilihan sementara untuk memudahkan pendaftaran.
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
     </section>
   );
@@ -345,10 +397,15 @@ function UpcomingClassCard({
   const languagePill = languageLabel(item.language);
   const showNearFull = seatsLeft > 0 && seatsLeft <= 14;
 
-  const seatColor = seatsLeft <= 5 ? "text-red-500" : seatsLeft <= 10 ? "text-orange-500" : "text-gray-700";
+  const seatColor =
+    seatsLeft <= 10
+      ? "text-red-500"
+      : seatsLeft <= 20
+      ? "text-orange-500"
+      : "text-gray-800";
 
   return (
-    <div className="rounded-xl border border-[#D1D5DB] bg-white p-4 shadow-sm transition hover:shadow-md">
+    <div className="rounded-xl border border-[#D1D5DB] bg-white px-2.5 py-2 shadow-[0_1px_3px_rgba(15,23,42,0.07)] transition hover:shadow-[0_3px_12px_rgba(15,23,42,0.10)]">
       {/* 2-COLUMN: left = date anchor + chips | right = seat + action */}
       <div className="flex items-stretch gap-3">
 
@@ -363,7 +420,6 @@ function UpcomingClassCard({
             <p className="mt-0.5 text-[11px] font-medium leading-tight text-[#6B7280]">
               {timeText}
             </p>
-            <p className="mt-1 text-sm font-semibold text-blue-700">RM {item.price_per_seat.toFixed(2)} / seat</p>
           </div>
 
           {/* CHIPS — below the date anchor */}
@@ -419,13 +475,13 @@ function UpcomingClassCard({
                 if (disabled) return;
                 onAddToCart(qty);
               }}
-              className={`inline-flex h-[30px] min-w-[5.75rem] shrink-0 items-center justify-center rounded-md px-2 text-[12px] font-bold leading-none shadow-sm transition ${
+              className={`inline-flex h-[26px] min-w-[3.75rem] shrink-0 items-center justify-center rounded-md px-2 text-[11px] font-bold leading-none shadow-sm transition ${
                 disabled
                   ? "cursor-not-allowed bg-slate-300 text-[#64748B]"
-                  : "bg-blue-700 text-white hover:bg-blue-800"
+                  : "bg-[#0F3B7B] text-white hover:bg-[#0b2e5f]"
               }`}
             >
-              Proceed
+              Daftar
             </button>
           </div>
           {qty <= 0 && seatsLeft > 0 ? (

@@ -9,16 +9,11 @@ type Props = {
     totalAmount: number;
     deliveryMethod: string;
   };
-  messages?: {
-    paid?: string;
-    pending?: string;
-    portalInstruction?: string;
-  };
   onGoPortal: () => void;
   onBackHome: () => void;
 };
 
-export default function PaymentSuccessPanel({ paymentStatus, summary, messages, onGoPortal, onBackHome }: Props) {
+export default function PaymentSuccessPanel({ paymentStatus, summary, onGoPortal, onBackHome }: Props) {
   const isPaid = paymentStatus === "paid";
 
   return (
@@ -30,8 +25,8 @@ export default function PaymentSuccessPanel({ paymentStatus, summary, messages, 
         </h3>
         <p className={`mt-2 text-sm ${isPaid ? "text-emerald-800" : "text-amber-800"}`}>
           {isPaid
-            ? (messages?.paid || "Thank you for your registration. Your booking has been confirmed and a confirmation email has been sent.")
-            : (messages?.pending || "We have received your payment receipt and it is under review. You will receive an email once approved.")}
+            ? "Thank you for your registration. Your booking has been confirmed and a confirmation email has been sent."
+            : "We have received your payment receipt and it is under review. You will receive an email once approved."}
         </p>
       </div>
 
@@ -45,7 +40,7 @@ export default function PaymentSuccessPanel({ paymentStatus, summary, messages, 
 
       <div className="rounded-xl border border-slate-200 bg-white p-4 text-center">
         <p className="text-sm font-semibold text-slate-900">Access Your Participant Portal</p>
-        <p className="mt-1 text-xs text-slate-600">{messages?.portalInstruction || "If first-time login, set your password using your registered email."}</p>
+        <p className="mt-1 text-xs text-slate-600">If first-time login, set your password using your registered email.</p>
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
           <button type="button" onClick={onGoPortal} className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white">
             Go to Participant Portal
