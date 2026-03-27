@@ -244,7 +244,7 @@ export async function fetchPublicCms(): Promise<PublicCmsPayload | null> {
   if (!base) return null;
   try {
     const res = await fetch(`${base}/api/public/cms`, {
-      next: { revalidate: 60 },
+      next: { revalidate: 10 },
       headers: { Accept: "application/json" },
     });
     if (!res.ok) return null;

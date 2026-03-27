@@ -12,8 +12,12 @@ import {
   CmsFooter,
   CmsHomepageRenderer,
 } from "@/components/home";
-import { getHomepageSettings } from "@/lib/homepage-settings";
-import { fetchPublicCms, cmsString } from "@/lib/public-cms";
+import {
+  defaultHomepageSettings,
+  getHomepageSettings,
+  type HomepageSettings,
+} from "@/lib/homepage-settings";
+import { fetchPublicCms, cmsString, type PublicCmsPayload } from "@/lib/public-cms";
 import { cmsFlatNavToLinks, mergePublicCmsForHome } from "@/lib/merge-public-cms";
 import PublicFloatingLayer from "@/components/public/PublicFloatingLayer";
 
@@ -22,7 +26,12 @@ const DEFAULT_DESC =
   "KKM Food Handling & Training — professional food safety courses for food handlers in Malaysia.";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const cms = await fetchPublicCms();
+  let cms: PublicCmsPayload | null = null;
+  try {
+    cms = await fetchPublicCms();
+  } catch (e) {
+    console.error("CMS fetch failed:", e);
+  }
   const title =
     cmsString(cms?.seo.homepage_seo_title) ??
     cmsString(cms?.seo.default_seo_title) ??
@@ -47,10 +56,28 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
-  const [settings, cms] = await Promise.all([
+  console.time("homepage");
+  let settings: HomepageSettings = defaultHomepageSettings;
+  let cms: PublicCmsPayload | null = null;
+
+  const [settingsSettled, cmsSettled] = await Promise.allSettled([
     getHomepageSettings(),
     fetchPublicCms(),
   ]);
+
+  if (settingsSettled.status === "fulfilled") {
+    settings = settingsSettled.value;
+  } else {
+    console.error("Homepage settings fetch failed:", settingsSettled.reason);
+  }
+
+  if (cmsSettled.status === "fulfilled") {
+    cms = cmsSettled.value;
+  } else {
+    console.error("CMS fetch failed:", cmsSettled.reason);
+  }
+
+  console.timeEnd("homepage");
   const ctx = mergePublicCmsForHome(settings, cms);
 
   const cmsKeys = new Set(

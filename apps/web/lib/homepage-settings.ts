@@ -234,7 +234,7 @@ export async function getHomepageSettings(): Promise<HomepageSettings> {
   if (!ADMIN_API?.trim()) return defaultHomepageSettings;
   try {
     const res = await fetch(`${ADMIN_API.replace(/\/$/, "")}/api/homepage-settings`, {
-      next: { revalidate: 60 },
+      next: { revalidate: 10 },
     });
     if (!res.ok) return defaultHomepageSettings;
     const data = (await res.json()) as Partial<HomepageSettings>;
