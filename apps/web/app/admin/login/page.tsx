@@ -11,7 +11,11 @@ import { Lock, Mail, ArrowRight, Shield, Chrome } from "lucide-react";
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") ?? "/admin";
+  const requestedRedirect = searchParams.get("redirect");
+  const redirect =
+    requestedRedirect && requestedRedirect.startsWith("/admin")
+      ? requestedRedirect
+      : "/admin";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
