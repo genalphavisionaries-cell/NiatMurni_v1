@@ -27,25 +27,38 @@ export default function HeroSection({
   section: PublicCmsHomepageSection;
   site: PublicCmsSite;
 }) {
+  const extraTitle =
+    extraString(section.extra_data, "headline") ??
+    extraString(section.extra_data, "title");
+  const extraSubtitle =
+    extraString(section.extra_data, "subheadline") ??
+    extraString(section.extra_data, "subtitle");
   const baseTitle =
     cmsString(section.title) ??
+    extraTitle ??
     cmsString(site.site_tagline) ??
     "Food Safety Training";
   const baseSubtitle =
     cmsString(section.subtitle) ??
+    extraSubtitle ??
     cmsString(section.description) ??
     "KKM-recognised training for food handlers — online or in person.";
 
   const basePrimaryLabel =
     cmsString(section.button_primary_label) ??
+    extraString(section.extra_data, "cta_primary_label") ??
     cmsString(site.primary_cta_label) ??
     "Register";
   const basePrimaryUrl =
     safeHref(section.button_primary_url) ??
+    safeHref(extraString(section.extra_data, "cta_primary_url")) ??
     safeHref(site.primary_cta_url) ??
     "/#classes";
   const baseSecondaryLabel = cmsString(section.button_secondary_label) ?? "View classes";
-  const baseSecondaryUrl = safeHref(section.button_secondary_url) ?? "/#classes";
+  const baseSecondaryUrl =
+    safeHref(section.button_secondary_url) ??
+    safeHref(extraString(section.extra_data, "cta_secondary_url")) ??
+    "/#classes";
 
   const overlayOpacity = Number(extraString(section.extra_data, "overlay_opacity") ?? "0.25");
   const badges = parseJsonSafe<HeroBadge[]>(

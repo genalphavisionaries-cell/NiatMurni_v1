@@ -57,31 +57,43 @@ function Avatar({ name }: { name: string }) {
 }
 
 export default function TestimonialsSection({ section }: { section: PublicCmsHomepageSection }) {
-  const title = cmsString(section.title) ?? "Kepercayaan & Ulasan";
-  const subtitle = cmsString(section.subtitle) ?? cmsString(section.description);
+  const rawTitle =
+    cmsString(section.title) ??
+    extraString(section.extra_data, "title") ??
+    extraString(section.extra_data, "headline");
+  const title = rawTitle ?? "Kepercayaan & Ulasan";
+  const subtitle =
+    cmsString(section.subtitle) ??
+    cmsString(section.description) ??
+    extraString(section.extra_data, "subtitle");
 
-  const items =
-    parseJsonSafe<Testimonial[]>(extraString(section.extra_data, "items_json")) ?? [];
+  const itemsJson =
+    extraString(section.extra_data, "items_json") ??
+    extraString(section.extra_data, "testimonials_json");
+  const items = parseJsonSafe<Testimonial[]>(itemsJson) ?? [];
   const visible = items.filter((t) => cmsString(t?.name) && cmsString(t?.review));
 
   type Summary = { rating?: number; count?: number };
-  const summaryJson = parseJsonSafe<Summary>(
-    extraString(section.extra_data, "review_summary_json")
-  );
+  const summaryJson =
+    parseJsonSafe<Summary>(extraString(section.extra_data, "review_summary_json")) ??
+    parseJsonSafe<Summary>(extraString(section.extra_data, "rating_json"));
   const summaryRating =
     typeof summaryJson?.rating === "number" && summaryJson.rating > 0
       ? summaryJson.rating
-      : 4.8;
+      : Number(extraString(section.extra_data, "rating_value") ?? "") || null;
   const summaryCount =
     typeof summaryJson?.count === "number" && summaryJson.count > 0
       ? summaryJson.count
-      : 2500;
+      : Number(extraString(section.extra_data, "rating_count") ?? "") || null;
 
-  const brands =
-    parseJsonSafe<string[]>(extraString(section.extra_data, "brands_json")) ??
-    ["Google Reviews", "KKM", "Dipercayai", "Kualiti", "Respons Pantas", "Seluruh Malaysia"];
+  const brandsJson =
+    extraString(section.extra_data, "brands_json") ??
+    extraString(section.extra_data, "logos_json");
+  const brands = parseJsonSafe<string[]>(brandsJson) ?? [];
 
-  if (!cmsString(title) && !subtitle && !visible.length) return null;
+  const hasSummary = typeof summaryRating === "number" || typeof summaryCount === "number";
+  const hasContent = !!rawTitle || !!subtitle || visible.length > 0 || brands.length > 0 || hasSummary;
+  if (!hasContent) return null;
 
   return (
     <section id="testimonials" className="bg-white py-16 sm:py-20">
@@ -100,27 +112,30 @@ export default function TestimonialsSection({ section }: { section: PublicCmsHom
         </div>
 
         {/* ── Google rating summary card ── */}
-        <div className="mt-10 flex justify-center">
-          <div className="flex w-full max-w-2xl flex-col items-center gap-4 rounded-2xl border border-slate-200 bg-white px-6 py-5 shadow-sm sm:flex-row sm:gap-6">
+        {hasSummary ? (
+          <div className="mt-10 flex justify-center">
+            <div className="flex w-full max-w-2xl flex-col items-center gap-4 rounded-2xl border border-slate-200 bg-white px-6 py-5 shadow-sm sm:flex-row sm:gap-6">
 
-            {/* Google badge */}
-            <GoogleBadge />
+              {/* Google badge */}
+              <GoogleBadge />
 
             {/* Divider */}
             <div className="hidden h-8 w-px bg-slate-200 sm:block" />
 
             {/* Rating number + stars */}
-            <div className="flex items-center gap-3">
-              <span className="text-4xl font-extrabold leading-none text-[#0F172A]">
-                {summaryRating.toFixed(1)}
-              </span>
-              <div className="flex flex-col">
-                <Stars rating={summaryRating} />
-                <span className="mt-0.5 text-[11px] text-[#64748B]">
-                  {summaryCount.toLocaleString("en-US")} ulasan
+              <div className="flex items-center gap-3">
+                <span className="text-4xl font-extrabold leading-none text-[#0F172A]">
+                  {(summaryRating ?? 0).toFixed(1)}
                 </span>
+                <div className="flex flex-col">
+                  <Stars rating={summaryRating ?? 0} />
+                  {typeof summaryCount === "number" ? (
+                    <span className="mt-0.5 text-[11px] text-[#64748B]">
+                      {summaryCount.toLocaleString("en-US")} ulasan
+                    </span>
+                  ) : null}
+                </div>
               </div>
-            </div>
 
             {/* Divider */}
             <div className="hidden h-8 w-px bg-slate-200 sm:block" />
@@ -137,27 +152,30 @@ export default function TestimonialsSection({ section }: { section: PublicCmsHom
                 <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </Link>
+            </div>
           </div>
-        </div>
+        ) : null}
 
         {/* ── Brand trust marquee ── */}
-        <div className="mt-6 overflow-hidden">
-          <div
-            className="flex gap-3 animate-[marquee_22s_linear_infinite]"
-            style={{ width: "max-content" }}
-          >
-            {Array.from({ length: 2 }).flatMap((_, rep) =>
-              brands.map((b, i) => (
-                <div
-                  key={`${rep}-${b}-${i}`}
-                  className="flex h-9 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-xs font-medium text-[#475569] whitespace-nowrap shadow-sm"
-                >
-                  {b}
-                </div>
-              ))
-            )}
+        {brands.length ? (
+          <div className="mt-6 overflow-hidden">
+            <div
+              className="flex gap-3 animate-[marquee_22s_linear_infinite]"
+              style={{ width: "max-content" }}
+            >
+              {Array.from({ length: 2 }).flatMap((_, rep) =>
+                brands.map((b, i) => (
+                  <div
+                    key={`${rep}-${b}-${i}`}
+                    className="flex h-9 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-xs font-medium text-[#475569] whitespace-nowrap shadow-sm"
+                  >
+                    {b}
+                  </div>
+                ))
+              )}
+            </div>
           </div>
-        </div>
+        ) : null}
 
         <style>{`
           @keyframes marquee {
@@ -170,7 +188,7 @@ export default function TestimonialsSection({ section }: { section: PublicCmsHom
         {visible.length ? (
           <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {visible.slice(0, 9).map((t, idx) => {
-              const rating = typeof t.rating === "number" ? t.rating : summaryRating;
+              const rating = typeof t.rating === "number" ? t.rating : summaryRating ?? 5;
               return (
                 <div
                   key={`${t.name}-${idx}`}

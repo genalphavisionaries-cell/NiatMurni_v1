@@ -1,5 +1,8 @@
+"use client";
+
 import type { HomepageSettings } from "@/lib/homepage-settings";
 import type { PublicCmsPayload, PublicCmsHomepageSection } from "@/lib/public-cms";
+import { useEffect } from "react";
 
 import HeroSection from "./sections/HeroSection";
 import WhyChooseUsSection from "./sections/WhyChooseUsSection";
@@ -11,6 +14,10 @@ import ContactSection from "../ContactSection";
 
 export type SupportedCmsSectionKey =
   | "hero"
+  | "usp"
+  | "trust"
+  | "promo"
+  | "footer"
   | "about"
   | "features"
   | "programs"
@@ -23,6 +30,10 @@ export type SupportedCmsSectionKey =
 
 const supported = new Set<string>([
   "hero",
+  "usp",
+  "trust",
+  "promo",
+  "footer",
   "about",
   "features",
   "programs",
@@ -49,6 +60,14 @@ export default function CmsHomepageRenderer({
   cms: PublicCmsPayload;
   legacy: HomepageSettings;
 }) {
+  useEffect(() => {
+    // Debug aid for CMS mapping verification in browser devtools.
+    if (process.env.NODE_ENV !== "production") {
+      // eslint-disable-next-line no-console
+      console.log("[CMS] /api/public/cms payload:", cms);
+    }
+  }, [cms]);
+
   const sections = (cms.homepage_sections ?? [])
     .filter((s) => supported.has(normalizeKey(s.section_key)))
     .slice()
@@ -66,9 +85,9 @@ export default function CmsHomepageRenderer({
   };
 
   const hero = first("hero");
-  const why = first("why_choose_us") ?? first("features");
-  const testimonials = first("testimonials");
-  const cta = first("cta");
+  const why = first("why_choose_us") ?? first("features") ?? first("usp");
+  const testimonials = first("testimonials") ?? first("trust");
+  const cta = first("cta") ?? first("promo");
   const contactSection = first("contact");
 
   const hasAny =
