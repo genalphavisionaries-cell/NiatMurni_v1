@@ -3,11 +3,8 @@ import type { NextRequest } from "next/server";
 import { ADMIN_SESSION_COOKIE, PARTICIPANT_SESSION_COOKIE } from "@/lib/auth";
 
 /**
- * WARNING: Do not mix admin and dashboard routing/auth rules.
- * Route namespaces are isolated permanently:
- * - /admin/* => admin auth only (admin_session)
- * - /dashboard/* => participant auth only (participant_session)
- * - all other public routes => no forced redirect
+ * Protect /admin: redirect to /admin/login if not authenticated.
+ * Admin panel is served at https://niatmurniacademy.com/admin (Next.js).
  */
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
