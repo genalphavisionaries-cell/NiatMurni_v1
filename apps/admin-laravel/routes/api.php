@@ -51,35 +51,12 @@ Route::post('/admin/reset-password', [App\Http\Controllers\Api\AdminAuthControll
     ->middleware('throttle:10,1')
     ->name('api.admin.reset-password');
 
-// Participant portal APIs (all protected by Sanctum)
+// Participant portal auth and certificate access
+Route::post('/participant/login', [App\Http\Controllers\Api\ParticipantAuthController::class, 'login'])->name('api.participant.login');
 Route::middleware('auth:sanctum')->prefix('participant')->name('api.participant.')->group(function () {
-    // Backward-compatible alias; recommends /api/auth/logout for new flows.
     Route::post('/logout', [App\Http\Controllers\Api\ParticipantAuthController::class, 'logout'])->name('logout');
     Route::get('/me', [App\Http\Controllers\Api\ParticipantAuthController::class, 'me'])->name('me');
-    Route::get('/bookings', [App\Http\Controllers\Api\ParticipantBookingController::class, 'index'])->name('bookings.index');
-    Route::get('/bookings/{id}', [App\Http\Controllers\Api\ParticipantBookingController::class, 'show'])->name('bookings.show');
     Route::get('/certificates', [App\Http\Controllers\Api\ParticipantCertificatesController::class, 'index'])->name('certificates.index');
-    Route::get('/payments', [App\Http\Controllers\Api\ParticipantPaymentController::class, 'index'])->name('payments.index');
-    Route::get('/support-tickets', [App\Http\Controllers\Api\ParticipantSupportTicketController::class, 'index'])->name('support-tickets.index');
-    Route::post('/support-tickets', [App\Http\Controllers\Api\ParticipantSupportTicketController::class, 'store'])->name('support-tickets.store');
-    Route::post('/support-tickets/{id}/reply', [App\Http\Controllers\Api\ParticipantSupportTicketController::class, 'reply'])->name('support-tickets.reply');
-});
-
-// Participant dashboard auth APIs (Sanctum cookie-based)
-Route::prefix('auth')->name('api.auth.')->group(function () {
-    Route::post('/first-time-login/request', [App\Http\Controllers\Api\AuthController::class, 'requestFirstTimeLogin'])
-        ->middleware('throttle:5,1')
-        ->name('first-time-login.request');
-    Route::post('/first-time-login/verify', [App\Http\Controllers\Api\AuthController::class, 'verifyFirstTimeLogin'])
-        ->middleware('throttle:10,1')
-        ->name('first-time-login.verify');
-    Route::post('/login', [App\Http\Controllers\Api\AuthController::class, 'login'])
-        ->middleware('throttle:10,1')
-        ->name('login');
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::post('/logout', [App\Http\Controllers\Api\AuthController::class, 'logout'])->name('logout');
-        Route::get('/me', [App\Http\Controllers\Api\AuthController::class, 'me'])->name('me');
-    });
 });
 
 Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureAdminAccess::class])->prefix('admin')->name('api.admin.')->group(function () {
@@ -168,13 +145,6 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureAdminAccess::class
     Route::middleware('module:participants')->group(function () {
         Route::get('/participants', [App\Http\Controllers\Api\Admin\ParticipantController::class, 'index'])->name('participants.index');
         Route::get('/participants/{participant}', [App\Http\Controllers\Api\Admin\ParticipantController::class, 'show'])->name('participants.show');
-        Route::post('/participants/{id}/reset-password', [App\Http\Controllers\Api\Admin\ParticipantController::class, 'resetPassword'])->name('participants.reset-password');
-        Route::post('/participants/{id}/resend-verification', [App\Http\Controllers\Api\Admin\ParticipantController::class, 'resendVerification'])->name('participants.resend-verification');
-        Route::post('/participants/{id}/disable', [App\Http\Controllers\Api\Admin\ParticipantController::class, 'disable'])->name('participants.disable');
-        Route::get('/support-tickets', [App\Http\Controllers\Api\Admin\SupportTicketController::class, 'index'])->name('support-tickets.index');
-        Route::get('/support-tickets/{id}', [App\Http\Controllers\Api\Admin\SupportTicketController::class, 'show'])->name('support-tickets.show');
-        Route::post('/support-tickets/{id}/reply', [App\Http\Controllers\Api\Admin\SupportTicketController::class, 'reply'])->name('support-tickets.reply');
-        Route::post('/support-tickets/{id}/close', [App\Http\Controllers\Api\Admin\SupportTicketController::class, 'close'])->name('support-tickets.close');
     });
 
     // Employers (for dropdowns)

@@ -166,41 +166,6 @@ export type Voucher = {
   applicable_class_session?: ClassSession | null;
 };
 
-export type AdminSupportTicketListItem = {
-  id: number;
-  subject: string;
-  message: string;
-  status: "open" | "closed";
-  created_at: string | null;
-  participant: {
-    id: number;
-    full_name: string;
-    email: string | null;
-    phone: string | null;
-  } | null;
-};
-
-export type AdminSupportTicketDetail = {
-  id: number;
-  subject: string;
-  message: string;
-  status: "open" | "closed";
-  created_at: string | null;
-  participant: {
-    id: number;
-    full_name: string;
-    email: string | null;
-    phone: string | null;
-  } | null;
-  replies: Array<{
-    id: number;
-    message: string;
-    sender: "participant" | "admin";
-    sender_name?: string | null;
-    created_at: string | null;
-  }>;
-};
-
 async function request<T>(
   path: string,
   options: RequestInit & { params?: Record<string, string> } = {}
@@ -266,45 +231,11 @@ export type ClassSession = {
 export type Participant = {
   id: number;
   full_name: string;
-  identity_no?: string | null;
-  nric_passport?: string | null;
+  nric_passport: string;
   email: string | null;
   phone: string | null;
   employer_id: number | null;
-  created_at?: string | null;
   employer?: { id: number; name: string } | null;
-};
-
-export type ParticipantDetail = {
-  profile: {
-    id: number;
-    full_name: string;
-    identity_no: string | null;
-    email: string | null;
-    phone: string | null;
-    created_at: string | null;
-    employer?: { id: number; name: string } | null;
-  };
-  bookings: Array<{
-    id: number;
-    class_name: string | null;
-    status: string;
-    payment_status: string | null;
-    created_at: string | null;
-  }>;
-  payments: Array<{
-    id: number;
-    amount: number;
-    status: string;
-    payment_date: string | null;
-    receipt_url?: string | null;
-  }>;
-  certificates: Array<{
-    id: number;
-    certificate_number: string | null;
-    issue_date: string | null;
-    status: string;
-  }>;
 };
 
 export type Booking = {
@@ -663,44 +594,18 @@ export const adminApi = {
   },
 
   // Participants
-  getParticipants(params?: { search?: string; per_page?: number; page?: number }): Promise<Paginated<Participant>> {
+  getParticipants(params?: { search?: string; per_page?: number }): Promise<Paginated<Participant>> {
     const p: Record<string, string> = {};
     if (params?.search) p.search = params.search;
     if (params?.per_page != null) p.per_page = String(params.per_page);
-    if (params?.page != null) p.page = String(params.page);
     return request<Paginated<Participant>>("/api/admin/participants", { params: p });
   },
-  getParticipant(id: number): Promise<ParticipantDetail> {
-    return request<ParticipantDetail>(`/api/admin/participants/${id}`);
+  getParticipant(id: number): Promise<Participant> {
+    return request<Participant>(`/api/admin/participants/${id}`);
   },
 
   // Employers (dropdown)
   getEmployers(params?: { search?: string }): Promise<Paginated<{ id: number; name: string }>> {
     return request<Paginated<{ id: number; name: string }>>("/api/admin/employers", { params: params as Record<string, string> });
-  },
-
-  // Support tickets (admin)
-  getSupportTickets(params?: { status?: "open" | "closed" }): Promise<AdminSupportTicketListItem[]> {
-    const p: Record<string, string> = {};
-    if (params?.status) p.status = params.status;
-    return request<AdminSupportTicketListItem[]>("/api/admin/support-tickets", { params: p });
-  },
-  getSupportTicket(id: number): Promise<AdminSupportTicketDetail> {
-    return request<AdminSupportTicketDetail>(`/api/admin/support-tickets/${id}`);
-  },
-  replySupportTicket(id: number, message: string): Promise<{
-    id: number;
-    message: string;
-    sender: "admin";
-    sender_name?: string | null;
-    created_at: string | null;
-  }> {
-    return request(`/api/admin/support-tickets/${id}/reply`, {
-      method: "POST",
-      body: JSON.stringify({ message }),
-    });
-  },
-  closeSupportTicket(id: number): Promise<{ id: number; status: "closed"; message: string }> {
-    return request(`/api/admin/support-tickets/${id}/close`, { method: "POST" });
   },
 };

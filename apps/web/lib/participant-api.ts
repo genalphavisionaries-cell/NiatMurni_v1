@@ -14,8 +14,9 @@ function getBaseURL(): string {
 }
 
 export type ParticipantCertificate = {
-  id: number;
+  certificate_number: string;
   program_name: string;
+  issued_at: string | null;
   issue_date: string | null;
   download_url: string;
 };
@@ -61,11 +62,7 @@ async function request<T>(
 }
 
 export async function fetchParticipantCertificates(): Promise<ParticipantCertificatesResponse> {
-  const data = await request<ParticipantCertificatesResponse | ParticipantCertificate[]>("/api/participant/certificates");
-  if (Array.isArray(data)) {
-    return { certificates: data };
-  }
-  return { certificates: Array.isArray(data.certificates) ? data.certificates : [] };
+  return request<ParticipantCertificatesResponse>("/api/participant/certificates");
 }
 
 export async function participantLogin(

@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Participant;
 use App\Models\User;
-use App\Support\Concerns\HasAuthenticatedUser;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -13,8 +12,6 @@ use Illuminate\Validation\ValidationException;
 
 class ParticipantAuthController extends Controller
 {
-    use HasAuthenticatedUser;
-
     public const COOKIE_NAME = 'participant_token';
 
     /** Non-HttpOnly cookie so Next.js can check if participant is logged in. */
@@ -93,7 +90,7 @@ class ParticipantAuthController extends Controller
      */
     public function me(Request $request): JsonResponse
     {
-        $user = $this->getAuthenticatedUser();
+        $user = $request->user();
         if (! $user || $user->role !== 'participant') {
             return response()->json(['message' => 'Unauthenticated'], 401);
         }
