@@ -36,12 +36,23 @@ function UspCard({ item }: { item: Item }) {
 }
 
 export default function WhyChooseUsSection({ section }: { section: PublicCmsHomepageSection }) {
-  const title = cmsString(section.title) ?? "Kenapa Kami";
-  const desc1 = cmsString(section.subtitle);
-  const desc2 = cmsString(section.description);
+  const rawTitle =
+    cmsString(section.title) ??
+    extraString(section.extra_data, "title") ??
+    extraString(section.extra_data, "headline");
+  const title = rawTitle ?? "Kenapa Kami";
+  const desc1 =
+    cmsString(section.subtitle) ??
+    extraString(section.extra_data, "subtitle");
+  const desc2 =
+    cmsString(section.description) ??
+    extraString(section.extra_data, "description");
 
-  const items =
-    parseJsonSafe<Item[]>(extraString(section.extra_data, "items_json")) ?? [];
+  const itemsJson =
+    extraString(section.extra_data, "items_json") ??
+    extraString(section.extra_data, "usp_items_json") ??
+    extraString(section.extra_data, "list_json");
+  const items = parseJsonSafe<Item[]>(itemsJson) ?? [];
 
   const visibleItems = items
     .filter((i) => cmsString(i?.title))
@@ -66,7 +77,9 @@ export default function WhyChooseUsSection({ section }: { section: PublicCmsHome
     return () => clearInterval(t);
   }, [bannerImages.length]);
 
-  if (!cmsString(title) && !visibleItems.length && !bannerImages.length) return null;
+  const hasContent =
+    !!rawTitle || !!desc1 || !!desc2 || visibleItems.length > 0 || bannerImages.length > 0;
+  if (!hasContent) return null;
 
   return (
     <section id="why_choose_us" className="bg-white py-16 sm:py-20">
