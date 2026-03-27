@@ -254,9 +254,9 @@ export type Booking = {
 export const adminApi = {
   login(email: string, password: string): Promise<LoginResponse> {
     const data = { email, password };
-    const API_BASE = process.env.NEXT_PUBLIC_API_URL;
-    console.log("LOGIN API:", `${API_BASE}/api/admin/login`);
-    return fetch(`${API_BASE}/api/admin/login`, {
+    const base = getApiBase();
+    console.log("LOGIN API:", `${base}/api/admin/login`);
+    return fetch(`${base}/api/admin/login`, {
       method: "POST",
       credentials: "include",
       headers: {

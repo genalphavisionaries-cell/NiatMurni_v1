@@ -3,9 +3,11 @@
  * Backend participant endpoints remain unchanged during frontend migration.
  */
 
+import { getApiBase } from "./config";
+
 function getBaseURL(): string {
-  const env = process.env.NEXT_PUBLIC_API_URL;
-  if (env && (env.startsWith("http://") || env.startsWith("https://"))) return env.replace(/\/$/, "");
+  const base = getApiBase();
+  if (base && (base.startsWith("http://") || base.startsWith("https://"))) return base;
   return "";
 }
 

@@ -1,12 +1,14 @@
 /**
  * Public structured CMS from Laravel GET /api/public/cms.
- * Base URL: NEXT_PUBLIC_API_URL only.
+ * Base URL: same as `getApiBase()` (NEXT_PUBLIC_API_URL without trailing /api).
  */
 
+import { getApiBase } from "./config";
+
 export const getPublicApiBase = (): string => {
-  const env = process.env.NEXT_PUBLIC_API_URL;
-  if (env?.trim() && (env.startsWith("http://") || env.startsWith("https://"))) {
-    return env.replace(/\/$/, "");
+  const base = getApiBase();
+  if (base && (base.startsWith("http://") || base.startsWith("https://"))) {
+    return base;
   }
   return "";
 };

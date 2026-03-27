@@ -3,6 +3,8 @@
  * All sections are optional; defaults used when missing.
  */
 
+import { getApiBase } from "./config";
+
 export type NavLink = {
   label: string;
   href: string;
@@ -209,8 +211,6 @@ export const defaultHomepageSettings: HomepageSettings = {
   },
 };
 
-const ADMIN_API = process.env.NEXT_PUBLIC_API_URL;
-
 function deepMerge<T extends object>(defaults: T, overrides: Partial<T> | null | undefined): T {
   if (overrides == null || typeof overrides !== "object") return defaults;
   const out = { ...defaults };
@@ -231,9 +231,10 @@ function deepMerge<T extends object>(defaults: T, overrides: Partial<T> | null |
  * Falls back to defaultHomepageSettings on failure or when env is not set.
  */
 export async function getHomepageSettings(): Promise<HomepageSettings> {
-  if (!ADMIN_API?.trim()) return defaultHomepageSettings;
+  const base = getApiBase();
+  if (!base) return defaultHomepageSettings;
   try {
-    const res = await fetch(`${ADMIN_API.replace(/\/$/, "")}/api/homepage-settings`, {
+    const res = await fetch(`${base}/api/homepage-settings`, {
       next: { revalidate: 10 },
     });
     if (!res.ok) return defaultHomepageSettings;

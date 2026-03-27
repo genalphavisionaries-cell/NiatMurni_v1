@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+import { getApiBase } from "./config";
 
 export type ClassSession = {
   id: number;
@@ -28,10 +28,10 @@ const MISSING_BACKEND_PREFIX = "[backend missing]";
 
 /**
  * Build absolute URL for Laravel `routes/api.php` paths (e.g. `/api/public/...`).
- * When `NEXT_PUBLIC_API_URL` already ends with `/api`, do not append `/api` again.
+ * Canonical env is `getApiBase()` without `/api`; this still handles a trailing `/api` safely.
  */
 function laravelApiUrl(pathFromRoot: string): string {
-  const base = (API_BASE ?? "").replace(/\/$/, "");
+  const base = getApiBase();
   if (!base) return "";
   const p = pathFromRoot.startsWith("/") ? pathFromRoot : `/${pathFromRoot}`;
   if (base.endsWith("/api")) {
@@ -126,12 +126,10 @@ function logMissingBackendApi(endpoint: string, status?: number) {
 }
 
 export async function fetchUpcomingClasses(): Promise<ClassSession[]> {
-  console.log(
-    "API URL:",
-    `${process.env.NEXT_PUBLIC_API_URL ?? ""}/api/public/classes/upcoming`
-  );
+  const canonicalUrl = `${getApiBase()}/api/public/classes/upcoming`;
+  console.log("API URL:", canonicalUrl);
 
-  if (!API_BASE) {
+  if (!getApiBase()) {
     logMissingBackendApi("/api/public/classes/upcoming");
     return [];
   }
@@ -171,7 +169,7 @@ export async function fetchUpcomingClasses(): Promise<ClassSession[]> {
 }
 
 export async function fetchClass(id: string): Promise<ClassSession | null> {
-  if (!API_BASE) {
+  if (!getApiBase()) {
     logMissingBackendApi(`/api/public/classes/${id}`);
     return null;
   }
@@ -247,7 +245,7 @@ export type PublicCheckoutSettings = {
 export async function registerForClass(
   payload: RegisterPayload
 ): Promise<{ redirect_url: string }> {
-  const res = await fetch(`${API_BASE}/api/register`, {
+  const res = await fetch(laravelApiUrl("/api/register"), {
     method: "POST",
     headers: { "Content-Type": "application/json", "Accept": "application/json" },
     body: JSON.stringify(payload),
@@ -308,7 +306,7 @@ export async function submitManualPaymentForBooking(
   form.set("receipt", receipt);
   form.set("payment_method", "manual");
 
-  const res = await fetch(`${API_BASE}/api/bookings/${bookingId}/manual-payment`, {
+  const res = await fetch(laravelApiUrl(`/api/bookings/${bookingId}/manual-payment`), {
     method: "POST",
     headers: { Accept: "application/json" },
     body: form,
@@ -383,7 +381,7 @@ export type BookingResponse = {
 };
 
 export async function fetchBooking(id: string): Promise<BookingResponse | null> {
-  if (!API_BASE) {
+  if (!getApiBase()) {
     logMissingBackendApi(`/api/public/bookings/${id}`);
     return null;
   }
