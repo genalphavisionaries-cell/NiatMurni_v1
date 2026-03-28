@@ -51,25 +51,35 @@ class CmsValidationService
     public function validateUspItems(array $points): array
     {
         $validated = [];
-        
+
         foreach ($points as $point) {
-            if (!is_array($point)) {
-                continue; // Skip non-array items
+            if (! is_array($point)) {
+                continue;
             }
-            
+
             $title = is_string($point['title'] ?? null) ? trim($point['title']) : '';
-            if (empty($title)) {
-                continue; // Skip items without title
+            $description = is_string($point['description'] ?? null) ? trim($point['description']) : '';
+            $icon = is_string($point['icon'] ?? null) ? trim($point['icon']) : '';
+            $backgroundColor = is_string($point['background_color'] ?? null) ? trim($point['background_color']) : '';
+            $iconAlt = is_string($point['icon_alt'] ?? null) ? trim($point['icon_alt']) : '';
+
+            $hasAny = $title !== '' || $description !== '' || $icon !== '' || $backgroundColor !== '' || $iconAlt !== '';
+            if (! $hasAny) {
+                continue;
+            }
+
+            if ($title === '') {
+                continue;
             }
 
             $validated[] = [
                 'title' => $title,
-                'description' => is_string($point['description'] ?? null) ? trim($point['description']) : '',
-                'background_color' => is_string($point['background_color'] ?? null) ? trim($point['background_color']) : '',
-                'icon_alt' => is_string($point['icon_alt'] ?? null) ? trim($point['icon_alt']) : '',
+                'description' => $description !== '' ? $description : null,
+                'icon_url' => $this->validateUrl($icon !== '' ? $icon : null),
+                'background_color' => $backgroundColor,
+                'icon_alt' => $iconAlt,
             ];
 
-            // Limit to 6 items maximum
             if (count($validated) >= 6) {
                 break;
             }
@@ -190,7 +200,10 @@ class CmsValidationService
         }
 
         // Allow relative URLs and absolute URLs
-        if (str_starts_with($url, '/') || str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) {
+        if (str_starts_with($url, '/')
+            || str_starts_with($url, './')
+            || str_starts_with($url, 'http://')
+            || str_starts_with($url, 'https://')) {
             return substr($url, 0, 2048); // Truncate to DB field limit
         }
 

@@ -15,10 +15,12 @@ class UpdateHomepageRequest extends FormRequest
     {
         // Base rules - always applied regardless of publish status
         $baseRules = [
-            // Hero section
+            // Hero section (Next admin uses headline/subheadline; Filament may use title)
             'hero' => 'sometimes|array',
             'hero.title' => 'nullable|string|max:255',
             'hero.subtitle' => 'nullable|string|max:500',
+            'hero.headline' => 'nullable|string|max:20000',
+            'hero.subheadline' => 'nullable|string|max:20000',
             'hero.enabled' => 'sometimes|boolean',
             'hero.buttons' => 'nullable|array|max:2',
             'hero.buttons.*.label' => 'nullable|string|max:100',
@@ -33,6 +35,7 @@ class UpdateHomepageRequest extends FormRequest
             'why_choose_us.points' => 'nullable|array|max:6',
             'why_choose_us.points.*.title' => 'nullable|string|max:200',
             'why_choose_us.points.*.description' => 'nullable|string|max:500',
+            'why_choose_us.points.*.icon' => 'nullable|string|max:2048',
             'why_choose_us.side_images_urls' => 'nullable|string|max:3000',
 
             // Testimonials section
@@ -86,10 +89,26 @@ class UpdateHomepageRequest extends FormRequest
             // Legacy aliases
             'usp' => 'sometimes|array',
             'usp.enabled' => 'sometimes|boolean',
+            'usp.title' => 'nullable|string|max:255',
+            'usp.description' => 'nullable|string|max:1000',
+            'usp.side_images_urls' => 'nullable|string|max:3000',
+            'usp.points' => 'nullable|array|max:6',
+            'usp.points.*.title' => 'nullable|string|max:200',
+            'usp.points.*.description' => 'nullable|string|max:500',
+            'usp.points.*.icon' => 'nullable|string|max:2048',
             'trust' => 'sometimes|array', 
             'trust.enabled' => 'sometimes|boolean',
             'promo' => 'sometimes|array',
             'promo.enabled' => 'sometimes|boolean',
+            'promo.title' => 'nullable|string|max:255',
+            'promo.description' => 'nullable|string|max:1000',
+            'promo.cards' => 'nullable|array|max:10',
+            'promo.cards.*.title' => 'nullable|string|max:200',
+            'promo.cards.*.description' => 'nullable|string|max:500',
+            'promo.cards.*.image_url' => 'nullable|string|max:2048',
+            'promo.cards.*.url' => 'nullable|string|max:2048',
+            'promo.cards.*.button_label' => 'nullable|string|max:100',
+            'promo.banner_urls' => 'nullable|string|max:3000',
         ];
 
         return $baseRules;
@@ -112,9 +131,7 @@ class UpdateHomepageRequest extends FormRequest
             'hero.title' => 'Hero Section: Main headline is required before publishing to attract visitors.',
             'hero.subtitle' => 'Hero Section: Description helps explain your service to visitors.',
             'why_choose_us.title' => 'Why Choose Us: Section title is required before publishing.',
-            'why_choose_us.points' => 'Why Choose Us: At least 1 benefit point is required to showcase your value.',
             'cta.title' => 'Promotions: Section title is required before publishing.',
-            'cta.cards' => 'Promotions: At least 1 promotional offer is required to drive conversions.',
             'testimonials.title' => 'Testimonials: Section title is required before publishing.',
             
             // Content quality hints
@@ -123,8 +140,8 @@ class UpdateHomepageRequest extends FormRequest
             '*.label.max' => 'Label: Short and clear (:max characters max) works best for navigation.',
             
             // Content requirements
-            '*.points.*.title' => 'Benefit Point: Title is required to explain this advantage.',
-            '*.cards.*.title' => 'Promotional Card: Title is required to describe this offer.',
+            '*.points.*.title' => 'When a benefit row has content, add a title. Optional: provide image URL if needed.',
+            '*.cards.*.title' => 'When a promo card has content, add a title. Optional: provide image URL if needed.',
             '*.logos.*.title' => 'Brand Logo: Company name is required for accessibility.',
             '*.menu_items.*.label' => 'Menu Item: Label is required for navigation.',
         ];
@@ -138,7 +155,7 @@ class UpdateHomepageRequest extends FormRequest
         $input = $this->all();
 
         // Ensure nested arrays are properly formatted
-        foreach (['hero', 'why_choose_us', 'testimonials', 'cta', 'header', 'footer', 'floating_menu'] as $section) {
+        foreach (['hero', 'why_choose_us', 'usp', 'testimonials', 'cta', 'promo', 'header', 'footer', 'floating_menu'] as $section) {
             if (isset($input[$section]) && !is_array($input[$section])) {
                 $input[$section] = [];
             }
@@ -148,8 +165,10 @@ class UpdateHomepageRequest extends FormRequest
         $arrayFields = [
             'hero.buttons',
             'why_choose_us.points',
+            'usp.points',
             'testimonials.logos', 
             'cta.cards',
+            'promo.cards',
             'header.menu_items',
             'footer.quick_links',
             'footer.buttons',
@@ -190,8 +209,8 @@ class UpdateHomepageRequest extends FormRequest
         
         if ($this->has('hero') && $this->isBeingPublished('hero')) {
             $this->validateSectionForPublish('hero', $validator, [
-                'title' => 'Hero title is required before publishing',
-                'subtitle' => 'Hero subtitle or description is recommended for better engagement'
+                'title' => 'Hero headline is required before publishing.',
+                'background' => 'Add at least one hero background image URL before publishing.',
             ]);
         }
 
@@ -199,8 +218,7 @@ class UpdateHomepageRequest extends FormRequest
             $key = $this->has('why_choose_us') ? 'why_choose_us' : 'usp';
             if ($this->isBeingPublished($key)) {
                 $this->validateSectionForPublish($key, $validator, [
-                    'title' => 'Why Choose Us title is required before publishing',
-                    'points' => 'At least 1 benefit point is required before publishing'
+                    'title' => 'Why Choose Us title is required before publishing.',
                 ]);
             }
         }
@@ -209,8 +227,8 @@ class UpdateHomepageRequest extends FormRequest
             $key = $this->has('cta') ? 'cta' : 'promo';
             if ($this->isBeingPublished($key)) {
                 $this->validateSectionForPublish($key, $validator, [
-                    'title' => 'Promotions title is required before publishing',
-                    'cards' => 'At least 1 promotional card is required before publishing'
+                    'title' => 'Promotions title is required before publishing.',
+                    'banner' => 'Add at least one banner image URL before publishing.',
                 ]);
             }
         }
@@ -231,36 +249,60 @@ class UpdateHomepageRequest extends FormRequest
     private function validateSectionForPublish(string $sectionKey, $validator, array $requirements): void
     {
         $section = $this->input($sectionKey, []);
-        
-        if (!is_array($section)) {
+
+        if (! is_array($section)) {
             return;
         }
 
-        // Check title requirement
-        if (isset($requirements['title']) && empty(trim($section['title'] ?? ''))) {
-            $validator->errors()->add("$sectionKey.title", $requirements['title']);
-        }
-
-        // Check section-specific requirements
-        if ($sectionKey === 'why_choose_us' || $sectionKey === 'usp') {
-            if (isset($requirements['points'])) {
-                $points = is_array($section['points'] ?? null) ? $section['points'] : [];
-                $validPoints = array_filter($points, fn($p) => !empty(trim($p['title'] ?? '')));
-                if (count($validPoints) === 0) {
-                    $validator->errors()->add("$sectionKey.points", $requirements['points']);
+        if (isset($requirements['title'])) {
+            if ($sectionKey === 'hero') {
+                $hasHeadline = $this->nonEmptyRichString($section['headline'] ?? null);
+                $hasTitle = $this->nonEmptyRichString($section['title'] ?? null);
+                if (! $hasHeadline && ! $hasTitle) {
+                    $validator->errors()->add("{$sectionKey}.headline", $requirements['title']);
                 }
+            } elseif (! $this->nonEmptyRichString($section['title'] ?? null)) {
+                $validator->errors()->add("{$sectionKey}.title", $requirements['title']);
             }
         }
 
-        if ($sectionKey === 'cta' || $sectionKey === 'promo') {
-            if (isset($requirements['cards'])) {
-                $cards = is_array($section['cards'] ?? null) ? $section['cards'] : [];
-                $validCards = array_filter($cards, fn($c) => !empty(trim($c['title'] ?? '')));
-                if (count($validCards) === 0) {
-                    $validator->errors()->add("$sectionKey.cards", $requirements['cards']);
-                }
+        if ($sectionKey === 'hero' && isset($requirements['background'])) {
+            if ($this->nonEmptyMultilineStringLineCount($section['background_urls'] ?? null) === 0) {
+                $validator->errors()->add("{$sectionKey}.background_urls", $requirements['background']);
             }
         }
+
+        if (($sectionKey === 'cta' || $sectionKey === 'promo') && isset($requirements['banner'])) {
+            if ($this->nonEmptyMultilineStringLineCount($section['banner_urls'] ?? null) === 0) {
+                $validator->errors()->add("{$sectionKey}.banner_urls", $requirements['banner']);
+            }
+        }
+    }
+
+    private function nonEmptyRichString(mixed $value): bool
+    {
+        if (! is_string($value)) {
+            return false;
+        }
+
+        return trim(strip_tags($value)) !== '';
+    }
+
+    private function nonEmptyMultilineStringLineCount(mixed $raw): int
+    {
+        if (! is_string($raw) || $raw === '') {
+            return 0;
+        }
+
+        $lines = preg_split("/\r\n|\n|\r/", $raw);
+
+        if (! is_array($lines)) {
+            return 0;
+        }
+
+        $nonEmpty = array_filter(array_map('trim', $lines), fn ($line) => is_string($line) && $line !== '');
+
+        return count($nonEmpty);
     }
 
     private function setNestedValue(array &$array, array $keys, $value): void

@@ -321,12 +321,12 @@ class CmsHomepageController extends Controller
                 'type' => 'usp',
                 'title' => $point['title'],
                 'description' => $point['description'] ?: null,
-                'icon_url' => null, // Not used in validation
+                'icon_url' => $point['icon_url'] ?? null,
                 'sort_order' => $i,
                 'is_active' => true,
                 'extra_json' => [
-                    'background_color' => $point['background_color'],
-                    'icon_alt' => $point['icon_alt'],
+                    'background_color' => $point['background_color'] ?? '',
+                    'icon_alt' => $point['icon_alt'] ?? '',
                 ],
             ]);
         }

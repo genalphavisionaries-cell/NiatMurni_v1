@@ -5,7 +5,7 @@ import { FormLabel, FormSection, TextInput, Textarea } from "@/components/dashbo
 import { adminApi } from "@/lib/admin-api";
 import type { CmsHeroData, CmsUspData, CmsClassesData, CmsPromoData, CmsPromoCard, CmsUspPoint } from "@/lib/admin-api";
 import { cn } from "@/lib/utils";
-import { hasRichText, isValidHttpOrRelativeUrl, isValidHttpOrRelativeUrlRequired } from "@/lib/cms-admin-validation";
+import { hasRichText, isValidHttpOrRelativeUrl } from "@/lib/cms-admin-validation";
 import { safeTrim, hasNonEmptyString, splitAndTrimLines } from "@/lib/safe-string-utils";
 import { CmsFieldGroup } from "@/components/admin/cms/CmsFieldGroup";
 import { SectionEnabledSwitch } from "@/components/admin/cms/SectionEnabledSwitch";
@@ -125,85 +125,113 @@ function validateHomepage(
 ): string[] {
   const errors: string[] = [];
 
-  if (hero.enabled !== false) {
+  const heroOn = hero.enabled !== false;
+  if (heroOn) {
     if (!hasRichText(safeTrim(hero.headline))) {
       errors.push("Hero: headline is required when this section is enabled.");
     }
-  }
-  for (const line of splitAndTrimLines(hero.background_urls)) {
-    if (!isValidHttpOrRelativeUrl(line)) {
-      errors.push(`Hero: invalid background image URL.`);
-      break;
+    const bgLines = splitAndTrimLines(hero.background_urls);
+    if (bgLines.length === 0) {
+      errors.push("Hero: add at least one background image URL when this section is enabled.");
     }
-  }
-  for (const b of hero.buttons) {
-    if (safeTrim(b.url) && !isValidHttpOrRelativeUrl(b.url)) {
-      errors.push("Hero: a button has an invalid URL.");
-      break;
+    for (const line of bgLines) {
+      if (!isValidHttpOrRelativeUrl(line)) {
+        errors.push("Hero: optional image URL is invalid. Leave empty or use a valid URL.");
+        break;
+      }
+    }
+    for (const b of hero.buttons) {
+      if (safeTrim(b.url) && !isValidHttpOrRelativeUrl(b.url)) {
+        errors.push("Hero: a button has an invalid URL.");
+        break;
+      }
     }
   }
 
-  if (whyChooseUs.enabled !== false) {
+  const whyOn = whyChooseUs.enabled !== false;
+  if (whyOn) {
     if (!hasRichText(safeTrim(whyChooseUs.title))) {
       errors.push("Why choose us: title is required when this section is enabled.");
     }
-  }
-  for (const line of splitAndTrimLines(whyChooseUs.side_images_urls)) {
-    if (!isValidHttpOrRelativeUrl(line)) {
-      errors.push("Why choose us: invalid side image URL.");
-      break;
-    }
-  }
-  whyChooseUs.points.forEach((p, i) => {
-    const hasCard = hasNonEmptyString(p.title) || hasRichText(safeTrim(p.description));
-    if (hasCard) {
-      if (!safeTrim(p.icon)) {
-        errors.push(`Why choose us card ${i + 1}: upload or enter an icon/image URL.`);
-      } else if (!isValidHttpOrRelativeUrlRequired(p.icon)) {
-        errors.push(`Why choose us card ${i + 1}: icon URL is invalid.`);
+    for (const line of splitAndTrimLines(whyChooseUs.side_images_urls)) {
+      if (!isValidHttpOrRelativeUrl(line)) {
+        errors.push("Why choose us: optional side image URL is invalid. Leave empty or use a valid URL.");
+        break;
       }
-    } else if (safeTrim(p.icon) && !isValidHttpOrRelativeUrl(p.icon)) {
-      errors.push(`Why choose us card ${i + 1}: icon URL is invalid.`);
     }
-  });
+  }
+  if (whyOn) {
+    whyChooseUs.points.forEach((p, i) => {
+      const hasAnyContent =
+        safeTrim(p.icon) !== "" ||
+        hasNonEmptyString(p.title) ||
+        hasRichText(safeTrim(p.description)) ||
+        safeTrim(p.background_color) !== "" ||
+        safeTrim(p.icon_alt) !== "";
+      if (!hasAnyContent) {
+        return;
+      }
+      if (!hasNonEmptyString(p.title)) {
+        errors.push(`Why choose us card ${i + 1}: title is required when this card has content.`);
+      }
+      if (safeTrim(p.icon) && !isValidHttpOrRelativeUrl(p.icon)) {
+        errors.push(
+          `Why choose us card ${i + 1}: optional image URL is invalid. Optional: provide image URL if needed, or leave empty.`
+        );
+      }
+    });
+  }
 
-  if (classes.enabled !== false) {
+  const classesOn = classes.enabled !== false;
+  if (classesOn) {
     if (!safeTrim(classes.title)) {
       errors.push("Classes: title is required when this section is enabled.");
     }
-  }
-  if (safeTrim(classes.button_url) && !isValidHttpOrRelativeUrl(classes.button_url)) {
-    errors.push("Classes: button URL is invalid.");
+    if (safeTrim(classes.button_url) && !isValidHttpOrRelativeUrl(classes.button_url)) {
+      errors.push("Classes: button URL is invalid.");
+    }
   }
 
-  if (ctaSection.enabled !== false) {
+  const ctaOn = ctaSection.enabled !== false;
+  if (ctaOn) {
     if (!hasRichText(safeTrim(ctaSection.title))) {
       errors.push("CTA: title is required when this section is enabled.");
     }
-  }
-  for (const line of splitAndTrimLines(ctaSection.banner_urls)) {
-    if (!isValidHttpOrRelativeUrl(line)) {
-      errors.push("CTA: invalid banner image URL.");
-      break;
+    const bannerLines = splitAndTrimLines(ctaSection.banner_urls);
+    if (bannerLines.length === 0) {
+      errors.push("CTA: add at least one banner image URL when this section is enabled.");
     }
-  }
-  ctaSection.cards.forEach((c, i) => {
-    const hasCard =
-      hasNonEmptyString(c.title) ||
-      hasRichText(safeTrim(c.description)) ||
-      hasNonEmptyString(c.button_label) ||
-      hasNonEmptyString(c.url);
-    if (hasCard) {
-      if (!safeTrim(c.image_url)) {
-        errors.push(`CTA card ${i + 1}: image is required when the card has content or a button.`);
-      } else if (!isValidHttpOrRelativeUrlRequired(c.image_url)) {
-        errors.push(`CTA card ${i + 1}: image URL is invalid.`);
+    for (const line of bannerLines) {
+      if (!isValidHttpOrRelativeUrl(line)) {
+        errors.push("CTA: optional banner image URL is invalid. Leave empty or use a valid URL.");
+        break;
       }
     }
-    if (safeTrim(c.url) && !isValidHttpOrRelativeUrl(c.url)) {
-      errors.push(`CTA card ${i + 1}: link URL is invalid.`);
-    }
-  });
+  }
+  if (ctaOn) {
+    ctaSection.cards.forEach((c, i) => {
+      const hasAnyContent =
+        safeTrim(c.image_url) !== "" ||
+        hasNonEmptyString(c.title) ||
+        hasRichText(safeTrim(c.description)) ||
+        hasNonEmptyString(c.button_label) ||
+        hasNonEmptyString(c.url);
+      if (!hasAnyContent) {
+        return;
+      }
+      if (!hasNonEmptyString(c.title)) {
+        errors.push(`CTA card ${i + 1}: title is required when this card has content.`);
+      }
+      if (safeTrim(c.image_url) && !isValidHttpOrRelativeUrl(c.image_url)) {
+        errors.push(
+          `CTA card ${i + 1}: optional image URL is invalid. Optional: provide image URL if needed, or leave empty.`
+        );
+      }
+      if (safeTrim(c.url) && !isValidHttpOrRelativeUrl(c.url)) {
+        errors.push(`CTA card ${i + 1}: link URL is invalid.`);
+      }
+    });
+  }
 
   return errors;
 }
