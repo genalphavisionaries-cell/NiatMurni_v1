@@ -4,6 +4,9 @@
  */
 
 import { getApiBase } from "./config";
+import { validateCmsPayload, type ValidationResult } from "./cms-validation";
+
+export type { ValidationResult } from "./cms-validation";
 
 export const getPublicApiBase = (): string => {
   const base = getApiBase();
@@ -280,21 +283,30 @@ function normalizeCmsPayload(data: PublicCmsPayload): PublicCmsPayload {
 }
 
 export async function fetchPublicCms(): Promise<PublicCmsPayload | null> {
+  const validation = await fetchPublicCmsWithValidation();
+  return validation?.payload ?? null;
+}
+
+export async function fetchPublicCmsWithValidation(): Promise<ValidationResult | null> {
   const base = getPublicApiBase();
-  if (!base) return null;
+  if (!base) return validateCmsPayload(null);
+  
   try {
     const res = await fetch(`${base}/api/public/cms`, {
       next: { revalidate: 10 },
       headers: { Accept: "application/json" },
     });
-    if (!res.ok) return null;
+    if (!res.ok) return validateCmsPayload(null);
+    
     const raw = (await res.json()) as PublicCmsPayload & { data?: PublicCmsPayload };
     // Laravel may return the payload at the root, or wrapped in { data } (legacy).
     const data = raw?.site && raw?.navigation ? raw : raw?.data;
-    if (!data?.site || !data?.navigation) return null;
-    return normalizeCmsPayload(data);
+    if (!data?.site || !data?.navigation) return validateCmsPayload(null);
+    
+    const normalized = normalizeCmsPayload(data);
+    return validateCmsPayload(normalized);
   } catch {
-    return null;
+    return validateCmsPayload(null);
   }
 }
 
