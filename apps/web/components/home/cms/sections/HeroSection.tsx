@@ -122,8 +122,17 @@ export default function HeroSection({
       ? overlayOpacity
       : 0.25;
 
+  const hasBackgroundImage = Boolean(desktopImg || mobileImg);
+
   return (
     <section id="hero" className="relative h-screen min-h-[720px] overflow-hidden bg-slate-950">
+      {/* Fallback when CMS provides no hero images — keeps layout full-height without a broken <img> */}
+      {!hasBackgroundImage ? (
+        <div
+          className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950"
+          aria-hidden
+        />
+      ) : null}
       {/* Background images */}
       {desktopImg ? (
         <img

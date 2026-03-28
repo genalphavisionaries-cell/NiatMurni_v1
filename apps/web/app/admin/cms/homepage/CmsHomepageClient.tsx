@@ -131,9 +131,6 @@ function validateHomepage(
       errors.push("Hero: headline is required when this section is enabled.");
     }
     const bgLines = splitAndTrimLines(hero.background_urls);
-    if (bgLines.length === 0) {
-      errors.push("Hero: add at least one background image URL when this section is enabled.");
-    }
     for (const line of bgLines) {
       if (!isValidHttpOrRelativeUrl(line)) {
         errors.push("Hero: optional image URL is invalid. Leave empty or use a valid URL.");
@@ -198,9 +195,6 @@ function validateHomepage(
       errors.push("CTA: title is required when this section is enabled.");
     }
     const bannerLines = splitAndTrimLines(ctaSection.banner_urls);
-    if (bannerLines.length === 0) {
-      errors.push("CTA: add at least one banner image URL when this section is enabled.");
-    }
     for (const line of bannerLines) {
       if (!isValidHttpOrRelativeUrl(line)) {
         errors.push("CTA: optional banner image URL is invalid. Leave empty or use a valid URL.");

@@ -210,7 +210,6 @@ class UpdateHomepageRequest extends FormRequest
         if ($this->has('hero') && $this->isBeingPublished('hero')) {
             $this->validateSectionForPublish('hero', $validator, [
                 'title' => 'Hero headline is required before publishing.',
-                'background' => 'Add at least one hero background image URL before publishing.',
             ]);
         }
 
@@ -228,7 +227,6 @@ class UpdateHomepageRequest extends FormRequest
             if ($this->isBeingPublished($key)) {
                 $this->validateSectionForPublish($key, $validator, [
                     'title' => 'Promotions title is required before publishing.',
-                    'banner' => 'Add at least one banner image URL before publishing.',
                 ]);
             }
         }
@@ -286,23 +284,6 @@ class UpdateHomepageRequest extends FormRequest
         }
 
         return trim(strip_tags($value)) !== '';
-    }
-
-    private function nonEmptyMultilineStringLineCount(mixed $raw): int
-    {
-        if (! is_string($raw) || $raw === '') {
-            return 0;
-        }
-
-        $lines = preg_split("/\r\n|\n|\r/", $raw);
-
-        if (! is_array($lines)) {
-            return 0;
-        }
-
-        $nonEmpty = array_filter(array_map('trim', $lines), fn ($line) => is_string($line) && $line !== '');
-
-        return count($nonEmpty);
     }
 
     private function setNestedValue(array &$array, array $keys, $value): void
