@@ -6,9 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Services\SettingService;
 use Carbon\Carbon;
-use Google\Analytics\Data\V1beta\Client\BetaAnalyticsDataClient;
-use Google\Analytics\Data\V1beta\DateRange;
-use Google\Analytics\Data\V1beta\Metric;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -30,7 +27,7 @@ class DashboardController extends Controller
                 return $this->buildOverviewData();
             });
 
-            return response()->json(['data' => $data]);
+            return response()->json(['data' => $this->sanitizeForJson($data)]);
         } catch (\Throwable $e) {
             return response()->json([
                 'message' => 'Dashboard load failed',
@@ -342,9 +339,21 @@ class DashboardController extends Controller
         ];
 
         try {
-            if ($gaMeasurementId && $gaServiceAccount) {
-                $client = new BetaAnalyticsDataClient([
-                    'credentials' => json_decode((string) $gaServiceAccount, true),
+            $gaClientFqcn = 'Google\\Analytics\\Data\\V1beta\\Client\\BetaAnalyticsDataClient';
+            $dateRangeFqcn = 'Google\\Analytics\\Data\\V1beta\\DateRange';
+            $metricFqcn = 'Google\\Analytics\\Data\\V1beta\\Metric';
+            if (
+                $gaMeasurementId && $gaServiceAccount
+                && class_exists($gaClientFqcn)
+                && class_exists($dateRangeFqcn)
+                && class_exists($metricFqcn)
+            ) {
+                $credentials = json_decode((string) $gaServiceAccount, true);
+                if (! is_array($credentials)) {
+                    $credentials = [];
+                }
+                $client = new $gaClientFqcn([
+                    'credentials' => $credentials,
                 ]);
 
                 $propertyId = str_replace('G-', '', (string) $gaMeasurementId);
@@ -352,15 +361,15 @@ class DashboardController extends Controller
                 $response = $client->runReport([
                     'property' => 'properties/'.$propertyId,
                     'dateRanges' => [
-                        new DateRange([
+                        new $dateRangeFqcn([
                             'start_date' => '7daysAgo',
                             'end_date' => 'today',
                         ]),
                     ],
                     'metrics' => [
-                        new Metric(['name' => 'totalUsers']),
-                        new Metric(['name' => 'sessions']),
-                        new Metric(['name' => 'screenPageViews']),
+                        new $metricFqcn(['name' => 'totalUsers']),
+                        new $metricFqcn(['name' => 'sessions']),
+                        new $metricFqcn(['name' => 'screenPageViews']),
                     ],
                 ]);
 
@@ -486,5 +495,25 @@ class DashboardController extends Controller
     private function fromCents(float $value): float
     {
         return round($value / 100, 2);
+    }
+
+    /**
+     * @param  mixed  $value
+     * @return mixed
+     */
+    private function sanitizeForJson(mixed $value): mixed
+    {
+        if (is_float($value) && (is_nan($value) || is_infinite($value))) {
+            return 0.0;
+        }
+        if (is_array($value)) {
+            foreach ($value as $k => $v) {
+                $value[$k] = $this->sanitizeForJson($v);
+            }
+
+            return $value;
+        }
+
+        return $value;
     }
 }

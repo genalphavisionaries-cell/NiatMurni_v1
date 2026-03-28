@@ -7,6 +7,9 @@ use App\Models\Booking;
 use App\Models\ClassSession;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
+use Throwable;
 
 class PublicController extends Controller
 {
@@ -19,35 +22,59 @@ class PublicController extends Controller
      */
     public function upcomingClasses(): JsonResponse
     {
-        $now = Carbon::now();
+        try {
+            $now = Carbon::now();
 
-        $sessions = ClassSession::query()
-            ->with(['program:id,name,is_active', 'tutor.user:id,name'])
-            ->where('ends_at', '>=', $now)
-            ->where('status', '!=', 'cancelled')
-            ->whereHas('program', fn ($q) => $q->where('is_active', true))
-            ->orderBy('starts_at')
-            ->get();
+            $sessions = $this->upcomingClassesQuery($now, upcoming: true)->get();
 
-        $recentPast = false;
+            $recentPast = false;
 
-        if ($sessions->isEmpty()) {
-            $sessions = ClassSession::query()
-                ->with(['program:id,name,is_active', 'tutor.user:id,name'])
-                ->where('ends_at', '<', $now)
-                ->where('status', '!=', 'cancelled')
-                ->whereHas('program', fn ($q) => $q->where('is_active', true))
-                ->orderByDesc('ends_at')
-                ->limit(6)
-                ->get();
-            $recentPast = true;
+            if ($sessions->isEmpty()) {
+                $sessions = $this->upcomingClassesQuery($now, upcoming: false)
+                    ->orderByDesc('ends_at')
+                    ->limit(6)
+                    ->get();
+                $recentPast = true;
+            }
+
+            $data = $sessions->map(function (ClassSession $session) use ($recentPast): array {
+                return $this->mapClassSessionForPublic($session, $recentPast);
+            })->values();
+
+            return response()->json(['data' => $data]);
+        } catch (Throwable $e) {
+            Log::error('public.upcoming_classes_failed', [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+            ]);
+
+            return response()->json(['data' => []]);
+        }
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Builder<ClassSession>
+     */
+    private function upcomingClassesQuery(Carbon $now, bool $upcoming)
+    {
+        $q = ClassSession::query()
+            ->with(['program', 'tutor.user']);
+
+        if (Schema::hasColumn('programs', 'is_active')) {
+            $q->whereHas('program', fn ($sub) => $sub->where('is_active', true));
         }
 
-        $data = $sessions->map(function (ClassSession $session) use ($recentPast): array {
-            return $this->mapClassSessionForPublic($session, $recentPast);
-        })->values();
+        if (Schema::hasColumn('class_sessions', 'status')) {
+            $q->where('status', '!=', 'cancelled');
+        }
 
-        return response()->json(['data' => $data]);
+        if ($upcoming) {
+            $q->where('ends_at', '>=', $now)->orderBy('starts_at');
+        } else {
+            $q->where('ends_at', '<', $now);
+        }
+
+        return $q;
     }
 
     /**
@@ -55,9 +82,13 @@ class PublicController extends Controller
      */
     private function mapClassSessionForPublic(ClassSession $session, bool $recentPast): array
     {
-        $bookedCount = (int) $session->bookings()
-            ->whereNotIn('status', ['cancelled'])
-            ->count();
+        try {
+            $bookedCount = (int) $session->bookings()
+                ->whereNotIn('status', ['cancelled'])
+                ->count();
+        } catch (Throwable) {
+            $bookedCount = 0;
+        }
         $capacity = (int) ($session->capacity ?? 0);
         $availableSlots = max($capacity - $bookedCount, 0);
         $programBasePriceCents = $session->program?->base_price_cents ?? null;
@@ -90,7 +121,7 @@ class PublicController extends Controller
     public function classDetail(int $id): JsonResponse
     {
         $session = ClassSession::query()
-            ->with(['program:id,name,description,price,is_active', 'tutor.user:id,name,email'])
+            ->with(['program', 'tutor.user'])
             ->whereKey($id)
             ->first();
 
@@ -98,9 +129,13 @@ class PublicController extends Controller
             return response()->json(['message' => 'Class not found'], 404);
         }
 
-        $bookedCount = (int) $session->bookings()
-            ->whereNotIn('status', ['cancelled'])
-            ->count();
+        try {
+            $bookedCount = (int) $session->bookings()
+                ->whereNotIn('status', ['cancelled'])
+                ->count();
+        } catch (Throwable) {
+            $bookedCount = 0;
+        }
         $capacity = (int) ($session->capacity ?? 0);
         $availableSlots = max($capacity - $bookedCount, 0);
 
