@@ -27,7 +27,7 @@ function validateHeroSection(section: PublicCmsHomepageSection | null | undefine
   const errors: ValidationError[] = [];
   
   if (!section) {
-    errors.push(createError("hero", "section", "Hero section is missing"));
+    errors.push(createError("hero", "section", "CRITICAL: Hero section is required and cannot be deleted"));
     return errors;
   }
 
@@ -53,7 +53,7 @@ function validateWhyChooseUsSection(sections: PublicCmsHomepageSection[]): Valid
   );
 
   if (!whySection) {
-    errors.push(createError("why_choose_us", "section", "Why choose us section is missing"));
+    errors.push(createError("why_choose_us", "section", "CRITICAL: Why Choose Us section is required and cannot be deleted"));
     return errors;
   }
 
@@ -119,7 +119,7 @@ function validateCtaSection(sections: PublicCmsHomepageSection[]): ValidationErr
   );
 
   if (!ctaSection) {
-    errors.push(createError("cta", "section", "CTA/Promotions section is missing"));
+    errors.push(createError("cta", "section", "CRITICAL: CTA/Promotions section is required and cannot be deleted"));
     return errors;
   }
 
@@ -184,6 +184,7 @@ function createSafeEmptySection(sectionKey: string, sortOrder: number): PublicCm
 
 function createSafeEmptyPayload(): PublicCmsPayload {
   return {
+    version: "1.0",
     site: {
       site_name: "",
       site_tagline: "",
@@ -232,8 +233,13 @@ function createSafeEmptyPayload(): PublicCmsPayload {
       footer_legal: [],
       footer_login: [],
     },
-    homepage_sections: [],
-    hero: null,
+    homepage_sections: [
+      createSafeEmptySection("hero", 0),
+      createSafeEmptySection("why_choose_us", 1), 
+      createSafeEmptySection("testimonials", 3),
+      createSafeEmptySection("cta", 4),
+    ],
+    hero: createSafeEmptySection("hero", 0),
     last_updated: null,
     floating_menu: {
       enabled: false,

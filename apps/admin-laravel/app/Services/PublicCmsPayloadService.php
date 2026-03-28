@@ -107,6 +107,7 @@ class PublicCmsPayloadService
         $floating = $this->mapFloatingMenu(is_array($h['floating_menu'] ?? null) ? $h['floating_menu'] : []);
 
         return [
+            'version' => '1.0',
             'site' => $site,
             'theme' => $theme,
             'seo' => $seo,

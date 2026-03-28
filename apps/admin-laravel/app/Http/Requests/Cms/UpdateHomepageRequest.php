@@ -88,13 +88,27 @@ class UpdateHomepageRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'hero.buttons.max' => 'Hero section can have maximum 2 buttons.',
-            'why_choose_us.points.max' => 'Why Choose Us section can have maximum 6 points.',
-            'testimonials.logos.max' => 'Testimonials section can have maximum 20 brand logos.',
-            'cta.cards.max' => 'CTA section can have maximum 10 promotional cards.',
-            'header.menu_items.max' => 'Header can have maximum 20 menu items.',
-            'footer.quick_links.max' => 'Footer can have maximum 20 quick links.',
+            // Max limits with helpful hints
+            'hero.buttons.max' => 'Hero section can have maximum 2 buttons. Consider using primary + secondary CTA.',
+            'why_choose_us.points.max' => 'Why Choose Us section can have maximum 6 points for optimal UX. Focus on key benefits.',
+            'testimonials.logos.max' => 'Testimonials section can have maximum 20 brand logos to maintain visual clarity.',
+            'cta.cards.max' => 'CTA section can have maximum 10 promotional cards. Consider grouping similar offers.',
+            'header.menu_items.max' => 'Header can have maximum 20 menu items. Consider using dropdown groups for better navigation.',
+            'footer.quick_links.max' => 'Footer can have maximum 20 quick links to avoid clutter.',
+            'footer.buttons.max' => 'Footer can have maximum 10 login buttons.',
+            'footer.legal_links.max' => 'Footer can have maximum 10 legal links.',
+            
+            // Field requirements
             '*.title.required_with' => 'Title is required when section is provided.',
+            '*.points.*.title.required_with' => 'Point title is required.',
+            '*.cards.*.title.required_with' => 'Card title is required.',
+            '*.logos.*.title.required_with' => 'Brand name is required.',
+            '*.menu_items.*.label.required_with' => 'Menu item label is required.',
+            
+            // String length hints
+            '*.title.max' => 'Title should be concise (max :max characters) for better readability.',
+            '*.description.max' => 'Description should be focused (max :max characters) for better engagement.',
+            '*.label.max' => 'Label should be short (max :max characters) for UI clarity.',
         ];
     }
 
@@ -140,6 +154,68 @@ class UpdateHomepageRequest extends FormRequest
         }
 
         $this->replace($input);
+    }
+
+    /**
+     * Custom validation to prevent deletion of critical sections.
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $this->validateCriticalSections($validator);
+        });
+    }
+
+    private function validateCriticalSections($validator): void
+    {
+        // If this is a partial update request, critical sections are only validated 
+        // if they're being explicitly set to disabled/empty
+        
+        if ($this->has('hero') && $this->isEffectivelyDisabled('hero')) {
+            $validator->errors()->add('hero', 'Hero section is critical and cannot be disabled or emptied.');
+        }
+
+        if (($this->has('why_choose_us') || $this->has('usp')) && 
+            ($this->isEffectivelyDisabled('why_choose_us') || $this->isEffectivelyDisabled('usp'))) {
+            $validator->errors()->add('why_choose_us', 'Why Choose Us section is critical and cannot be disabled or emptied.');
+        }
+
+        if (($this->has('cta') || $this->has('promo')) && 
+            ($this->isEffectivelyDisabled('cta') || $this->isEffectivelyDisabled('promo'))) {
+            $validator->errors()->add('cta', 'CTA/Promotions section is critical and cannot be disabled or emptied.');
+        }
+    }
+
+    private function isEffectivelyDisabled(string $sectionKey): bool
+    {
+        $section = $this->input($sectionKey, []);
+        
+        if (!is_array($section)) {
+            return true; // Non-array means disabled
+        }
+
+        // Check if section is explicitly disabled
+        if (isset($section['enabled']) && !$section['enabled']) {
+            return true;
+        }
+
+        // Check if section has no meaningful content
+        $hasTitle = !empty(trim($section['title'] ?? ''));
+        $hasDescription = !empty(trim($section['description'] ?? ''));
+        
+        // For specific section types, check their critical content
+        if ($sectionKey === 'why_choose_us' || $sectionKey === 'usp') {
+            $hasPoints = is_array($section['points'] ?? null) && count($section['points']) > 0;
+            return !$hasTitle && !$hasDescription && !$hasPoints;
+        }
+
+        if ($sectionKey === 'cta' || $sectionKey === 'promo') {
+            $hasCards = is_array($section['cards'] ?? null) && count($section['cards']) > 0;
+            return !$hasTitle && !$hasDescription && !$hasCards;
+        }
+
+        // For hero, just check title
+        return !$hasTitle && !$hasDescription;
     }
 
     private function setNestedValue(array &$array, array $keys, $value): void

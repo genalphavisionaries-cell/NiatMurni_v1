@@ -242,4 +242,58 @@ class CmsValidationService
 
         return $this->validateJsonField(json_encode($item->extra_json));
     }
+
+    /**
+     * Validate that critical sections exist and have content.
+     * 
+     * @param Collection<CmsSection> $sections
+     * @throws \Illuminate\Validation\ValidationException
+     */
+    public function validateCriticalSections($sections): void
+    {
+        $sectionsByKey = $sections->keyBy('section_key');
+        $errors = [];
+
+        // Check critical sections exist and are active
+        $criticalSections = ['hero', 'why_choose_us', 'cta'];
+        
+        foreach ($criticalSections as $key) {
+            $section = $sectionsByKey->get($key);
+            
+            if (!$section || !$section->is_active) {
+                $errors[] = "The {$key} section is critical and cannot be disabled or removed.";
+                continue;
+            }
+
+            // Validate section has meaningful content
+            $content = $section->content_json ?? [];
+            $title = trim($content['title'] ?? $section->title ?? '');
+            
+            if (empty($title)) {
+                $errors[] = "The {$key} section must have a title.";
+            }
+
+            // Section-specific content validation
+            if ($key === 'why_choose_us') {
+                $items = $section->items()->where('type', 'usp')->where('is_active', true)->count();
+                if ($items === 0) {
+                    $errors[] = "The Why Choose Us section must have at least 1 benefit point.";
+                }
+            }
+
+            if ($key === 'cta') {
+                $items = $section->items()->where('type', 'promo_card')->where('is_active', true)->count();
+                if ($items === 0) {
+                    $errors[] = "The CTA section must have at least 1 promotional card.";
+                }
+            }
+        }
+
+        if (!empty($errors)) {
+            throw new \Illuminate\Validation\ValidationException(
+                validator([], []),
+                response()->json(['errors' => ['critical_sections' => $errors]], 422)
+            );
+        }
+    }
 }

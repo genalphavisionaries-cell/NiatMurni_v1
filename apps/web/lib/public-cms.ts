@@ -105,6 +105,8 @@ export type PublicCmsFloatingMenu = {
 };
 
 export type PublicCmsPayload = {
+  /** Payload format version for future compatibility */
+  version?: string;
   site: PublicCmsSite;
   theme: PublicCmsTheme;
   seo: PublicCmsSeo;
@@ -125,6 +127,8 @@ export type PublicCmsPayload = {
   /** CMS payload generation timestamp (Laravel `now()`). */
   last_updated?: string | null;
   floating_menu: PublicCmsFloatingMenu;
+  /** Allow unknown fields for future version compatibility */
+  [key: string]: unknown;
 };
 
 const EMPTY_THEME: PublicCmsTheme = {
@@ -155,6 +159,7 @@ const defaultFooterContactSocial = (): {
 });
 
 const emptyPayload = (): PublicCmsPayload => ({
+  version: "1.0",
   site: {
     site_name: "",
     site_tagline: "",
