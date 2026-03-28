@@ -3,36 +3,61 @@
 import type { PublicCmsHomepageSection } from "@/lib/public-cms";
 import { cmsString } from "@/lib/public-cms";
 import { extraString, parseJsonSafe, safeHref } from "../utils";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { SafeCmsHtml } from "../SafeCmsHtml";
 
-type Item = { title: string; description?: string };
+type Item = { title: string; description?: string; icon?: string };
+
+const BENEFIT_ICONS: Record<string, React.ReactNode> = {
+  clock: (
+    <svg className="h-5 w-5 text-[#2563EB]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  ),
+  award: (
+    <svg className="h-5 w-5 text-[#2563EB]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+    </svg>
+  ),
+  shield: (
+    <svg className="h-5 w-5 text-[#2563EB]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+    </svg>
+  ),
+  monitor: (
+    <svg className="h-5 w-5 text-[#2563EB]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+    </svg>
+  ),
+  certificate: (
+    <svg className="h-5 w-5 text-[#2563EB]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+    </svg>
+  ),
+};
+
+function BenefitIcon({ name }: { name?: string }) {
+  return <>{BENEFIT_ICONS[name ?? ""] ?? BENEFIT_ICONS.award}</>;
+}
 
 function UspCard({ item }: { item: Item }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card transition hover:shadow-md">
-      <div className="flex items-start gap-3">
-        <div className="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#FEF3C7] text-[#92400E]">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
-            <path
-              d="M20 6 9 17l-5-5"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+    <div className="flex gap-4 rounded-[14px] bg-white p-[18px] shadow-[0_8px_20px_rgba(0,0,0,0.06)]">
+      <div
+        className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-[10px]"
+        style={{ width: 44, height: 44, background: "#EFF6FF" }}
+      >
+        <BenefitIcon name={item.icon} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="font-semibold text-[#0F172A] [&_a]:text-[#2563EB] [&_a]:underline">
+          <SafeCmsHtml html={item.title} className="max-w-none [&_p]:m-0" />
         </div>
-        <div className="min-w-0 flex-1">
-          <div className="text-base font-semibold text-[#0F172A] [&_a]:text-[#2563EB] [&_a]:underline">
-            <SafeCmsHtml html={item.title} className="max-w-none [&_p]:m-0" />
+        {item.description ? (
+          <div className="mt-1 text-sm leading-relaxed text-[#64748B] [&_a]:text-[#2563EB] [&_a]:underline">
+            <SafeCmsHtml html={item.description} className="max-w-none prose-p:my-1" />
           </div>
-          {item.description ? (
-            <div className="mt-2 text-sm leading-relaxed text-[#64748B] [&_a]:text-[#2563EB]">
-              <SafeCmsHtml html={item.description} className="max-w-none prose-p:my-1" />
-            </div>
-          ) : null}
-        </div>
+        ) : null}
       </div>
     </div>
   );
@@ -59,82 +84,67 @@ export default function WhyChooseUsSection({ section }: { section: PublicCmsHome
     return urls.length ? urls : fallback ? [fallback] : [];
   }, [section.image_url, section.extra_data]);
 
-  const [active, setActive] = useState(0);
-
-  useEffect(() => {
-    if (bannerImages.length <= 1) return;
-    const t = setInterval(() => {
-      setActive((v) => (v + 1) % bannerImages.length);
-    }, 6500);
-    return () => clearInterval(t);
-  }, [bannerImages.length]);
-
   if (!cmsString(title) && !visibleItems.length && !bannerImages.length) return null;
 
   return (
-    <section id="why_choose_us" className="bg-white py-16 sm:py-20">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid items-start gap-10 lg:grid-cols-2">
-          <div>
-            <div className="text-3xl font-bold tracking-tight text-[#0F172A] sm:text-4xl" role="heading" aria-level={2}>
-              <SafeCmsHtml html={title} className="max-w-none [&_p]:m-0" />
+    <section
+      id="why_choose_us"
+      className="py-20"
+      style={{ background: "#F9FAFB", paddingTop: 80, paddingBottom: 80 }}
+      aria-labelledby="why-choose-heading"
+    >
+      <div className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8">
+        <header className="mb-10 text-center lg:mb-12">
+          <div id="why-choose-heading" className="text-2xl font-bold text-[#0F172A] sm:text-3xl" role="heading" aria-level={2}>
+            <SafeCmsHtml html={title} className="max-w-none [&_p]:m-0" />
+          </div>
+          {(desc1 || desc2) ? (
+            <div className="mx-auto mt-3 max-w-2xl text-[#64748B] sm:text-lg [&_a]:text-[#2563EB] [&_a]:underline">
+              {desc1 ? <SafeCmsHtml html={desc1} className="max-w-none prose-p:my-2" /> : null}
+              {desc2 ? <SafeCmsHtml html={desc2} className="mt-2 max-w-none prose-p:my-2" /> : null}
             </div>
-            {(desc1 || desc2) ? (
-              <div className="mt-4 text-lg leading-relaxed text-[#64748B] [&_a]:text-[#2563EB]">
-                {desc1 ? <SafeCmsHtml html={desc1} className="max-w-none prose-p:my-2" /> : null}
-                {desc2 ? <SafeCmsHtml html={desc2} className="mt-2 max-w-none prose-p:my-2" /> : null}
-              </div>
-            ) : null}
+          ) : null}
+          <p className="mx-auto mt-1 text-sm text-[#94A3B8]">
+            Dipercayai oleh ribuan pengusaha makanan di Malaysia
+          </p>
+        </header>
 
-            {visibleItems.length ? (
-              <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {visibleItems.map((it, idx) => (
-                  <UspCard key={`${it.title}-${idx}`} item={it} />
-                ))}
-              </div>
-            ) : null}
+        <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-[48px]">
+          <div className="order-2 space-y-4 lg:order-1">
+            {visibleItems.map((it, idx) => (
+              <UspCard key={`${it.title}-${idx}`} item={it} />
+            ))}
           </div>
 
-          <div className="relative">
-            <div className="rounded-3xl border border-slate-200 bg-white/70 p-3 shadow-sm">
-              <div className="relative overflow-hidden rounded-2xl">
-                {bannerImages[active] ? (
-                  <>
-                    <img
-                      src={bannerImages[active]}
-                      alt="Why us banner"
-                      className="h-[420px] w-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
-                  </>
-                ) : (
-                  <div className="h-[420px] w-full bg-gradient-to-br from-[#2563EB] to-[#1D4ED8]" />
-                )}
-
-                {bannerImages.length > 1 ? (
-                  <div className="absolute inset-x-0 bottom-4 flex items-center justify-center gap-2">
-                    {bannerImages.map((_, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        aria-label={`Banner ${idx + 1}`}
-                        onClick={() => setActive(idx)}
-                        className={`h-2.5 w-2.5 rounded-full transition ${
-                          idx === active ? "bg-[#EAB308]" : "bg-white/45 hover:bg-white/70"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                ) : null}
+          <div className="order-1 lg:order-2">
+            {bannerImages[0] ? (
+              <div
+                className="relative overflow-hidden rounded-[20px] shadow-[0_20px_50px_rgba(0,0,0,0.15)]"
+                style={{ borderRadius: 20, boxShadow: "0 20px 50px rgba(0,0,0,0.15)" }}
+              >
+                <div className="aspect-[3/2] w-full">
+                  <img
+                    src={bannerImages[0]}
+                    alt="Why us banner"
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                </div>
               </div>
-            </div>
+            ) : (
+              <div
+                className="flex aspect-[3/2] w-full items-center justify-center rounded-[20px] bg-[#E2E8F0] text-[#64748B]"
+                style={{ borderRadius: 20, boxShadow: "0 20px 50px rgba(0,0,0,0.15)" }}
+              >
+                <span className="text-sm">Banner image (upload in admin)</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
     </section>
   );
 }
-
