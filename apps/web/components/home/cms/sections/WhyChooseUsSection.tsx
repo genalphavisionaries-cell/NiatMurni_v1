@@ -1,9 +1,10 @@
- "use client";
+"use client";
 
 import type { PublicCmsHomepageSection } from "@/lib/public-cms";
 import { cmsString } from "@/lib/public-cms";
 import { extraString, parseJsonSafe, safeHref } from "../utils";
 import { useEffect, useMemo, useState } from "react";
+import { SafeCmsHtml } from "../SafeCmsHtml";
 
 type Item = { title: string; description?: string };
 
@@ -22,12 +23,14 @@ function UspCard({ item }: { item: Item }) {
             />
           </svg>
         </div>
-        <div>
-          <h3 className="text-base font-semibold text-[#0F172A]">{item.title}</h3>
+        <div className="min-w-0 flex-1">
+          <div className="text-base font-semibold text-[#0F172A] [&_a]:text-[#2563EB] [&_a]:underline">
+            <SafeCmsHtml html={item.title} className="max-w-none [&_p]:m-0" />
+          </div>
           {item.description ? (
-            <p className="mt-2 text-sm leading-relaxed text-[#64748B]">
-              {item.description}
-            </p>
+            <div className="mt-2 text-sm leading-relaxed text-[#64748B] [&_a]:text-[#2563EB]">
+              <SafeCmsHtml html={item.description} className="max-w-none prose-p:my-1" />
+            </div>
           ) : null}
         </div>
       </div>
@@ -73,13 +76,13 @@ export default function WhyChooseUsSection({ section }: { section: PublicCmsHome
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid items-start gap-10 lg:grid-cols-2">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight text-[#0F172A] sm:text-4xl">
-              {title}
-            </h2>
+            <div className="text-3xl font-bold tracking-tight text-[#0F172A] sm:text-4xl" role="heading" aria-level={2}>
+              <SafeCmsHtml html={title} className="max-w-none [&_p]:m-0" />
+            </div>
             {(desc1 || desc2) ? (
-              <div className="mt-4 text-lg leading-relaxed text-[#64748B]">
-                {desc1 ? <p>{desc1}</p> : null}
-                {desc2 ? <p className="mt-2">{desc2}</p> : null}
+              <div className="mt-4 text-lg leading-relaxed text-[#64748B] [&_a]:text-[#2563EB]">
+                {desc1 ? <SafeCmsHtml html={desc1} className="max-w-none prose-p:my-2" /> : null}
+                {desc2 ? <SafeCmsHtml html={desc2} className="mt-2 max-w-none prose-p:my-2" /> : null}
               </div>
             ) : null}
 

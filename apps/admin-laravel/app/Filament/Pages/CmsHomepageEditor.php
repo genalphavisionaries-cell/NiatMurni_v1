@@ -24,7 +24,7 @@ use Filament\Pages\Page;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Homepage sections: hero, USP, classes, trust, promo — cms_sections + cms_items.
+ * Homepage sections: hero, why_choose_us, classes, testimonials, cta — cms_sections + cms_items.
  */
 class CmsHomepageEditor extends Page implements HasForms
 {
@@ -101,23 +101,23 @@ class CmsHomepageEditor extends Page implements HasForms
                                             ->helperText('Up to 5 URLs; first line is primary.'),
                                     ]),
                             ]),
-                        Tab::make('USP')
+                        Tab::make('Why choose us')
                             ->icon('heroicon-o-star')
                             ->schema([
                                 Section::make('Section Content')
                                     ->columns(2)
                                     ->schema([
-                                        TextInput::make('usp.title')
+                                        TextInput::make('why_choose_us.title')
                                             ->label('Title')
                                             ->maxLength(255),
-                                        Textarea::make('usp.description')
+                                        Textarea::make('why_choose_us.description')
                                             ->label('Description')
                                             ->rows(3)
                                             ->columnSpanFull(),
                                     ]),
                                 Section::make('USP Points')
                                     ->schema([
-                                        Repeater::make('usp.points')
+                                        Repeater::make('why_choose_us.points')
                                             ->label('Points (max 4)')
                                             ->maxItems(4)
                                             ->schema([
@@ -130,7 +130,7 @@ class CmsHomepageEditor extends Page implements HasForms
                                     ]),
                                 Section::make('Side Images')
                                     ->schema([
-                                        Textarea::make('usp.side_images_urls')
+                                        Textarea::make('why_choose_us.side_images_urls')
                                             ->label('Right-side image URLs (one per line)')
                                             ->rows(4),
                                     ]),
@@ -169,7 +169,7 @@ class CmsHomepageEditor extends Page implements HasForms
                                     ->label('')
                                     ->content('Class listings are loaded dynamically from the API — no manual class rows here.'),
                             ]),
-                        Tab::make('Trust')
+                        Tab::make('Testimonials')
                             ->icon('heroicon-o-shield-check')
                             ->schema([
                                 Section::make('Partner Logos')
@@ -187,35 +187,35 @@ class CmsHomepageEditor extends Page implements HasForms
                                 Section::make('Google Rating')
                                     ->columns(3)
                                     ->schema([
-                                        TextInput::make('trust.google_rating_text')->label('Rating text'),
-                                        TextInput::make('trust.google_button_label')->label('Button label'),
-                                        TextInput::make('trust.google_button_url')->label('Button URL')->maxLength(2048),
+                                        TextInput::make('testimonials.google_rating_text')->label('Rating text'),
+                                        TextInput::make('testimonials.google_button_label')->label('Button label'),
+                                        TextInput::make('testimonials.google_button_url')->label('Button URL')->maxLength(2048),
                                     ]),
-                                Placeholder::make('trust_note')
+                                Placeholder::make('testimonials_note')
                                     ->label('')
                                     ->content('Customer testimonials are managed under CMS → Testimonials.'),
                             ]),
-                        Tab::make('Promo')
+                        Tab::make('CTA')
                             ->icon('heroicon-o-megaphone')
                             ->schema([
                                 Section::make('Section Content')
                                     ->columns(2)
                                     ->schema([
-                                        TextInput::make('promo.title')
+                                        TextInput::make('cta.title')
                                             ->label('Title')
                                             ->maxLength(255),
-                                        Textarea::make('promo.description')
+                                        Textarea::make('cta.description')
                                             ->label('Description')
                                             ->rows(3)
                                             ->columnSpanFull(),
-                                        Textarea::make('promo.banner_urls')
+                                        Textarea::make('cta.banner_urls')
                                             ->label('Banner image URLs (max 3, one per line)')
                                             ->rows(3)
                                             ->columnSpanFull(),
                                     ]),
                                 Section::make('Promo Cards')
                                     ->schema([
-                                        Repeater::make('promo.cards')
+                                        Repeater::make('cta.cards')
                                             ->label('Cards (max 3)')
                                             ->maxItems(3)
                                             ->schema([
@@ -239,10 +239,10 @@ class CmsHomepageEditor extends Page implements HasForms
         $data = $this->form->getState();
         DB::transaction(function () use ($data) {
             $this->persistHero($data['hero'] ?? []);
-            $this->persistUsp($data['usp'] ?? []);
+            $this->persistUsp($data['why_choose_us'] ?? $data['usp'] ?? []);
             $this->persistClasses($data['classes'] ?? []);
-            $this->persistTrust($data['trust'] ?? []);
-            $this->persistPromo($data['promo'] ?? []);
+            $this->persistTrust($data['testimonials'] ?? $data['trust'] ?? []);
+            $this->persistPromo($data['cta'] ?? $data['promo'] ?? []);
         });
         app(CmsService::class)->forgetCache();
 
@@ -263,10 +263,10 @@ class CmsHomepageEditor extends Page implements HasForms
     {
         return [
             'hero' => $this->loadHero(),
-            'usp' => $this->loadUsp(),
+            'why_choose_us' => $this->loadUsp(),
             'classes' => $this->loadClasses(),
-            'trust' => $this->loadTrust(),
-            'promo' => $this->loadPromo(),
+            'testimonials' => $this->loadTrust(),
+            'cta' => $this->loadPromo(),
         ];
     }
 
@@ -325,7 +325,7 @@ class CmsHomepageEditor extends Page implements HasForms
      */
     private function loadUsp(): array
     {
-        $s = $this->section('usp');
+        $s = $this->section('why_choose_us');
         $c = $s->content_json ?? [];
         $points = [];
         foreach ($s->items()->where('type', 'usp')->orderBy('sort_order')->get() as $item) {
@@ -351,7 +351,7 @@ class CmsHomepageEditor extends Page implements HasForms
      */
     private function persistUsp(array $usp): void
     {
-        $section = $this->section('usp');
+        $section = $this->section('why_choose_us');
         $lines = array_values(array_filter(array_map('trim', explode("\n", (string) ($usp['side_images_urls'] ?? '')))));
         $section->content_json = [
             'title' => $usp['title'] ?? '',
@@ -411,7 +411,7 @@ class CmsHomepageEditor extends Page implements HasForms
      */
     private function loadTrust(): array
     {
-        $s = $this->section('trust');
+        $s = $this->section('testimonials');
         $c = $s->content_json ?? [];
         $logos = [];
         foreach ($s->items()->where('type', 'logo')->orderBy('sort_order')->get() as $item) {
@@ -434,7 +434,7 @@ class CmsHomepageEditor extends Page implements HasForms
      */
     private function persistTrust(array $trust): void
     {
-        $section = $this->section('trust');
+        $section = $this->section('testimonials');
         $section->content_json = [
             'google_rating' => [
                 'text' => $trust['google_rating_text'] ?? '',
@@ -462,7 +462,7 @@ class CmsHomepageEditor extends Page implements HasForms
      */
     private function loadPromo(): array
     {
-        $s = $this->section('promo');
+        $s = $this->section('cta');
         $c = $s->content_json ?? [];
         $banners = $c['banner_urls'] ?? [];
         $bText = is_array($banners) ? implode("\n", $banners) : '';
@@ -491,7 +491,7 @@ class CmsHomepageEditor extends Page implements HasForms
      */
     private function persistPromo(array $promo): void
     {
-        $section = $this->section('promo');
+        $section = $this->section('cta');
         $lines = array_values(array_filter(array_map('trim', explode("\n", (string) ($promo['banner_urls'] ?? '')))));
         $section->content_json = [
             'title' => $promo['title'] ?? '',

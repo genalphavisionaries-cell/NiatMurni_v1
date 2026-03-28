@@ -22,8 +22,8 @@ const config: Config = {
           900: "#713f12",
         },
         brand: {
-          DEFAULT: "#2563EB",
-          hover: "#1D4ED8",
+          DEFAULT: "var(--cms-primary, #2563EB)",
+          hover: "var(--cms-primary-hover, #1D4ED8)",
         },
         hero: {
           bg: "#F8F7F3",

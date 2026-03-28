@@ -9,3 +9,4 @@ export { default as SocialProofSection } from "./SocialProofSection";
 export { default as CmsHomepageRenderer } from "./cms/CmsHomepageRenderer";
 export { default as CmsHeader } from "./cms/CmsHeader";
 export { default as CmsFooter } from "./cms/CmsFooter";
+export { default as CmsDebugPanel } from "./cms/CmsDebugPanel";

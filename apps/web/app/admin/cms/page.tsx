@@ -5,7 +5,7 @@ export const metadata = {
 };
 
 const pages = [
-  { href: "/admin/cms/homepage", title: "Homepage", desc: "Edit hero, USP, classes, and promo sections" },
+  { href: "/admin/cms/homepage", title: "Homepage", desc: "Edit hero, why choose us, classes, and CTA sections" },
   { href: "/admin/cms/header", title: "Header & Navigation", desc: "Logo, menu items, CTA button, languages" },
   { href: "/admin/cms/footer", title: "Footer", desc: "Branding, links, payment trust, copyright" },
   { href: "/admin/cms/testimonials", title: "Testimonials", desc: "Customer reviews shown on the homepage" },

@@ -5,6 +5,7 @@ import { FormLabel, TextInput, Textarea } from "@/components/dashboard";
 import { adminApi } from "@/lib/admin-api";
 import type { CmsTestimonial } from "@/lib/admin-api";
 import { cn } from "@/lib/utils";
+import { CmsImageUploadField } from "@/components/admin/cms/CmsImageUploadField";
 
 export default function AdminCmsTestimonialsPage() {
   const [items, setItems] = useState<CmsTestimonial[]>([]);
@@ -103,11 +104,15 @@ export default function AdminCmsTestimonialsPage() {
             <FormLabel>Content</FormLabel>
             <Textarea value={editing.content ?? ""} onChange={(e) => setEditing({ ...editing, content: e.target.value })} rows={3} className="mt-1" />
           </div>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div>
-              <FormLabel>Image URL</FormLabel>
-              <TextInput value={editing.image_url ?? ""} onChange={(e) => setEditing({ ...editing, image_url: e.target.value || null })} className="mt-1" />
-            </div>
+          <CmsImageUploadField
+            label="Photo"
+            url={editing.image_url ?? ""}
+            alt=""
+            showAlt={false}
+            onUrlChange={(v) => setEditing({ ...editing, image_url: v || null })}
+            onAltChange={() => {}}
+          />
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <FormLabel>Sort order</FormLabel>
               <TextInput type="number" value={editing.sort_order ?? 0} onChange={(e) => setEditing({ ...editing, sort_order: Number(e.target.value) })} className="mt-1" />

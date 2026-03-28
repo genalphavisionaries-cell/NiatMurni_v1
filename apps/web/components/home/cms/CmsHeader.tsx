@@ -115,7 +115,7 @@ export default function CmsHeader({
   }, [navTree]);
 
   const headerBg = "var(--cms-header-bg, rgba(255,255,255,0.92))";
-  const ctaBg = "var(--cms-primary, #eab308)";
+  const ctaBg = "var(--cms-primary, #2563eb)";
 
   return (
     <header

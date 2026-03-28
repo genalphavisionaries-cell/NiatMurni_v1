@@ -17,10 +17,13 @@ export type SupportedCmsSectionKey =
   | "features"
   | "programs"
   | "why_choose_us"
+  | "usp"
   | "stats"
   | "testimonials"
+  | "trust"
   | "faq"
   | "cta"
+  | "promo"
   | "contact";
 
 const FALLBACK = {
@@ -60,10 +63,13 @@ const supported = new Set<string>([
   "features",
   "programs",
   "why_choose_us",
+  "usp",
   "stats",
   "testimonials",
+  "trust",
   "faq",
   "cta",
+  "promo",
   "contact",
 ]);
 
@@ -96,20 +102,31 @@ function mergeHeroSection(
   s: PublicCmsHomepageSection | null,
   legacy: HomepageSettings
 ): PublicCmsHomepageSection {
+  const legacyImg = legacy.hero.backgroundImageUrl ?? "/images/food-handling-hero.svg";
   if (!s) {
     const fb = makeFallbackHeroSection();
-    const legacyImg = legacy.hero.backgroundImageUrl ?? "/images/food-handling-hero.svg";
     return { ...fb, image_url: legacyImg || FALLBACK.hero.image };
   }
-  const legacyImg = legacy.hero.backgroundImageUrl ?? "/images/food-handling-hero.svg";
-  const imageSrc = cmsString(s.image_url) || legacyImg || FALLBACK.hero.image;
+  const title = cmsString(s.title) != null ? s.title : FALLBACK.hero.title;
+  const subtitle =
+    cmsString(s.subtitle) != null
+      ? s.subtitle
+      : cmsString(s.description) != null
+        ? s.description
+        : FALLBACK.hero.subtitle;
+  const image_url =
+    cmsString(s.image_url) != null ? s.image_url : legacyImg || FALLBACK.hero.image;
+  const button_primary_label =
+    cmsString(s.button_primary_label) != null ? s.button_primary_label : FALLBACK.hero.cta_text;
+  const button_primary_url =
+    cmsString(s.button_primary_url) != null ? s.button_primary_url : "/#classes";
   return {
     ...s,
-    title: cmsString(s.title) || FALLBACK.hero.title,
-    subtitle: cmsString(s.subtitle) || cmsString(s.description) || FALLBACK.hero.subtitle,
-    image_url: imageSrc || null,
-    button_primary_label: cmsString(s.button_primary_label) || FALLBACK.hero.cta_text,
-    button_primary_url: s.button_primary_url || "/#classes",
+    title,
+    subtitle,
+    image_url,
+    button_primary_label,
+    button_primary_url,
   };
 }
 
@@ -221,10 +238,13 @@ export default function CmsHomepageRenderer({
     return arr?.length ? arr[0] : null;
   };
 
-  const heroSection = mergeHeroSection(first("hero"), legacy);
-  const whySection = mergeWhySection(first("why_choose_us") ?? first("features"));
-  const testimonialsSection = mergeTestimonialsSection(first("testimonials"));
-  const ctaSection = mergeCtaSection(first("cta"));
+  /** CMS primary: `cms.hero` from API/normalize, else first hero section; `FALLBACK.hero` only inside `mergeHeroSection` when both are absent. */
+  const hero = cms?.hero ?? first("hero");
+  console.log("CMS HERO:", cms?.hero);
+  const heroSection = mergeHeroSection(hero, legacy);
+  const whySection = mergeWhySection(first("why_choose_us") ?? first("usp") ?? first("features"));
+  const testimonialsSection = mergeTestimonialsSection(first("testimonials") ?? first("trust"));
+  const ctaSection = mergeCtaSection(first("cta") ?? first("promo"));
   const contactSection = first("contact");
 
   return (

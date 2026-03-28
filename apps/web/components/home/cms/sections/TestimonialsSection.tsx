@@ -1,7 +1,9 @@
 import type { PublicCmsHomepageSection } from "@/lib/public-cms";
 import { cmsString } from "@/lib/public-cms";
+import { cmsPlainTextForAttribute } from "@/lib/sanitize-cms-html";
 import { extraString, parseJsonSafe } from "../utils";
 import Link from "next/link";
+import { SafeCmsHtml } from "../SafeCmsHtml";
 
 type Testimonial = {
   name: string;
@@ -89,13 +91,13 @@ export default function TestimonialsSection({ section }: { section: PublicCmsHom
 
         {/* ── Section heading ── */}
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-[#0F172A] sm:text-4xl">
-            {title}
-          </h2>
+          <div className="text-3xl font-bold tracking-tight text-[#0F172A] sm:text-4xl" role="heading" aria-level={2}>
+            <SafeCmsHtml html={title} className="max-w-none [&_p]:m-0" />
+          </div>
           {subtitle ? (
-            <p className="mt-3 text-base leading-relaxed text-[#64748B]">
-              {subtitle}
-            </p>
+            <div className="mt-3 text-base leading-relaxed text-[#64748B] [&_a]:text-[#2563EB]">
+              <SafeCmsHtml html={subtitle} className="max-w-none prose-p:my-2" />
+            </div>
           ) : null}
         </div>
 
@@ -171,16 +173,17 @@ export default function TestimonialsSection({ section }: { section: PublicCmsHom
           <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {visible.slice(0, 9).map((t, idx) => {
               const rating = typeof t.rating === "number" ? t.rating : summaryRating;
+              const namePlain = cmsPlainTextForAttribute(t.name) || t.name;
               return (
                 <div
-                  key={`${t.name}-${idx}`}
+                  key={`${namePlain}-${idx}`}
                   className="flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_1px_4px_rgba(15,23,42,0.06)] transition hover:shadow-[0_4px_16px_rgba(15,23,42,0.10)]"
                 >
                   {/* Row 1: avatar + name + date */}
                   <div className="flex items-start gap-3">
-                    <Avatar name={t.name} />
+                    <Avatar name={namePlain} />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-[#0F172A]">{t.name}</p>
+                      <p className="truncate text-sm font-semibold text-[#0F172A]">{namePlain}</p>
                       {t.date ? (
                         <p className="mt-0.5 text-[11px] text-[#94A3B8]">{t.date}</p>
                       ) : null}
@@ -193,9 +196,10 @@ export default function TestimonialsSection({ section }: { section: PublicCmsHom
                   </div>
 
                   {/* Row 3: review text */}
-                  <p className="mt-2.5 flex-1 text-sm leading-relaxed text-[#475569]">
-                    &ldquo;{t.review}&rdquo;
-                  </p>
+                  <div className="mt-2.5 flex-1 text-sm leading-relaxed text-[#475569] [&_a]:text-[#2563EB]">
+                    <span className="sr-only">Review: </span>
+                    <SafeCmsHtml html={t.review} className="max-w-none prose-p:my-1" />
+                  </div>
 
                 </div>
               );

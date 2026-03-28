@@ -11,6 +11,7 @@ import {
   CmsHeader,
   CmsFooter,
   CmsHomepageRenderer,
+  CmsDebugPanel,
 } from "@/components/home";
 import {
   defaultHomepageSettings,
@@ -87,9 +88,12 @@ export default async function HomePage() {
     !!cms &&
     (cmsKeys.has("hero") ||
       cmsKeys.has("why_choose_us") ||
+      cmsKeys.has("usp") ||
       cmsKeys.has("features") ||
       cmsKeys.has("testimonials") ||
-      cmsKeys.has("cta"));
+      cmsKeys.has("trust") ||
+      cmsKeys.has("cta") ||
+      cmsKeys.has("promo"));
 
   // Legacy fallback: build a hero carousel-like section from homepage settings.
   // This removes the old booking panel and keeps the hero clean & consistent.
@@ -116,10 +120,10 @@ export default async function HomePage() {
             <CmsHomepageRenderer cms={cms} legacy={settings} />
 
             {/* Fallback fill-ins if CMS omits key blocks */}
-            {!cmsKeys.has("why_choose_us") && !cmsKeys.has("features") ? (
+            {!cmsKeys.has("why_choose_us") && !cmsKeys.has("usp") && !cmsKeys.has("features") ? (
               <WhyChooseSection data={settings.whyChoose} />
             ) : null}
-            {!cmsKeys.has("testimonials") ? (
+            {!cmsKeys.has("testimonials") && !cmsKeys.has("trust") ? (
               <SocialProofSection data={settings.socialProof} />
             ) : null}
           </main>
@@ -190,6 +194,7 @@ export default async function HomePage() {
         </>
       )}
       <PublicFloatingLayer />
+      {cms ? <CmsDebugPanel cms={cms} /> : null}
     </div>
   );
 }

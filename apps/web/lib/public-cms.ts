@@ -117,7 +117,19 @@ export type PublicCmsPayload = {
     footer_login: PublicCmsNavItem[];
   };
   homepage_sections: PublicCmsHomepageSection[];
+  /** First hero row from `homepage_sections` (filled by `normalizeCmsPayload`). */
+  hero?: PublicCmsHomepageSection | null;
   floating_menu: PublicCmsFloatingMenu;
+};
+
+const EMPTY_THEME: PublicCmsTheme = {
+  primary_color: "",
+  secondary_color: "",
+  accent_color: "",
+  background_color: "",
+  text_color: "",
+  header_background_color: "",
+  footer_background_color: "",
 };
 
 const defaultFooterContactSocial = (): {
@@ -146,15 +158,7 @@ const emptyPayload = (): PublicCmsPayload => ({
     primary_cta_label: "",
     primary_cta_url: "",
   },
-  theme: {
-    primary_color: "",
-    secondary_color: "",
-    accent_color: "",
-    background_color: "",
-    text_color: "",
-    header_background_color: "",
-    footer_background_color: "",
-  },
+  theme: { ...EMPTY_THEME },
   seo: {
     homepage_seo_title: "",
     homepage_seo_description: "",
@@ -165,6 +169,7 @@ const emptyPayload = (): PublicCmsPayload => ({
   ...defaultFooterContactSocial(),
   navigation: { header: [], footer: [], footer_legal: [], footer_login: [] },
   homepage_sections: [],
+  hero: null,
   floating_menu: { enabled: false, items: [] },
 });
 
@@ -180,6 +185,17 @@ function normalizeNavItem(raw: Partial<PublicCmsNavItem> & Record<string, unknow
     is_button: !!raw.is_button,
     children,
   };
+}
+
+function normalizeHomepageSectionKey(k: string): string {
+  return k.trim().toLowerCase();
+}
+
+function pickFirstHeroSection(sections: PublicCmsHomepageSection[]): PublicCmsHomepageSection | null {
+  const heroes = sections.filter((s) => normalizeHomepageSectionKey(s.section_key) === "hero");
+  if (!heroes.length) return null;
+  heroes.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+  return heroes[0] ?? null;
 }
 
 function normalizeFloatingMenu(raw: PublicCmsPayload["floating_menu"] | undefined): PublicCmsFloatingMenu {
@@ -211,8 +227,23 @@ function normalizeCmsPayload(data: PublicCmsPayload): PublicCmsPayload {
       ? false
       : true;
 
+  const theme = data.theme ?? EMPTY_THEME;
+  const sections = data.homepage_sections ?? [];
+  const hero = data.hero ?? pickFirstHeroSection(sections);
+
   return {
     ...data,
+    homepage_sections: sections,
+    hero,
+    theme: {
+      primary_color: theme.primary_color ?? EMPTY_THEME.primary_color,
+      secondary_color: theme.secondary_color ?? EMPTY_THEME.secondary_color,
+      accent_color: theme.accent_color ?? EMPTY_THEME.accent_color,
+      background_color: theme.background_color ?? EMPTY_THEME.background_color,
+      text_color: theme.text_color ?? EMPTY_THEME.text_color,
+      header_background_color: theme.header_background_color ?? EMPTY_THEME.header_background_color,
+      footer_background_color: theme.footer_background_color ?? EMPTY_THEME.footer_background_color,
+    },
     footer: {
       description: data.footer?.description ?? "",
       bottom_text: data.footer?.bottom_text ?? "",
@@ -250,7 +281,9 @@ export async function fetchPublicCms(): Promise<PublicCmsPayload | null> {
       headers: { Accept: "application/json" },
     });
     if (!res.ok) return null;
-    const data = (await res.json()) as PublicCmsPayload;
+    const raw = (await res.json()) as PublicCmsPayload & { data?: PublicCmsPayload };
+    // Laravel may return the payload at the root, or wrapped in { data } (legacy).
+    const data = raw?.site && raw?.navigation ? raw : raw?.data;
     if (!data?.site || !data?.navigation) return null;
     return normalizeCmsPayload(data);
   } catch {

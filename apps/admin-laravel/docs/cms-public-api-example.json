@@ -21,9 +21,9 @@
         }
       },
       "hero": [],
-      "usp": [],
+      "why_choose_us": [],
       "classes": [],
-      "trust": {
+      "testimonials": {
         "testimonials": [
           {
             "name": "A. Customer",
@@ -34,7 +34,7 @@
           }
         ]
       },
-      "promo": [],
+      "cta": [],
       "footer": [],
       "floating_menu": []
     }

@@ -1,7 +1,9 @@
 import type { PublicCmsHomepageSection } from "@/lib/public-cms";
 import { cmsString } from "@/lib/public-cms";
+import { cmsPlainTextForAttribute } from "@/lib/sanitize-cms-html";
 import { extraString, parseJsonSafe, safeHref } from "../utils";
 import Link from "next/link";
+import { SafeCmsHtml } from "../SafeCmsHtml";
 
 type PromoItem = {
   image_url?: string;
@@ -65,16 +67,20 @@ export default function PromotionsSection({
     <section id="promotions" className="bg-surface py-16 sm:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-10 flex flex-col items-center text-center">
-          <div className="inline-flex items-center rounded-full bg-[#FEF3C7] px-4 py-2 text-sm font-semibold text-[#92400E]">
-            {topBanner}
+          <div className="inline-flex max-w-full items-center rounded-full bg-[#FEF3C7] px-4 py-2 text-sm font-semibold text-[#92400E] [&_a]:text-[#92400E] [&_a]:underline">
+            <SafeCmsHtml html={topBanner} className="max-w-none [&_p]:m-0 [&_p]:inline" />
           </div>
-          <h2 className="mt-4 text-3xl font-bold tracking-tight text-[#0F172A] sm:text-4xl">
-            {title}
-          </h2>
+          <div
+            className="mt-4 text-3xl font-bold tracking-tight text-[#0F172A] sm:text-4xl [&_a]:text-[#2563EB] [&_a]:underline"
+            role="heading"
+            aria-level={2}
+          >
+            <SafeCmsHtml html={title} className="max-w-none [&_p]:m-0" />
+          </div>
           {description ? (
-            <p className="mt-4 max-w-2xl text-lg leading-relaxed text-[#64748B]">
-              {description}
-            </p>
+            <div className="mt-4 max-w-2xl text-lg leading-relaxed text-[#64748B] [&_a]:text-[#2563EB]">
+              <SafeCmsHtml html={description} className="max-w-none prose-p:my-2" />
+            </div>
           ) : null}
         </div>
 
@@ -95,7 +101,7 @@ export default function PromotionsSection({
                   <div className="h-36 overflow-hidden rounded-2xl">
                     <img
                       src={img}
-                      alt={pTitle}
+                      alt={cmsPlainTextForAttribute(pTitle) || `Promo ${idx + 1}`}
                       className="h-full w-full object-cover"
                       onError={(e) => {
                         e.currentTarget.style.display = "none";
@@ -106,13 +112,13 @@ export default function PromotionsSection({
                   <PlaceholderPromoImage index={idx} />
                 )}
 
-                <h3 className="mt-5 text-xl font-semibold tracking-tight text-[#0F172A]">
-                  {pTitle}
-                </h3>
+                <div className="mt-5 text-xl font-semibold tracking-tight text-[#0F172A]">
+                  <SafeCmsHtml html={pTitle} className="max-w-none [&_p]:m-0" />
+                </div>
                 {pDesc ? (
-                  <p className="mt-2 min-h-[3.5rem] text-sm leading-relaxed text-[#64748B]">
-                    {pDesc}
-                  </p>
+                  <div className="mt-2 min-h-[3.5rem] text-sm leading-relaxed text-[#64748B] [&_a]:text-[#2563EB]">
+                    <SafeCmsHtml html={pDesc} className="max-w-none prose-p:my-1" />
+                  </div>
                 ) : null}
 
                 <div className="mt-6">
@@ -120,7 +126,7 @@ export default function PromotionsSection({
                     href={btnUrl}
                     className="inline-flex w-full items-center justify-center rounded-xl bg-[#2563EB] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1D4ED8]"
                   >
-                    {btnLabel}
+                    <SafeCmsHtml as="span" html={btnLabel} className="[&_p]:m-0 [&_p]:inline" />
                   </Link>
                 </div>
               </div>

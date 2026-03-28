@@ -9,13 +9,14 @@ use App\Models\CmsTestimonial;
 use Illuminate\Support\Facades\Cache;
 
 /**
- * Public homepage CMS: cms_pages → cms_sections → cms_items (+ cms_testimonials for trust).
+ * Public homepage CMS: cms_pages → cms_sections → cms_items (+ cms_testimonials merged into testimonials section).
  *
  * Example payload shape (keys omitted when empty):
  * {
  *   "header": {"title":null,"subtitle":null,"content":{...},"items":{"menu_item":[...]}},
  *   "hero": {"content":{...},"items":[]},
- *   "trust": {"content":{...},"items":{"logo":[...]},"testimonials":[...]}
+ *   "why_choose_us": {"content":{...},"items":{"usp":[...]}},
+ *   "testimonials": {"content":{...},"items":{"logo":[...]},"testimonials":[...]}
  * }
  */
 class CmsService
@@ -62,18 +63,20 @@ class CmsService
             ->get()
             ->keyBy('section_key');
 
-        $keys = ['header', 'hero', 'usp', 'classes', 'trust', 'promo', 'footer', 'floating_menu'];
+        $keys = ['header', 'hero', 'why_choose_us', 'classes', 'testimonials', 'cta', 'footer', 'floating_menu'];
         $out = [];
         foreach ($keys as $key) {
-            if ($key === 'trust') {
+            if ($key === 'testimonials') {
                 continue;
             }
             $section = $sections->get($key);
             $out[$key] = $this->mapSection($section, $key);
         }
 
-        $out['trust'] = $this->mergeTrustTestimonials(
-            $this->mapSection($sections->get('trust'), 'trust')
+        $testimonialsSection = $sections->get('testimonials') ?? $sections->get('trust');
+        $expectedKey = $testimonialsSection !== null ? (string) $testimonialsSection->section_key : 'testimonials';
+        $out['testimonials'] = $this->mergeTrustTestimonials(
+            $this->mapSection($testimonialsSection, $expectedKey)
         );
 
         return $out;
@@ -87,10 +90,10 @@ class CmsService
         return [
             'header' => [],
             'hero' => [],
-            'usp' => [],
+            'why_choose_us' => [],
             'classes' => [],
-            'trust' => [],
-            'promo' => [],
+            'testimonials' => [],
+            'cta' => [],
             'footer' => [],
             'floating_menu' => [],
         ];

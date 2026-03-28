@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { HomepageSettings, NavLink } from "@/lib/homepage-settings";
 import type { PublicCmsContactBlock, PublicCmsFooterBlock, PublicCmsSocialBlock } from "@/lib/public-cms";
 import { cmsString } from "@/lib/public-cms";
+import { SafeCmsHtml } from "./SafeCmsHtml";
 
 type CmsFooterProps = {
   siteName: string;
@@ -129,7 +130,9 @@ export default function CmsFooter({
                 <p className="text-lg font-semibold text-white">{siteName}</p>
               )}
             </div>
-            <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-white/75">{desc}</p>
+            <div className="mt-4 whitespace-pre-line text-sm leading-relaxed text-white/75 [&_a]:text-white [&_a]:underline">
+              <SafeCmsHtml html={desc} className="max-w-none [&_p]:my-2 [&_p]:text-white/75 first:[&_p]:mt-0" />
+            </div>
             <p className="mt-2 text-xs text-white/60">Berdaftar di Malaysia</p>
           </div>
 
@@ -222,7 +225,9 @@ export default function CmsFooter({
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
                       <PadlockIcon className="h-5 w-5 shrink-0" />
-                      <span className="text-sm font-medium">{paymentHeadline}</span>
+                      <span className="text-sm font-medium [&_a]:text-[#0F172A] [&_a]:underline">
+                        <SafeCmsHtml html={paymentHeadline} as="span" className="[&_p]:m-0 [&_p]:inline" />
+                      </span>
                     </div>
                     <div className="flex items-center gap-1.5 rounded bg-[#32325D] px-2.5 py-1.5">
                       <span className="text-[10px] font-medium text-white">Powered by</span>
@@ -282,9 +287,9 @@ export default function CmsFooter({
                   )
                 )}
               </div>
-              <p className="mt-2 max-w-xl whitespace-pre-line text-center text-xs text-white/60 sm:text-left">
-                {bottomLine}
-              </p>
+              <div className="mt-2 max-w-xl whitespace-pre-line text-center text-xs text-white/60 sm:text-left [&_a]:text-white/80 [&_a]:underline">
+                <SafeCmsHtml html={bottomLine} className="max-w-none [&_p]:my-1" />
+              </div>
             </div>
             <div className="flex flex-col items-center sm:items-end">
               {sslBadgeUrl ? (
@@ -326,9 +331,9 @@ export default function CmsFooter({
                   </div>
                 </div>
               )}
-              <p className="mt-1.5 max-w-[220px] text-center text-[11px] text-white/50 sm:text-right">
-                {sslCaption}
-              </p>
+              <div className="mt-1.5 max-w-[220px] text-center text-[11px] text-white/50 sm:text-right [&_a]:text-white/70 [&_a]:underline">
+                <SafeCmsHtml html={sslCaption} className="max-w-none [&_p]:m-0 [&_p]:inline" />
+              </div>
             </div>
           </div>
         </div>

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { PublicCmsHomepageSection, PublicCmsSite } from "@/lib/public-cms";
 import { cmsString } from "@/lib/public-cms";
 import { extraString, safeHref, parseJsonSafe } from "../utils";
+import { SafeCmsHtml } from "../SafeCmsHtml";
 
 type HeroBadge = { label: string };
 
@@ -173,12 +174,16 @@ export default function HeroSection({
             </div>
           ) : null}
 
-          <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
-            {title}
-          </h1>
-          <p className="mt-5 text-lg leading-relaxed text-white/80 sm:text-xl">
-            {subtitle}
-          </p>
+          <div
+            className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl [&_a]:text-white [&_a]:underline"
+            role="heading"
+            aria-level={1}
+          >
+            <SafeCmsHtml html={title} className="max-w-none [&_p]:m-0" />
+          </div>
+          <div className="mt-5 text-lg leading-relaxed text-white/80 sm:text-xl [&_a]:text-white/90 [&_a]:underline">
+            <SafeCmsHtml html={subtitle} className="max-w-none prose-p:my-2 prose-headings:text-white prose-headings:font-semibold" />
+          </div>
 
           <div className="mt-10 flex flex-wrap items-center gap-4">
             <Link
@@ -186,13 +191,13 @@ export default function HeroSection({
               className="inline-flex rounded-xl px-7 py-4 text-sm font-semibold text-white shadow-lg transition active:scale-[0.98]"
               style={{ background: "var(--cms-primary, #eab308)" }}
             >
-              {primaryLabel}
+              <SafeCmsHtml as="span" html={primaryLabel} className="[&_p]:m-0 [&_p]:inline" />
             </Link>
             <Link
               href={secondaryUrl}
               className="inline-flex rounded-xl border border-white/25 bg-white/5 px-7 py-4 text-sm font-semibold text-white transition hover:bg-white/10"
             >
-              {secondaryLabel}
+              <SafeCmsHtml as="span" html={secondaryLabel} className="[&_p]:m-0 [&_p]:inline" />
             </Link>
           </div>
         </div>

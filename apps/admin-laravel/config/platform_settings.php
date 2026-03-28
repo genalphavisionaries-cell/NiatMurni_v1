@@ -116,6 +116,24 @@ return [
             'default' => 'Niat Murni Academy',
             'helper' => 'Separate from CMS keys; use for API/JSON consumers.',
         ],
+        'primary_color' => [
+            'label' => 'Public site primary colour',
+            'type' => 'color',
+            'default' => '#2563EB',
+            'helper' => 'Buttons, links, and highlights on the marketing site (CSS --cms-primary).',
+        ],
+        'secondary_color' => [
+            'label' => 'Public site secondary colour',
+            'type' => 'color',
+            'default' => '#64748B',
+            'helper' => 'Supporting UI (CSS --cms-secondary).',
+        ],
+        'accent_color' => [
+            'label' => 'Public site accent colour',
+            'type' => 'color',
+            'default' => '#F59E0B',
+            'helper' => 'Badges and emphasis (CSS --cms-accent).',
+        ],
     ],
 
     'feature_flags' => [

@@ -46,21 +46,101 @@ export type AdminProfile = {
 };
 
 // CMS types (relational model)
-export type CmsHeroData = { headline: string; subheadline: string; buttons: { label: string; url: string; color?: string }[]; background_urls: string };
-export type CmsUspPoint = { icon: string; title: string; description: string };
-export type CmsUspData = { title: string; description: string; points: CmsUspPoint[]; side_images_urls: string };
-export type CmsClassesData = { title: string; description: string; button_text: string; button_url: string; max_items: number };
-export type CmsTrustLogo = { image_url: string; title: string };
-export type CmsTrustData = { logos: CmsTrustLogo[]; google_rating_text: string; google_button_label: string; google_button_url: string };
-export type CmsPromoCard = { image_url: string; title: string; description: string; button_label: string; url: string };
-export type CmsPromoData = { title: string; description: string; banner_urls: string; cards: CmsPromoCard[] };
+export type CmsHeroData = {
+  headline: string;
+  subheadline: string;
+  buttons: { label: string; url: string; color?: string }[];
+  background_urls: string;
+  background_alts?: string;
+  accent_color?: string;
+  enabled?: boolean;
+};
+export type CmsUspPoint = {
+  icon: string;
+  title: string;
+  description: string;
+  background_color?: string;
+  icon_alt?: string;
+};
+export type CmsUspData = {
+  title: string;
+  description: string;
+  points: CmsUspPoint[];
+  side_images_urls: string;
+  side_images_alts?: string;
+  accent_color?: string;
+  enabled?: boolean;
+};
+export type CmsClassesData = {
+  title: string;
+  description: string;
+  button_text: string;
+  button_url: string;
+  max_items: number;
+  accent_color?: string;
+  enabled?: boolean;
+};
+export type CmsTrustLogo = { image_url: string; title: string; image_alt?: string };
+export type CmsTrustData = {
+  logos: CmsTrustLogo[];
+  google_rating_text: string;
+  google_button_label: string;
+  google_button_url: string;
+  enabled?: boolean;
+};
+export type CmsPromoCard = {
+  image_url: string;
+  title: string;
+  description: string;
+  button_label: string;
+  url: string;
+  card_color?: string;
+  image_alt?: string;
+};
+export type CmsPromoData = {
+  title: string;
+  description: string;
+  banner_urls: string;
+  banner_alts?: string;
+  accent_color?: string;
+  cards: CmsPromoCard[];
+  enabled?: boolean;
+};
 export type CmsMenuItem = { label: string; url: string; type: string; has_children: boolean };
-export type CmsHeaderData = { logo_url: string; menu_items: CmsMenuItem[]; cta: { label: string; url: string; bg_color: string; text_color: string }; languages: { code: string; label: string; active: boolean }[] };
+export type CmsHeaderData = {
+  logo_url: string;
+  logo_alt?: string;
+  menu_items: CmsMenuItem[];
+  cta: { label: string; url: string; bg_color: string; text_color: string };
+  languages: { code: string; label: string; active: boolean }[];
+  enabled?: boolean;
+};
 export type CmsFooterLink = { label: string; url: string };
-export type CmsFooterData = { brand: { logo_url: string; description: string }; quick_links: CmsFooterLink[]; buttons: CmsFooterLink[]; payment: { title: string; icons_urls: string }; legal_links: CmsFooterLink[]; bottom: { copyright: string; ssl_badge_url: string } };
+export type CmsFooterData = {
+  brand: { logo_url: string; description: string; logo_alt?: string };
+  quick_links: CmsFooterLink[];
+  buttons: CmsFooterLink[];
+  payment: { title: string; icons_urls: string; icons_alts?: string };
+  legal_links: CmsFooterLink[];
+  bottom: { copyright: string; ssl_badge_url: string };
+  enabled?: boolean;
+};
 export type CmsFloatingItem = { icon: string; label: string; url: string };
 export type CmsFloatingData = { enabled: boolean; style_json: string; items: CmsFloatingItem[] };
-export type CmsHomepageData = { hero: CmsHeroData; usp: CmsUspData; classes: CmsClassesData; trust: CmsTrustData; promo: CmsPromoData; header: CmsHeaderData; footer: CmsFooterData; floating_menu: CmsFloatingData };
+export type CmsHomepageData = {
+  hero: CmsHeroData;
+  why_choose_us: CmsUspData;
+  classes: CmsClassesData;
+  /** Partner logos + Google rating (section_key: testimonials). */
+  testimonials: CmsTrustData;
+  /** Promotions / bottom CTA section (relational items: promo_card). */
+  cta: CmsPromoData;
+  header: CmsHeaderData;
+  footer: CmsFooterData;
+  floating_menu: CmsFloatingData;
+};
+/** Legacy API keys — prefer {@link CmsHomepageData} canonical fields. */
+export type CmsHomepageLegacyKeys = { usp?: CmsUspData; promo?: CmsPromoData; trust?: CmsTrustData };
 export type CmsTestimonial = { id: number; name: string; image_url: string | null; rating: number; content: string; is_active: boolean; sort_order: number; created_at?: string; updated_at?: string };
 
 export type AdminSystemSettings = {
@@ -448,11 +528,16 @@ export const adminApi = {
   },
 
   // CMS — new relational model (cms_pages / cms_sections / cms_items)
-  getCmsHomepage(): Promise<{ data: CmsHomepageData }> {
+  getCmsHomepage(): Promise<{ data: CmsHomepageData & CmsHomepageLegacyKeys }> {
     return request("/api/admin/cms/homepage");
   },
   updateCmsHomepage(payload: Partial<CmsHomepageData>): Promise<{ message: string }> {
     return request("/api/admin/cms/homepage", { method: "PUT", body: JSON.stringify(payload) });
+  },
+  uploadCmsMedia(file: File): Promise<{ data: { url: string } }> {
+    const body = new FormData();
+    body.append("file", file);
+    return request("/api/admin/cms/media", { method: "POST", body });
   },
   getCmsTestimonials(): Promise<{ data: CmsTestimonial[] }> {
     return request("/api/admin/cms/testimonials");

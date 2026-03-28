@@ -6,6 +6,7 @@ use App\Filament\Resources\SettingsResource;
 use App\Services\SettingService;
 use Filament\Actions\Action;
 use Filament\Forms;
+use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
@@ -69,6 +70,11 @@ class ManageSettings extends Page implements HasForms
                         ->options($meta['options'] ?? [])
                         ->native(false)
                         ->default($default);
+                } elseif ($type === 'color') {
+                    $schema[] = ColorPicker::make($fieldName)
+                        ->label($label)
+                        ->helperText($helper)
+                        ->default(is_string($default) ? $default : '#000000');
                 } else {
                     $schema[] = Forms\Components\TextInput::make($fieldName)
                         ->label($label)

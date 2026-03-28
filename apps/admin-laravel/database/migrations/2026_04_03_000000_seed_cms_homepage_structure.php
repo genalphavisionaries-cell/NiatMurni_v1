@@ -33,10 +33,10 @@ return new class extends Migration
         $sections = [
             ['key' => 'header', 'title' => 'Header', 'order' => 0],
             ['key' => 'hero', 'title' => 'Hero', 'order' => 1],
-            ['key' => 'usp', 'title' => 'USP', 'order' => 2],
+            ['key' => 'why_choose_us', 'title' => 'Why choose us', 'order' => 2],
             ['key' => 'classes', 'title' => 'Classes', 'order' => 3],
-            ['key' => 'trust', 'title' => 'Trust', 'order' => 4],
-            ['key' => 'promo', 'title' => 'Promo', 'order' => 5],
+            ['key' => 'testimonials', 'title' => 'Testimonials', 'order' => 4],
+            ['key' => 'cta', 'title' => 'CTA', 'order' => 5],
             ['key' => 'footer', 'title' => 'Footer', 'order' => 6],
             ['key' => 'floating_menu', 'title' => 'Floating Menu', 'order' => 7],
         ];

@@ -16,6 +16,14 @@
   --card-bg: #ffffff;
   --text-primary: #0f172a;
   --text-secondary: #64748b;
+  /* Public CMS payload (merge-public-cms.ts sets these on the page wrapper when API returns values) */
+  --cms-primary: #2563eb;
+  --cms-secondary: #64748b;
+  --cms-accent: #f59e0b;
+  --cms-bg: transparent;
+  --cms-text: inherit;
+  --cms-header-bg: transparent;
+  --cms-footer-bg: transparent;
 }
 
 body {

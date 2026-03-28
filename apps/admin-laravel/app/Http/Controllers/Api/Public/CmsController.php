@@ -3,15 +3,17 @@
 namespace App\Http\Controllers\Api\Public;
 
 use App\Http\Controllers\Controller;
-use App\Services\CmsService;
+use App\Services\PublicCmsPayloadService;
 use Illuminate\Http\JsonResponse;
 
+/**
+ * Public site CMS: full {@see PublicCmsPayload} for Next.js
+ * (site, navigation, homepage_sections, …), mapped from relational CMS.
+ */
 class CmsController extends Controller
 {
-    public function __invoke(CmsService $cms): JsonResponse
+    public function __invoke(PublicCmsPayloadService $payload): JsonResponse
     {
-        return response()->json([
-            'data' => $cms->getHomepage(),
-        ]);
+        return response()->json($payload->build());
     }
 }
