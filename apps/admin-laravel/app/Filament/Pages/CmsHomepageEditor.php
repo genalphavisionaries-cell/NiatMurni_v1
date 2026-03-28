@@ -65,13 +65,41 @@ class CmsHomepageEditor extends Page implements HasForms
 
     public function form(Form $form): Form
     {
+        $homepageStatus = $this->getHomepageStatus();
+        
         return $form
             ->schema([
+                // Global Homepage Status Banner
+                Section::make('')
+                    ->schema([
+                        Placeholder::make('homepage_status')
+                            ->label('')
+                            ->content(function () use ($homepageStatus) {
+                                $statusBadge = $homepageStatus['is_live'] 
+                                    ? '<span style="background: #059669; color: white; padding: 4px 12px; border-radius: 6px; font-weight: 600;">🌐 Homepage Live</span>'
+                                    : '<span style="background: #D97706; color: white; padding: 4px 12px; border-radius: 6px; font-weight: 600;">✏️ Draft Changes Pending</span>';
+                                
+                                $sectionStatus = implode(' | ', array_map(
+                                    fn($section, $status) => "<strong>{$section}:</strong> " . $this->formatSectionStatus($status),
+                                    array_keys($homepageStatus['sections']),
+                                    $homepageStatus['sections']
+                                ));
+                                
+                                return "<div style='padding: 16px; border: 2px solid #e5e7eb; border-radius: 8px; background: #f9fafb;'>
+                                    <div style='margin-bottom: 8px;'>{$statusBadge}</div>
+                                    <div style='font-size: 14px; color: #6b7280;'>{$sectionStatus}</div>
+                                </div>";
+                            }),
+                    ])
+                    ->columnSpanFull(),
+                    
                 Tabs::make('homeTabs')
                     ->columnSpanFull()
                     ->tabs([
                         Tab::make('Hero Section')
                             ->icon('heroicon-o-sparkles')
+                            ->badge(fn () => $this->getSectionStatusBadge('hero'))
+                            ->badgeColor(fn () => $this->getSectionStatusColor('hero'))
                             ->schema([
                                 Section::make('🎯 Hero Section')
                                     ->description('The main banner that visitors see first. Create a compelling headline and call-to-action.')
@@ -139,6 +167,8 @@ class CmsHomepageEditor extends Page implements HasForms
                             ]),
                         Tab::make('Why Choose Us')
                             ->icon('heroicon-o-star')
+                            ->badge(fn () => $this->getSectionStatusBadge('why_choose_us'))
+                            ->badgeColor(fn () => $this->getSectionStatusColor('why_choose_us'))
                             ->schema([
                                 Section::make('⭐ Why Choose Us Section')
                                     ->description('Highlight your unique value propositions and competitive advantages to convince visitors.')
@@ -271,6 +301,8 @@ class CmsHomepageEditor extends Page implements HasForms
                             ]),
                         Tab::make('Trust & Reviews')
                             ->icon('heroicon-o-shield-check')
+                            ->badge(fn () => $this->getSectionStatusBadge('testimonials'))
+                            ->badgeColor(fn () => $this->getSectionStatusColor('testimonials'))
                             ->schema([
                                 Section::make('🛡️ Trust & Social Proof Section')
                                     ->description('Build credibility with customer reviews, brand partnerships, and trust indicators.')
@@ -337,6 +369,8 @@ class CmsHomepageEditor extends Page implements HasForms
                             ]),
                         Tab::make('Promotions & CTA')
                             ->icon('heroicon-o-megaphone')
+                            ->badge(fn () => $this->getSectionStatusBadge('cta'))
+                            ->badgeColor(fn () => $this->getSectionStatusColor('cta'))
                             ->schema([
                                 Section::make('🎯 Call-to-Action & Promotions')
                                     ->description('Drive conversions with promotional offers, special deals, and compelling calls-to-action.')
@@ -465,15 +499,13 @@ class CmsHomepageEditor extends Page implements HasForms
     {
         $data = $this->form->getState();
         
-        // Validate for publish
-        $validationErrors = $this->validateForPublish($data);
+        // Validate ALL critical sections for homepage consistency
+        $validationResult = $this->validateEntireHomepageForPublish($data);
         
-        if (!empty($validationErrors)) {
-            $errorMessage = "Cannot publish - please fix the following issues:\n\n" . implode("\n", $validationErrors);
-            
+        if (!$validationResult['can_publish']) {
             Notification::make()
-                ->title('Publish Failed')
-                ->body($errorMessage)
+                ->title('Homepage Cannot Be Published')
+                ->body($validationResult['message'])
                 ->danger()
                 ->persistent()
                 ->send();
@@ -494,8 +526,8 @@ class CmsHomepageEditor extends Page implements HasForms
             app(CmsService::class)->forgetCache();
 
             Notification::make()
-                ->title('Published Successfully')
-                ->body('Your homepage changes are now live on the website!')
+                ->title('Homepage Published Successfully')
+                ->body('All sections are now live! Your homepage is complete and published.')
                 ->success()
                 ->send();
                 
@@ -530,36 +562,94 @@ class CmsHomepageEditor extends Page implements HasForms
         return $data;
     }
 
-    private function validateForPublish(array $data): array
+    private function validateEntireHomepageForPublish(array $data): array
     {
         $errors = [];
+        $sections = [];
         
-        // Validate Hero
+        // Validate ALL critical sections regardless of individual toggles
+        
+        // 1. Validate Hero Section
         $hero = $data['hero'] ?? [];
-        if (empty(trim($hero['headline'] ?? ''))) {
-            $errors[] = "• Hero Section: Headline is required for publishing";
+        $heroErrors = $this->validateSectionData('Hero', $hero, [
+            'headline' => 'Main headline is required to attract visitors',
+            'subheadline' => 'Description helps explain your service',
+        ]);
+        if (!empty($heroErrors)) {
+            $errors = array_merge($errors, $heroErrors);
+            $sections['hero'] = 'incomplete';
+        } else {
+            $sections['hero'] = 'ready';
         }
         
-        // Validate Why Choose Us
+        // 2. Validate Why Choose Us Section  
         $why = $data['why_choose_us'] ?? [];
-        if (empty(trim($why['title'] ?? ''))) {
-            $errors[] = "• Why Choose Us: Section title is required for publishing";
-        }
+        $whyErrors = $this->validateSectionData('Why Choose Us', $why, [
+            'title' => 'Section title is required to highlight your advantages',
+        ]);
+        
         $points = $why['points'] ?? [];
         $validPoints = array_filter($points, fn($p) => !empty(trim($p['title'] ?? '')));
         if (empty($validPoints)) {
-            $errors[] = "• Why Choose Us: At least 1 benefit point is required for publishing";
+            $whyErrors[] = "• Why Choose Us: At least 1 benefit point is required to showcase your value";
         }
         
-        // Validate CTA
-        $cta = $data['cta'] ?? [];
-        if (empty(trim($cta['title'] ?? ''))) {
-            $errors[] = "• Promotions: Section title is required for publishing";
+        if (!empty($whyErrors)) {
+            $errors = array_merge($errors, $whyErrors);
+            $sections['why_choose_us'] = 'incomplete';
+        } else {
+            $sections['why_choose_us'] = 'ready';
         }
+        
+        // 3. Validate CTA/Promotions Section
+        $cta = $data['cta'] ?? [];
+        $ctaErrors = $this->validateSectionData('Promotions', $cta, [
+            'title' => 'Section title is required to drive customer action',
+        ]);
+        
         $cards = $cta['cards'] ?? [];
         $validCards = array_filter($cards, fn($c) => !empty(trim($c['title'] ?? '')));
         if (empty($validCards)) {
-            $errors[] = "• Promotions: At least 1 promotional offer is required for publishing";
+            $ctaErrors[] = "• Promotions: At least 1 promotional offer is required to drive conversions";
+        }
+        
+        if (!empty($ctaErrors)) {
+            $errors = array_merge($errors, $ctaErrors);
+            $sections['cta'] = 'incomplete';
+        } else {
+            $sections['cta'] = 'ready';
+        }
+
+        // Build comprehensive response
+        if (!empty($errors)) {
+            $message = "Homepage cannot be published until all required sections are complete:\n\n" . 
+                      implode("\n", $errors) . 
+                      "\n\n💡 You can still save as draft to preserve your work.";
+                      
+            return [
+                'can_publish' => false,
+                'message' => $message,
+                'errors' => $errors,
+                'sections_status' => $sections,
+            ];
+        }
+
+        return [
+            'can_publish' => true,
+            'message' => 'All sections are ready for publishing!',
+            'errors' => [],
+            'sections_status' => $sections,
+        ];
+    }
+
+    private function validateSectionData(string $sectionName, array $section, array $requiredFields): array
+    {
+        $errors = [];
+        
+        foreach ($requiredFields as $field => $message) {
+            if (empty(trim($section[$field] ?? ''))) {
+                $errors[] = "• {$sectionName}: {$message}";
+            }
         }
         
         return $errors;
@@ -641,14 +731,24 @@ class CmsHomepageEditor extends Page implements HasForms
         $section = $this->section('hero');
         $lines = array_values(array_filter(array_map('trim', explode("\n", (string) ($hero['background_urls'] ?? '')))));
         
-        // Merge with existing content to prevent data loss
+        // Prepare updates (only include provided fields)
+        $updates = [];
+        if (array_key_exists('headline', $hero)) {
+            $updates['headline'] = $hero['headline'] ?? '';
+        }
+        if (array_key_exists('subheadline', $hero)) {
+            $updates['subheadline'] = $hero['subheadline'] ?? '';
+        }
+        if (array_key_exists('buttons', $hero)) {
+            $updates['buttons'] = $hero['buttons'] ?? [];
+        }
+        if (array_key_exists('background_urls', $hero)) {
+            $updates['background_urls'] = array_slice($lines, 0, 5);
+        }
+        
+        // Deep merge to preserve nested structures like buttons array
         $existingContent = $section->content_json ?? [];
-        $newContent = [
-            'headline' => $hero['headline'] ?? $existingContent['headline'] ?? '',
-            'subheadline' => $hero['subheadline'] ?? $existingContent['subheadline'] ?? '',
-            'buttons' => $hero['buttons'] ?? $existingContent['buttons'] ?? [],
-            'background_urls' => array_slice($lines, 0, 5),
-        ];
+        $newContent = $this->deepMerge($existingContent, $updates);
         
         $section->content_json = $newContent;
         $section->is_active = $hero['enabled'] ?? $section->is_active ?? true;
@@ -690,13 +790,21 @@ class CmsHomepageEditor extends Page implements HasForms
         $section = $this->section('why_choose_us');
         $lines = array_values(array_filter(array_map('trim', explode("\n", (string) ($usp['side_images_urls'] ?? '')))));
         
-        // Merge with existing content
+        // Prepare updates (only include provided fields)
+        $updates = [];
+        if (array_key_exists('title', $usp)) {
+            $updates['title'] = $usp['title'] ?? '';
+        }
+        if (array_key_exists('description', $usp)) {
+            $updates['description'] = $usp['description'] ?? '';
+        }
+        if (array_key_exists('side_images_urls', $usp)) {
+            $updates['side_images_urls'] = $lines;
+        }
+        
+        // Deep merge to preserve existing content
         $existingContent = $section->content_json ?? [];
-        $newContent = [
-            'title' => $usp['title'] ?? $existingContent['title'] ?? '',
-            'description' => $usp['description'] ?? $existingContent['description'] ?? '',
-            'side_images_urls' => $lines,
-        ];
+        $newContent = $this->deepMerge($existingContent, $updates);
         
         $section->content_json = $newContent;
         $section->is_active = $usp['enabled'] ?? $section->is_active ?? true;
@@ -746,15 +854,27 @@ class CmsHomepageEditor extends Page implements HasForms
     {
         $section = $this->section('classes');
         
-        // Merge with existing content
+        // Prepare updates (only include provided fields)
+        $updates = [];
+        if (array_key_exists('title', $classes)) {
+            $updates['title'] = $classes['title'] ?? '';
+        }
+        if (array_key_exists('description', $classes)) {
+            $updates['description'] = $classes['description'] ?? '';
+        }
+        if (array_key_exists('button_text', $classes)) {
+            $updates['button_text'] = $classes['button_text'] ?? '';
+        }
+        if (array_key_exists('button_url', $classes)) {
+            $updates['button_url'] = $classes['button_url'] ?? '';
+        }
+        if (array_key_exists('max_items', $classes)) {
+            $updates['max_items'] = (int) ($classes['max_items'] ?? 20);
+        }
+        
+        // Deep merge to preserve existing content
         $existingContent = $section->content_json ?? [];
-        $newContent = [
-            'title' => $classes['title'] ?? $existingContent['title'] ?? '',
-            'description' => $classes['description'] ?? $existingContent['description'] ?? '',
-            'button_text' => $classes['button_text'] ?? $existingContent['button_text'] ?? '',
-            'button_url' => $classes['button_url'] ?? $existingContent['button_url'] ?? '',
-            'max_items' => (int) ($classes['max_items'] ?? $existingContent['max_items'] ?? 20),
-        ];
+        $newContent = $this->deepMerge($existingContent, $updates);
         
         $section->content_json = $newContent;
         $section->is_active = $classes['enabled'] ?? $section->is_active ?? true;
@@ -792,17 +912,32 @@ class CmsHomepageEditor extends Page implements HasForms
     {
         $section = $this->section('testimonials');
         
-        // Merge with existing content
-        $existingContent = $section->content_json ?? [];
-        $existingRating = $existingContent['google_rating'] ?? [];
+        // Prepare updates (only include provided fields)
+        $updates = [];
+        if (array_key_exists('google_rating_text', $trust) || 
+            array_key_exists('google_button_label', $trust) || 
+            array_key_exists('google_button_url', $trust)) {
+            
+            $existingRating = ($section->content_json ?? [])['google_rating'] ?? [];
+            $updates['google_rating'] = [];
+            
+            if (array_key_exists('google_rating_text', $trust)) {
+                $updates['google_rating']['text'] = $trust['google_rating_text'] ?? '';
+            }
+            if (array_key_exists('google_button_label', $trust)) {
+                $updates['google_rating']['button_label'] = $trust['google_button_label'] ?? '';
+            }
+            if (array_key_exists('google_button_url', $trust)) {
+                $updates['google_rating']['button_url'] = $trust['google_button_url'] ?? '';
+            }
+            
+            // Merge with existing google_rating data
+            $updates['google_rating'] = $this->deepMerge($existingRating, $updates['google_rating']);
+        }
         
-        $newContent = [
-            'google_rating' => [
-                'text' => $trust['google_rating_text'] ?? $existingRating['text'] ?? '',
-                'button_label' => $trust['google_button_label'] ?? $existingRating['button_label'] ?? '',
-                'button_url' => $trust['google_button_url'] ?? $existingRating['button_url'] ?? '',
-            ],
-        ];
+        // Deep merge to preserve existing content
+        $existingContent = $section->content_json ?? [];
+        $newContent = $this->deepMerge($existingContent, $updates);
         
         $section->content_json = $newContent;
         $section->is_active = $trust['enabled'] ?? $section->is_active ?? true;
@@ -864,13 +999,21 @@ class CmsHomepageEditor extends Page implements HasForms
         $section = $this->section('cta');
         $lines = array_values(array_filter(array_map('trim', explode("\n", (string) ($promo['banner_urls'] ?? '')))));
         
-        // Merge with existing content
+        // Prepare updates (only include provided fields)
+        $updates = [];
+        if (array_key_exists('title', $promo)) {
+            $updates['title'] = $promo['title'] ?? '';
+        }
+        if (array_key_exists('description', $promo)) {
+            $updates['description'] = $promo['description'] ?? '';
+        }
+        if (array_key_exists('banner_urls', $promo)) {
+            $updates['banner_urls'] = array_slice($lines, 0, 3);
+        }
+        
+        // Deep merge to preserve existing content
         $existingContent = $section->content_json ?? [];
-        $newContent = [
-            'title' => $promo['title'] ?? $existingContent['title'] ?? '',
-            'description' => $promo['description'] ?? $existingContent['description'] ?? '',
-            'banner_urls' => array_slice($lines, 0, 3),
-        ];
+        $newContent = $this->deepMerge($existingContent, $updates);
         
         $section->content_json = $newContent;
         $section->is_active = $promo['enabled'] ?? $section->is_active ?? true;
@@ -897,5 +1040,205 @@ class CmsHomepageEditor extends Page implements HasForms
                 }
             }
         }
+    }
+
+    /**
+     * Recursively merge arrays to preserve nested structure and prevent data loss.
+     * 
+     * @param array $original - Existing data
+     * @param array $updates - New data to merge in
+     * @return array - Deeply merged result
+     */
+    private function deepMerge(array $original, array $updates): array
+    {
+        $result = $original;
+        
+        foreach ($updates as $key => $value) {
+            if (is_array($value) && isset($result[$key]) && is_array($result[$key])) {
+                // Recursively merge nested arrays
+                $result[$key] = $this->deepMerge($result[$key], $value);
+            } else {
+                // Direct assignment for scalar values or new keys
+                $result[$key] = $value;
+            }
+        }
+        
+        return $result;
+    }
+
+    /**
+     * Safely update only provided fields while preserving existing data structure.
+     * 
+     * @param array $existing - Current section data
+     * @param array $updates - New data to apply
+     * @param array $fieldMap - Mapping of form fields to data structure
+     * @return array - Merged result
+     */
+    private function mergeContentData(array $existing, array $updates, array $fieldMap = []): array
+    {
+        $merged = $existing;
+        
+        foreach ($updates as $key => $value) {
+            if ($key === 'enabled') {
+                continue; // Skip enabled field (handled separately)
+            }
+            
+            // Apply field mapping if provided
+            $targetKey = $fieldMap[$key] ?? $key;
+            
+            if (is_array($value) && isset($merged[$targetKey]) && is_array($merged[$targetKey])) {
+                // Deep merge for nested structures
+                $merged[$targetKey] = $this->deepMerge($merged[$targetKey], $value);
+            } else {
+                // Direct update for scalar values
+                $merged[$targetKey] = $value;
+            }
+        }
+        
+        return $merged;
+    }
+
+    /**
+     * Get the current live status of the homepage and its sections.
+     */
+    private function getHomepageStatus(): array
+    {
+        $page = $this->homepage();
+        $sections = $page->sections()->get()->keyBy('section_key');
+        
+        $sectionStatuses = [];
+        $allLive = true;
+        
+        $criticalSections = [
+            'hero' => 'Hero',
+            'why_choose_us' => 'Why Choose Us', 
+            'testimonials' => 'Trust & Reviews',
+            'cta' => 'Promotions',
+        ];
+        
+        foreach ($criticalSections as $key => $label) {
+            $section = $sections->get($key);
+            
+            if (!$section) {
+                $sectionStatuses[$label] = 'missing';
+                $allLive = false;
+                continue;
+            }
+            
+            if (!$section->is_active) {
+                $sectionStatuses[$label] = 'draft';
+                $allLive = false;
+                continue;
+            }
+            
+            // Check if section has meaningful content
+            $content = $section->content_json ?? [];
+            $hasContent = $this->sectionHasContent($key, $content, $section);
+            
+            if (!$hasContent) {
+                $sectionStatuses[$label] = 'incomplete';
+                $allLive = false;
+            } else {
+                $sectionStatuses[$label] = 'live';
+            }
+        }
+        
+        return [
+            'is_live' => $allLive,
+            'sections' => $sectionStatuses,
+        ];
+    }
+    
+    /**
+     * Check if a section has meaningful content for live status.
+     */
+    private function sectionHasContent(string $sectionKey, array $content, $section): bool
+    {
+        switch ($sectionKey) {
+            case 'hero':
+                return !empty(trim($content['headline'] ?? ''));
+                
+            case 'why_choose_us':
+                $hasTitle = !empty(trim($content['title'] ?? ''));
+                $hasPoints = $section->items()->where('type', 'usp')->where('is_active', true)->count() > 0;
+                return $hasTitle && $hasPoints;
+                
+            case 'testimonials':
+                $hasRating = !empty(trim($content['google_rating']['text'] ?? ''));
+                $hasLogos = $section->items()->where('type', 'logo')->where('is_active', true)->count() > 0;
+                return $hasRating || $hasLogos;
+                
+            case 'cta':
+                $hasTitle = !empty(trim($content['title'] ?? ''));
+                $hasCards = $section->items()->where('type', 'promo_card')->where('is_active', true)->count() > 0;
+                return $hasTitle && $hasCards;
+                
+            default:
+                return true;
+        }
+    }
+    
+    /**
+     * Format section status for display.
+     */
+    private function formatSectionStatus(string $status): string
+    {
+        return match($status) {
+            'live' => '<span style="color: #059669;">Live</span>',
+            'draft' => '<span style="color: #D97706;">Draft</span>',
+            'incomplete' => '<span style="color: #DC2626;">Incomplete</span>',
+            'missing' => '<span style="color: #991B1B;">Missing</span>',
+            default => $status,
+        };
+    }
+
+    /**
+     * Get status badge text for individual section tabs.
+     */
+    private function getSectionStatusBadge(string $sectionKey): string
+    {
+        $status = $this->getHomepageStatus();
+        $sectionName = match($sectionKey) {
+            'hero' => 'Hero',
+            'why_choose_us' => 'Why Choose Us',
+            'testimonials' => 'Trust & Reviews', 
+            'cta' => 'Promotions',
+            default => ucfirst($sectionKey),
+        };
+        
+        $sectionStatus = $status['sections'][$sectionName] ?? 'missing';
+        
+        return match($sectionStatus) {
+            'live' => 'Live',
+            'draft' => 'Draft',
+            'incomplete' => 'Needs Content',
+            'missing' => 'Missing',
+            default => 'Unknown',
+        };
+    }
+
+    /**
+     * Get status badge color for individual section tabs.
+     */
+    private function getSectionStatusColor(string $sectionKey): string
+    {
+        $status = $this->getHomepageStatus();
+        $sectionName = match($sectionKey) {
+            'hero' => 'Hero',
+            'why_choose_us' => 'Why Choose Us',
+            'testimonials' => 'Trust & Reviews', 
+            'cta' => 'Promotions',
+            default => ucfirst($sectionKey),
+        };
+        
+        $sectionStatus = $status['sections'][$sectionName] ?? 'missing';
+        
+        return match($sectionStatus) {
+            'live' => 'success',
+            'draft' => 'warning', 
+            'incomplete' => 'danger',
+            'missing' => 'gray',
+            default => 'gray',
+        };
     }
 }
