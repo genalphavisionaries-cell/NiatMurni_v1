@@ -203,6 +203,7 @@ class CmsHomepageController extends Controller
                 'background_urls' => '',
                 'background_alts' => '',
                 'accent_color' => '',
+                'button_color' => '',
                 'enabled' => true,
             ];
         }
@@ -216,6 +217,7 @@ class CmsHomepageController extends Controller
             'background_urls' => implode("\n", is_array($urls) ? $urls : []),
             'background_alts' => implode("\n", $c['background_alts'] ?? []),
             'accent_color' => $c['accent_color'] ?? '',
+            'button_color' => $c['button_color'] ?? '',
             'enabled' => (bool) $s->is_active,
         ];
     }
@@ -233,6 +235,7 @@ class CmsHomepageController extends Controller
             'background_urls' => $urls,
             'background_alts' => $alts,
             'accent_color' => $hero['accent_color'] ?? '',
+            'button_color' => $hero['button_color'] ?? '',
         ];
         if (array_key_exists('enabled', $hero)) {
             $section->is_active = (bool) $hero['enabled'];
@@ -252,6 +255,7 @@ class CmsHomepageController extends Controller
                 'side_images_urls' => '',
                 'side_images_alts' => '',
                 'accent_color' => '',
+                'button_color' => '',
                 'enabled' => true,
             ];
         }
@@ -277,6 +281,7 @@ class CmsHomepageController extends Controller
             'side_images_urls' => implode("\n", is_array($sideUrls) ? $sideUrls : []),
             'side_images_alts' => implode("\n", $c['side_images_alts'] ?? []),
             'accent_color' => $c['accent_color'] ?? '',
+            'button_color' => $c['button_color'] ?? '',
             'enabled' => (bool) $s->is_active,
         ];
     }
@@ -304,6 +309,9 @@ class CmsHomepageController extends Controller
         }
         if (array_key_exists('accent_color', $usp)) {
             $updates['accent_color'] = $usp['accent_color'] ?? '';
+        }
+        if (array_key_exists('button_color', $usp)) {
+            $updates['button_color'] = $usp['button_color'] ?? '';
         }
 
         // Merge with existing content to prevent data loss
@@ -345,6 +353,7 @@ class CmsHomepageController extends Controller
                 'button_url' => '',
                 'max_items' => 20,
                 'accent_color' => '',
+                'button_color' => '',
                 'enabled' => true,
             ];
         }
@@ -357,6 +366,7 @@ class CmsHomepageController extends Controller
             'button_url' => $c['button_url'] ?? '',
             'max_items' => (int) ($c['max_items'] ?? 20),
             'accent_color' => $c['accent_color'] ?? '',
+            'button_color' => $c['button_color'] ?? '',
             'enabled' => (bool) $s->is_active,
         ];
     }
@@ -371,6 +381,7 @@ class CmsHomepageController extends Controller
             'button_url' => $data['button_url'] ?? '',
             'max_items' => (int) ($data['max_items'] ?? 20),
             'accent_color' => $data['accent_color'] ?? '',
+            'button_color' => $data['button_color'] ?? '',
         ];
         if (array_key_exists('enabled', $data)) {
             $section->is_active = (bool) $data['enabled'];
@@ -388,6 +399,8 @@ class CmsHomepageController extends Controller
                 'google_rating_text' => '',
                 'google_button_label' => '',
                 'google_button_url' => '',
+                'accent_color' => '',
+                'button_color' => '',
                 'enabled' => true,
             ];
         }
@@ -407,6 +420,8 @@ class CmsHomepageController extends Controller
             'google_rating_text' => $c['google_rating']['text'] ?? '',
             'google_button_label' => $c['google_rating']['button_label'] ?? '',
             'google_button_url' => $c['google_rating']['button_url'] ?? '',
+            'accent_color' => $c['accent_color'] ?? '',
+            'button_color' => $c['button_color'] ?? '',
             'enabled' => (bool) $s->is_active,
         ];
     }
@@ -420,6 +435,8 @@ class CmsHomepageController extends Controller
                 'button_label' => $trust['google_button_label'] ?? '',
                 'button_url' => $trust['google_button_url'] ?? '',
             ],
+            'accent_color' => $trust['accent_color'] ?? '',
+            'button_color' => $trust['button_color'] ?? '',
         ];
         if (array_key_exists('enabled', $trust)) {
             $section->is_active = (bool) $trust['enabled'];
@@ -479,6 +496,7 @@ class CmsHomepageController extends Controller
             'banner_urls' => implode("\n", is_array($banners) ? $banners : []),
             'banner_alts' => implode("\n", $c['banner_alts'] ?? []),
             'accent_color' => $c['accent_color'] ?? '',
+            'button_color' => $c['button_color'] ?? '',
             'cards' => $cards,
             'enabled' => (bool) $s->is_active,
         ];
@@ -499,6 +517,7 @@ class CmsHomepageController extends Controller
             'banner_urls' => $urls,
             'banner_alts' => $alts,
             'accent_color' => $promo['accent_color'] ?? '',
+            'button_color' => $promo['button_color'] ?? '',
         ]);
         
         $section->content_json = $contentJson;

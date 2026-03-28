@@ -275,7 +275,7 @@ function LinkRepeater({
         </div>
       ))}
       {items.length < max && (
-        <button type="button" onClick={() => onChange([...items, { label: "", url: "" }])} className="mt-2 text-sm text-blue-600 hover:underline disabled:opacity-50" disabled={disabled}>
+        <button type="button" onClick={() => onChange([...items, { label: "", url: "" }])} className="mt-2 text-sm text-slate-700 hover:underline disabled:opacity-50" disabled={disabled}>
           + Add {label.toLowerCase().replace(/s$/, "")}
         </button>
       )}

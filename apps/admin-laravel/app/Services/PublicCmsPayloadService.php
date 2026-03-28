@@ -105,6 +105,10 @@ class PublicCmsPayloadService
         if ($why !== null) {
             $homepageSections[] = $why;
         }
+        $classesSection = $this->mapClassesSection(is_array($h['classes'] ?? null) ? $h['classes'] : []);
+        if ($classesSection !== null) {
+            $homepageSections[] = $classesSection;
+        }
         $testimonials = $this->mapTestimonialsSection($this->pickHomepageSection($h, 'testimonials', 'trust'));
         if ($testimonials !== null) {
             $homepageSections[] = $testimonials;
@@ -283,6 +287,8 @@ class PublicCmsPayloadService
             $extra['slides_json'] = json_encode($slides);
         }
 
+        $colors = $this->sectionColorFields($content);
+
         return [
             'section_key' => 'hero',
             'name' => 'Hero',
@@ -295,6 +301,8 @@ class PublicCmsPayloadService
             'button_primary_url' => ($b0['url'] ?? '') !== '' ? (string) $b0['url'] : null,
             'button_secondary_label' => ($b1['label'] ?? '') !== '' ? (string) $b1['label'] : null,
             'button_secondary_url' => ($b1['url'] ?? '') !== '' ? (string) $b1['url'] : null,
+            'accent_color' => $colors['accent_color'],
+            'button_color' => $colors['button_color'],
             'extra_data' => $extra,
         ];
     }
@@ -343,6 +351,8 @@ class PublicCmsPayloadService
             $extra['banner_images_json'] = json_encode($sideUrls);
         }
 
+        $colors = $this->sectionColorFields($content);
+
         return [
             'section_key' => 'why_choose_us',
             'name' => 'Why choose us',
@@ -355,6 +365,8 @@ class PublicCmsPayloadService
             'button_primary_url' => null,
             'button_secondary_label' => null,
             'button_secondary_url' => null,
+            'accent_color' => $colors['accent_color'],
+            'button_color' => $colors['button_color'],
             'extra_data' => $extra !== [] ? $extra : null,
         ];
     }
@@ -419,6 +431,8 @@ class PublicCmsPayloadService
         }
         $extra['review_summary_json'] = json_encode(['rating' => 4.9, 'count' => 1300]);
 
+        $colors = $this->sectionColorFields($content);
+
         $displayTitle = ! $this->isEffectivelyEmpty($heading) ? $heading : 'Apa Kata Peserta Kami';
         $displaySubtitle = (! $this->isEffectivelyEmpty($sectionHeading) && ! $this->isEffectivelyEmpty($googleBlurb) && 
             (is_string($sectionHeading) ? trim($sectionHeading) : '') !== (is_string($googleBlurb) ? trim($googleBlurb) : ''))
@@ -437,7 +451,49 @@ class PublicCmsPayloadService
             'button_primary_url' => null,
             'button_secondary_label' => null,
             'button_secondary_url' => null,
+            'accent_color' => $colors['accent_color'],
+            'button_color' => $colors['button_color'],
             'extra_data' => $extra,
+        ];
+    }
+
+    /**
+     * Upcoming classes strip (accent / button colors from CMS classes section).
+     *
+     * @param  array<string, mixed>  $classes  Output of {@see CmsService::mapSection()} for key "classes"
+     * @return array<string, mixed>|null
+     */
+    private function mapClassesSection(array $classes): ?array
+    {
+        if ($classes === []) {
+            return null;
+        }
+
+        $content = is_array($classes['content'] ?? null) ? $classes['content'] : [];
+        $title = (string) ($content['title'] ?? '');
+        $desc = (string) ($content['description'] ?? '');
+        $colors = $this->sectionColorFields($content);
+        $hasCopy = ! $this->isEffectivelyEmpty($title) || ! $this->isEffectivelyEmpty($desc);
+        $hasColors = $colors['accent_color'] !== null || $colors['button_color'] !== null;
+        if (! $hasCopy && ! $hasColors) {
+            return null;
+        }
+
+        return [
+            'section_key' => 'classes',
+            'name' => 'Classes',
+            'sort_order' => 2,
+            'title' => ! $this->isEffectivelyEmpty($title) ? $title : null,
+            'subtitle' => null,
+            'description' => ! $this->isEffectivelyEmpty($desc) ? $desc : null,
+            'image_url' => null,
+            'button_primary_label' => null,
+            'button_primary_url' => null,
+            'button_secondary_label' => null,
+            'button_secondary_url' => null,
+            'accent_color' => $colors['accent_color'],
+            'button_color' => $colors['button_color'],
+            'extra_data' => null,
         ];
     }
 
@@ -486,6 +542,8 @@ class PublicCmsPayloadService
             'banner_text' => $ribbon,
         ];
 
+        $colors = $this->sectionColorFields($content);
+
         return [
             'section_key' => 'cta',
             'name' => 'Promotions',
@@ -498,6 +556,8 @@ class PublicCmsPayloadService
             'button_primary_url' => null,
             'button_secondary_label' => null,
             'button_secondary_url' => null,
+            'accent_color' => $colors['accent_color'],
+            'button_color' => $colors['button_color'],
             'extra_data' => $extra,
         ];
     }
@@ -569,6 +629,23 @@ class PublicCmsPayloadService
         $h = substr($hex, 1);
 
         return '#'.$h[0].$h[0].$h[1].$h[1].$h[2].$h[2];
+    }
+
+    /**
+     * Section-level colours from relational `content_json` (optional overrides for public site).
+     *
+     * @param  array<string, mixed>  $content
+     * @return array{accent_color: ?string, button_color: ?string}
+     */
+    private function sectionColorFields(array $content): array
+    {
+        $accent = isset($content['accent_color']) ? trim((string) $content['accent_color']) : '';
+        $button = isset($content['button_color']) ? trim((string) $content['button_color']) : '';
+
+        return [
+            'accent_color' => $accent !== '' ? $accent : null,
+            'button_color' => $button !== '' ? $button : null,
+        ];
     }
 
     /** Whether HTML has no visible text (used for section emptiness checks only). */

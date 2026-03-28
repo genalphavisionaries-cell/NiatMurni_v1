@@ -88,7 +88,7 @@ export default function AdminCmsTestimonialsPage() {
 
       {/* Editor modal */}
       {editing && (
-        <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-6 shadow-sm space-y-4">
+        <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-6 shadow-sm space-y-4">
           <h2 className="font-semibold text-gray-900">{editing.id ? "Edit" : "New"} Testimonial</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -158,7 +158,7 @@ export default function AdminCmsTestimonialsPage() {
                 <td className="px-4 py-3">{t.is_active ? <span className="text-green-600">Yes</span> : <span className="text-gray-400">No</span>}</td>
                 <td className="px-4 py-3 text-gray-500">{t.sort_order}</td>
                 <td className="px-4 py-3 text-right space-x-2">
-                  <button onClick={() => setEditing(t)} className="text-blue-600 hover:underline">Edit</button>
+                  <button onClick={() => setEditing(t)} className="text-slate-700 hover:underline">Edit</button>
                   <button onClick={() => handleDelete(t.id)} className="text-red-500 hover:underline">Delete</button>
                 </td>
               </tr>

@@ -1,5 +1,7 @@
-import type { PublicCmsHomepageSection } from "@/lib/public-cms";
+import type { CSSProperties } from "react";
+import type { PublicCmsHomepageSection, PublicCmsTheme } from "@/lib/public-cms";
 import { cmsString } from "@/lib/public-cms";
+import { getSectionColor } from "@/lib/cms-section-colors";
 import { cmsPlainTextForAttribute } from "@/lib/sanitize-cms-html";
 import { extraString, parseJsonSafe, safeHref } from "../utils";
 import Link from "next/link";
@@ -36,9 +38,12 @@ const DEFAULT_PROMOS: PromoItem[] = [
 
 export default function PromotionsSection({
   section,
+  theme,
 }: {
   section: PublicCmsHomepageSection;
+  theme: PublicCmsTheme;
 }) {
+  const colors = getSectionColor(section, theme);
   const topBanner = cmsString(section.subtitle) ?? extraString(section.extra_data, "banner_text") ?? "Promosi Terhad";
   const title = cmsString(section.title) ?? "Cadangan Promosi";
   const description = cmsString(section.description) ?? extraString(section.extra_data, "description_2");
@@ -68,7 +73,7 @@ export default function PromotionsSection({
                   loading="lazy"
                 />
               ) : (
-                <div className="flex h-full min-h-[120px] items-center justify-center bg-gradient-to-r from-primary-500/10 to-primary-600/10 text-slate-600">
+                <div className="flex h-full min-h-[120px] items-center justify-center bg-gradient-to-r from-slate-200/40 to-slate-100/50 text-slate-600">
                   <span className="text-sm font-medium">
                     {cmsPlainTextForAttribute(topBanner) || "Promo banner slot — upload in admin"}
                   </span>
@@ -79,18 +84,23 @@ export default function PromotionsSection({
         </div>
       </section>
 
-      <section id="promotions" className="bg-white py-12 sm:py-14" aria-label="Promotions">
+      <section
+        id="promotions"
+        className="bg-white py-12 sm:py-14"
+        aria-label="Promotions"
+        style={{ ["--section-accent" as string]: colors.accent } as CSSProperties}
+      >
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div
-              className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl [&_a]:text-[color:var(--cms-primary,#2563EB)] [&_a]:underline"
+              className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl [&_a]:text-[color:var(--section-accent)] [&_a]:underline"
               role="heading"
               aria-level={2}
             >
               <SafeCmsHtml html={title} className="max-w-none [&_p]:m-0" />
             </div>
             {description ? (
-              <div className="mx-auto mt-2 max-w-xl text-sm text-slate-600 [&_a]:text-[color:var(--cms-primary,#2563EB)]">
+              <div className="mx-auto mt-2 max-w-xl text-sm text-slate-600 [&_a]:text-[color:var(--section-accent)] [&_a]:underline">
                 <SafeCmsHtml html={description} className="max-w-none prose-p:my-1" />
               </div>
             ) : null}
@@ -122,7 +132,7 @@ export default function PromotionsSection({
                         }}
                       />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary-50 to-slate-100">
+                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-100 to-slate-50">
                         <span className="text-4xl opacity-30">✨</span>
                       </div>
                     )}
@@ -130,15 +140,18 @@ export default function PromotionsSection({
                   </div>
 
                   <div className="p-5">
-                    <div className="text-base font-semibold text-slate-900 [&_a]:text-[color:var(--cms-primary,#2563EB)] [&_a]:underline">
+                    <div className="text-base font-semibold text-slate-900 [&_a]:text-[color:var(--section-accent)] [&_a]:underline">
                       <SafeCmsHtml html={pTitle} className="max-w-none [&_p]:m-0" />
                     </div>
                     {pDesc ? (
-                      <div className="mt-1 text-sm text-slate-600 [&_a]:text-[color:var(--cms-primary,#2563EB)]">
+                      <div className="mt-1 text-sm text-slate-600 [&_a]:text-[color:var(--section-accent)] [&_a]:underline">
                         <SafeCmsHtml html={pDesc} className="max-w-none prose-p:my-1" />
                       </div>
                     ) : null}
-                    <span className="mt-3 inline-flex items-center text-sm font-semibold text-primary-600 group-hover:text-primary-700">
+                    <span
+                      className="mt-3 inline-flex items-center text-sm font-semibold transition group-hover:opacity-90"
+                      style={{ color: colors.accent }}
+                    >
                       <SafeCmsHtml as="span" html={btnLabel} className="[&_p]:m-0 [&_p]:inline" />
                       <svg className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

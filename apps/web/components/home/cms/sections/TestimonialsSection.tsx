@@ -1,7 +1,9 @@
 "use client";
 
-import type { PublicCmsHomepageSection } from "@/lib/public-cms";
+import type { CSSProperties } from "react";
+import type { PublicCmsHomepageSection, PublicCmsTheme } from "@/lib/public-cms";
 import { cmsString } from "@/lib/public-cms";
+import { getSectionColor } from "@/lib/cms-section-colors";
 import { cmsPlainTextForAttribute } from "@/lib/sanitize-cms-html";
 import { extraString, parseJsonSafe } from "../utils";
 import { safeTrim, safeStringTrim } from "@/lib/safe-string-utils";
@@ -72,7 +74,14 @@ function normalizeBrands(raw: unknown): BrandItem[] {
   return out;
 }
 
-export default function TestimonialsSection({ section }: { section: PublicCmsHomepageSection }) {
+export default function TestimonialsSection({
+  section,
+  theme,
+}: {
+  section: PublicCmsHomepageSection;
+  theme: PublicCmsTheme;
+}) {
+  const colors = getSectionColor(section, theme);
   const title = cmsString(section.title) ?? "Kepercayaan & Ulasan Peserta";
   const subtitle = cmsString(section.subtitle) ?? cmsString(section.description) ?? "";
   const testimonialRef = useRef<HTMLDivElement>(null);
@@ -118,7 +127,13 @@ export default function TestimonialsSection({ section }: { section: PublicCmsHom
     <section
       id="testimonials"
       className="bg-[#F8FAFC] py-20"
-      style={{ paddingTop: 80, paddingBottom: 80 }}
+      style={
+        {
+          paddingTop: 80,
+          paddingBottom: 80,
+          ["--section-accent" as string]: colors.accent,
+        } as CSSProperties
+      }
       aria-labelledby="social-proof-heading"
     >
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
@@ -127,7 +142,7 @@ export default function TestimonialsSection({ section }: { section: PublicCmsHom
             <SafeCmsHtml html={title} className="max-w-none [&_p]:m-0" />
           </div>
           {subtitle ? (
-            <div className="mx-auto mt-3 max-w-2xl text-[#64748B] [&_a]:text-[color:var(--cms-primary,#2563EB)] [&_a]:underline">
+            <div className="mx-auto mt-3 max-w-2xl text-[#64748B] [&_a]:text-[color:var(--section-accent)] [&_a]:underline">
               <SafeCmsHtml html={subtitle} className="max-w-none prose-p:my-2" />
             </div>
           ) : null}
@@ -176,10 +191,11 @@ export default function TestimonialsSection({ section }: { section: PublicCmsHom
             href={GOOGLE_REVIEW_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="shrink-0 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors hover:brightness-95 focus:outline focus:outline-2 focus:outline-[color:var(--cms-primary,#2563EB)] focus:outline-offset-2"
+            className="shrink-0 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors hover:brightness-95 focus:outline focus:outline-2 focus:outline-offset-2"
             style={{
-              backgroundColor: "var(--cms-btn-primary-bg, var(--cms-primary, #2563EB))",
-              color: "var(--cms-btn-primary-text, #ffffff)",
+              backgroundColor: colors.buttonBg,
+              color: colors.buttonText,
+              outlineColor: colors.accent,
             }}
           >
             Write a Review
@@ -198,6 +214,7 @@ export default function TestimonialsSection({ section }: { section: PublicCmsHom
                   key={`${cmsPlainTextForAttribute(t.name) || t.name}-${idx}`}
                   testimonial={t}
                   fallbackRating={summaryRating}
+                  accentColor={colors.accent}
                 />
               ))}
             </div>
@@ -223,9 +240,11 @@ export default function TestimonialsSection({ section }: { section: PublicCmsHom
 function TestimonialCard({
   testimonial: t,
   fallbackRating,
+  accentColor,
 }: {
   testimonial: Testimonial;
   fallbackRating: number;
+  accentColor: string;
 }) {
   const [expanded, setExpanded] = useState(false);
   const fullReview = plainText(t.review);
@@ -260,7 +279,8 @@ function TestimonialCard({
         <button
           type="button"
           onClick={() => setExpanded(true)}
-          className="mt-1 text-[13px] font-medium text-[color:var(--cms-primary,#2563EB)] hover:underline focus:outline focus:outline-2 focus:outline-[color:var(--cms-primary,#2563EB)] focus:outline-offset-1"
+          className="mt-1 text-[13px] font-medium hover:underline focus:outline focus:outline-2 focus:outline-offset-1"
+          style={{ color: accentColor, outlineColor: accentColor }}
         >
           Read more
         </button>

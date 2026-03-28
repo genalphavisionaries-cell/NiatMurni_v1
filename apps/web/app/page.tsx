@@ -18,7 +18,7 @@ import {
   getHomepageSettings,
   type HomepageSettings,
 } from "@/lib/homepage-settings";
-import { fetchPublicCms, cmsString, type PublicCmsPayload } from "@/lib/public-cms";
+import { fetchPublicCms, cmsString, EMPTY_THEME, type PublicCmsPayload } from "@/lib/public-cms";
 import { cmsFlatNavToLinks, mergePublicCmsForHome } from "@/lib/merge-public-cms";
 import { getCmsThemeStyleObject } from "@/lib/cms-theme-vars";
 import PublicFloatingLayer from "@/components/public/PublicFloatingLayer";
@@ -101,7 +101,8 @@ export default async function HomePage() {
       cmsKeys.has("testimonials") ||
       cmsKeys.has("trust") ||
       cmsKeys.has("cta") ||
-      cmsKeys.has("promo"));
+      cmsKeys.has("promo") ||
+      cmsKeys.has("classes"));
 
   // Legacy fallback: build a hero carousel-like section from homepage settings.
   // This removes the old booking panel and keeps the hero clean & consistent.
@@ -176,9 +177,17 @@ export default async function HomePage() {
               heroSecondaryUrl={settings.mainBanners?.[0]?.ctaHref ?? "#classes"}
               heroBackgroundUrls={legacyHeroSlides}
               heroOverlayOpacity={settings.hero.overlayOpacity}
+              theme={cms?.theme ?? EMPTY_THEME}
             />
             <WhyChooseSection data={settings.whyChoose} />
-            <UpcomingClassesSection />
+            <UpcomingClassesSection
+              theme={cms?.theme ?? EMPTY_THEME}
+              section={
+                cms?.homepage_sections?.find(
+                  (s) => (s.section_key ?? "").trim().toLowerCase() === "classes"
+                ) ?? null
+              }
+            />
             <SocialProofSection data={settings.socialProof} />
             <PromoStrip />
             <PromoGrid />

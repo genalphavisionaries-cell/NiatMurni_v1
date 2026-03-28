@@ -15,7 +15,7 @@ export default function AdminSettingsUsersRedirect() {
     <div className="flex min-h-[200px] items-center justify-center">
       <p className="text-sm text-gray-500">
         Redirecting…{" "}
-        <a href="/admin/users" className="text-blue-600 underline">
+        <a href="/admin/users" className="text-slate-700 underline">
           Open User Management
         </a>
       </p>

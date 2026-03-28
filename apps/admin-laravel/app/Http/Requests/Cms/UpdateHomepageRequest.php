@@ -26,6 +26,8 @@ class UpdateHomepageRequest extends FormRequest
             'hero.buttons.*.label' => 'nullable|string|max:100',
             'hero.buttons.*.url' => 'nullable|string|max:2048',
             'hero.background_urls' => 'nullable|string|max:5000',
+            'hero.accent_color' => 'nullable|string|max:64',
+            'hero.button_color' => 'nullable|string|max:64',
 
             'why_choose_us' => 'sometimes|array',
             'why_choose_us.title' => 'nullable|string|max:255',
@@ -36,6 +38,8 @@ class UpdateHomepageRequest extends FormRequest
             'why_choose_us.points.*.description' => 'nullable|string',
             'why_choose_us.points.*.icon' => 'nullable|string|max:2048',
             'why_choose_us.side_images_urls' => 'nullable|string|max:3000',
+            'why_choose_us.accent_color' => 'nullable|string|max:64',
+            'why_choose_us.button_color' => 'nullable|string|max:64',
 
             'classes' => 'sometimes|array',
             'classes.title' => 'nullable|string|max:255',
@@ -44,10 +48,13 @@ class UpdateHomepageRequest extends FormRequest
             'classes.button_url' => 'nullable|string|max:2048',
             'classes.max_items' => 'nullable|integer|min:1|max:100',
             'classes.accent_color' => 'nullable|string|max:64',
+            'classes.button_color' => 'nullable|string|max:64',
             'classes.enabled' => 'sometimes|boolean',
 
             'testimonials' => 'sometimes|array',
             'testimonials.enabled' => 'sometimes|boolean',
+            'testimonials.accent_color' => 'nullable|string|max:64',
+            'testimonials.button_color' => 'nullable|string|max:64',
             'testimonials.google_rating_text' => 'nullable|string|max:500',
             'testimonials.google_button_label' => 'nullable|string|max:100',
             'testimonials.google_button_url' => 'nullable|string|max:2048',
@@ -66,6 +73,8 @@ class UpdateHomepageRequest extends FormRequest
             'cta.cards.*.image_url' => 'nullable|string|max:2048',
             'cta.cards.*.url' => 'nullable|string|max:2048',
             'cta.cards.*.button_label' => 'nullable|string|max:100',
+            'cta.accent_color' => 'nullable|string|max:64',
+            'cta.button_color' => 'nullable|string|max:64',
 
             'header' => 'sometimes|array',
             'header.logo_url' => 'nullable|string|max:2048',
@@ -98,6 +107,8 @@ class UpdateHomepageRequest extends FormRequest
             'usp.points.*.title' => 'nullable|string|max:255',
             'usp.points.*.description' => 'nullable|string',
             'usp.points.*.icon' => 'nullable|string|max:2048',
+            'usp.accent_color' => 'nullable|string|max:64',
+            'usp.button_color' => 'nullable|string|max:64',
 
             'trust' => 'sometimes|array',
             'trust.enabled' => 'sometimes|boolean',
@@ -107,6 +118,8 @@ class UpdateHomepageRequest extends FormRequest
             'trust.logos' => 'nullable|array|max:20',
             'trust.logos.*.title' => 'nullable|string|max:100',
             'trust.logos.*.image_url' => 'nullable|string|max:2048',
+            'trust.accent_color' => 'nullable|string|max:64',
+            'trust.button_color' => 'nullable|string|max:64',
 
             'promo' => 'sometimes|array',
             'promo.enabled' => 'sometimes|boolean',
@@ -119,6 +132,8 @@ class UpdateHomepageRequest extends FormRequest
             'promo.cards.*.url' => 'nullable|string|max:2048',
             'promo.cards.*.button_label' => 'nullable|string|max:100',
             'promo.banner_urls' => 'nullable|string|max:3000',
+            'promo.accent_color' => 'nullable|string|max:64',
+            'promo.button_color' => 'nullable|string|max:64',
         ];
     }
 

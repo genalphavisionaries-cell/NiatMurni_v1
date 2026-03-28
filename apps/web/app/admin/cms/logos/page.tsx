@@ -156,7 +156,7 @@ export default function AdminCmsLogosPage() {
                 type="button"
                 onClick={() => setData({ ...data, logos: [...data.logos, { image_url: "", title: "", image_alt: "" }] })}
                 disabled={!enabled}
-                className="mt-2 text-sm font-medium text-blue-600 hover:underline disabled:opacity-50"
+                className="mt-2 text-sm font-medium text-slate-700 hover:underline disabled:opacity-50"
               >
                 + Add logo
               </button>

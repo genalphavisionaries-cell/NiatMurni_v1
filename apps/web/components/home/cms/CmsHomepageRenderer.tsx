@@ -1,5 +1,5 @@
 import type { HomepageSettings } from "@/lib/homepage-settings";
-import type { PublicCmsPayload, PublicCmsHomepageSection } from "@/lib/public-cms";
+import type { PublicCmsPayload, PublicCmsHomepageSection, PublicCmsTheme } from "@/lib/public-cms";
 import { cmsString } from "@/lib/public-cms";
 
 import HeroSection from "./sections/HeroSection";
@@ -24,6 +24,7 @@ export type SupportedCmsSectionKey =
   | "faq"
   | "cta"
   | "promo"
+  | "classes"
   | "contact";
 
 const FALLBACK = {
@@ -70,6 +71,7 @@ const supported = new Set<string>([
   "faq",
   "cta",
   "promo",
+  "classes",
   "contact",
 ]);
 
@@ -249,7 +251,9 @@ export default function CmsHomepageRenderer({
   const whySection = mergeWhySection(first("why_choose_us") ?? first("usp") ?? first("features"));
   const testimonialsSection = mergeTestimonialsSection(first("testimonials") ?? first("trust"));
   const ctaSection = mergeCtaSection(first("cta") ?? first("promo"));
+  const classesSection = first("classes");
   const contactSection = first("contact");
+  const theme: PublicCmsTheme = cms.theme;
 
   if (isCmsDebug) {
     console.log("CMS HERO:", cms?.hero);
@@ -278,15 +282,15 @@ export default function CmsHomepageRenderer({
   return (
     <>
       {/* 1. Hero */}
-      {heroSection ? <HeroSection section={heroSection} site={cms.site} /> : null}
+      {heroSection ? <HeroSection section={heroSection} site={cms.site} theme={theme} /> : null}
       {/* 2. Why Us */}
-      {whySection ? <WhyChooseUsSection section={whySection} /> : null}
+      {whySection ? <WhyChooseUsSection section={whySection} theme={theme} /> : null}
       {/* 3. Upcoming Classes — always rendered here, between Why Us and Testimonials */}
-      <UpcomingClassesSection />
+      <UpcomingClassesSection theme={theme} section={classesSection ?? undefined} />
       {/* 4. Trust & Reviews */}
-      {testimonialsSection ? <TestimonialsSection section={testimonialsSection} /> : null}
+      {testimonialsSection ? <TestimonialsSection section={testimonialsSection} theme={theme} /> : null}
       {/* 5. Promotions */}
-      {ctaSection ? <PromotionsSection section={ctaSection} /> : null}
+      {ctaSection ? <PromotionsSection section={ctaSection} theme={theme} /> : null}
       {/* 6. Contact (if configured) */}
       {contactSection ? (
         <ContactSection email={cms.contact.email} phone={cms.contact.phone} />

@@ -453,7 +453,7 @@ function UspTab({ data, onChange }: { data: CmsUspData; onChange: (d: CmsUspData
             type="button"
             onClick={() => set("points", [...data.points, emptyUspPoint()])}
             disabled={!enabled}
-            className="text-sm font-medium text-blue-600 hover:underline disabled:opacity-50"
+            className="text-sm font-medium text-slate-700 hover:underline disabled:opacity-50"
           >
             + Add USP card
           </button>
@@ -641,7 +641,7 @@ function PromoTab({ data, onChange }: { data: CmsPromoData; onChange: (d: CmsPro
             type="button"
             onClick={() => set("cards", [...data.cards, emptyPromoCard()])}
             disabled={!enabled}
-            className="text-sm font-medium text-blue-600 hover:underline disabled:opacity-50"
+            className="text-sm font-medium text-slate-700 hover:underline disabled:opacity-50"
           >
             + Add promo card
           </button>
@@ -712,7 +712,7 @@ function RepeaterButtons({
         type="button"
         onClick={() => onChange([...items, { label: "", url: "", color: "" }])}
         disabled={disabled}
-        className="text-sm font-medium text-blue-600 hover:underline disabled:opacity-50"
+        className="text-sm font-medium text-slate-700 hover:underline disabled:opacity-50"
       >
         + Add button
       </button>

@@ -93,6 +93,10 @@ export type PublicCmsHomepageSection = {
   button_primary_url: string | null;
   button_secondary_label: string | null;
   button_secondary_url: string | null;
+  /** Section accent (headings, links, borders); falls back to theme.primary_color when empty */
+  accent_color?: string | null;
+  /** Primary button background for this section; falls back to theme.primary_button_color */
+  button_color?: string | null;
   extra_data: Record<string, string> | null;
 };
 
@@ -166,7 +170,8 @@ export type PublicCmsPayload = {
   [key: string]: unknown;
 };
 
-const EMPTY_THEME: PublicCmsTheme = {
+/** Default theme when API omits fields (used by section color fallbacks). */
+export const EMPTY_THEME: PublicCmsTheme = {
   primary_color: "#2563EB",
   secondary_color: "#64748B",
   accent_color: "#F59E0B",
@@ -291,6 +296,21 @@ function normalizeFloatingMenu(raw: PublicCmsPayload["floating_menu"] | undefine
   return { enabled, items };
 }
 
+function pickSectionColorField(v: unknown): string | null {
+  if (typeof v !== "string") return null;
+  const t = v.trim();
+  return t.length ? t : null;
+}
+
+function normalizeHomepageSectionColors(s: PublicCmsHomepageSection): PublicCmsHomepageSection {
+  const raw = s as PublicCmsHomepageSection & Record<string, unknown>;
+  return {
+    ...s,
+    accent_color: pickSectionColorField(raw.accent_color),
+    button_color: pickSectionColorField(raw.button_color),
+  };
+}
+
 function normalizeCmsPayload(data: PublicCmsPayload): PublicCmsPayload {
   const showPay = (data.footer as { show_payment_card?: unknown } | undefined)?.show_payment_card;
   const showPaymentCard =
@@ -302,8 +322,9 @@ function normalizeCmsPayload(data: PublicCmsPayload): PublicCmsPayload {
       : true;
 
   const theme = data.theme ?? EMPTY_THEME;
-  const sections = data.homepage_sections ?? [];
-  const hero = data.hero ?? pickFirstHeroSection(sections);
+  const sections = (data.homepage_sections ?? []).map(normalizeHomepageSectionColors);
+  const heroRaw = data.hero ?? pickFirstHeroSection(sections);
+  const hero = heroRaw ? normalizeHomepageSectionColors(heroRaw) : null;
   const lastUpdated = typeof data.last_updated === "string" && data.last_updated && data.last_updated.trim()
     ? data.last_updated
     : null;
@@ -311,7 +332,7 @@ function normalizeCmsPayload(data: PublicCmsPayload): PublicCmsPayload {
   return {
     ...data,
     homepage_sections: sections,
-    hero,
+    hero: hero ?? pickFirstHeroSection(sections),
     last_updated: lastUpdated,
     theme: {
       primary_color: theme.primary_color ?? EMPTY_THEME.primary_color,

@@ -1,11 +1,15 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { fetchUpcomingClasses, type ClassSession } from "@/lib/api";
 import QuantitySelector from "@/components/home/QuantitySelector";
 import { useCart } from "@/components/cart/CartProvider";
 import { safeTrim } from "@/lib/safe-string-utils";
+import type { PublicCmsHomepageSection, PublicCmsTheme } from "@/lib/public-cms";
+import { EMPTY_THEME } from "@/lib/public-cms";
+import { getSectionColor } from "@/lib/cms-section-colors";
 
 type HeroClassItem = {
   id: string;
@@ -126,7 +130,18 @@ const DESKTOP_INCREMENT = 10;
 const MOBILE_INITIAL = 10;
 const MOBILE_INCREMENT = 6;
 
-export default function UpcomingClassesSection() {
+type SectionColors = ReturnType<typeof getSectionColor>;
+
+type UpcomingClassesSectionProps = {
+  theme?: PublicCmsTheme;
+  section?: PublicCmsHomepageSection | null;
+};
+
+export default function UpcomingClassesSection({
+  theme = EMPTY_THEME,
+  section = null,
+}: UpcomingClassesSectionProps) {
+  const colors = getSectionColor(section ?? {}, theme);
   const [apiClasses, setApiClasses] = useState<ClassSession[]>([]);
   const [loading, setLoading] = useState(true);
   // separate visible-count state for mobile and desktop
@@ -183,7 +198,17 @@ export default function UpcomingClassesSection() {
   }, [apiClasses]);
 
   return (
-    <section id="classes" className="scroll-mt-20 bg-[#EFF6FF] py-16 sm:py-20">
+    <section
+      id="classes"
+      className="scroll-mt-20 bg-[#EFF6FF] py-16 sm:py-20"
+      style={
+        {
+          ["--section-accent" as string]: colors.accent,
+          ["--section-btn-bg" as string]: colors.buttonBg,
+          ["--section-btn-text" as string]: colors.buttonText,
+        } as CSSProperties
+      }
+    >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <h2 className="text-3xl font-bold tracking-tight text-[#0F172A] sm:text-4xl">
@@ -201,7 +226,7 @@ export default function UpcomingClassesSection() {
             <div className="flex justify-center py-16">
               <div
                 className="h-10 w-10 animate-spin rounded-full border-2 border-t-transparent"
-                style={{ borderColor: "var(--cms-primary, #2563EB)", borderTopColor: "transparent" }}
+                style={{ borderColor: colors.accent, borderTopColor: "transparent" }}
               />
             </div>
           ) : (
@@ -222,6 +247,7 @@ export default function UpcomingClassesSection() {
                       <UpcomingClassCard
                         key={c.id}
                         item={c}
+                        colors={colors}
                         isNext={firstRecommendedId === c.id}
                         onAddToCart={(qty) => {
                           if (qty <= 0 || c.recentPast) return;
@@ -241,6 +267,7 @@ export default function UpcomingClassesSection() {
                             <UpcomingClassCard
                               key={c.id}
                               item={c}
+                              colors={colors}
                               isNext={firstRecommendedId === c.id}
                               onAddToCart={(qty) => {
                                 if (qty <= 0 || c.recentPast) return;
@@ -266,7 +293,7 @@ export default function UpcomingClassesSection() {
                         Math.min(v + MOBILE_INCREMENT, displayList.length)
                       )
                     }
-                    className="inline-flex items-center gap-2 rounded-full border border-[#CBD5E1] bg-white px-6 py-2.5 text-sm font-semibold text-[#0F172A] shadow-sm transition hover:border-[color:var(--cms-primary,#2563EB)] hover:bg-[#EFF6FF] hover:text-[color:var(--cms-primary,#2563EB)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--cms-primary,#2563EB)]"
+                    className="inline-flex items-center gap-2 rounded-full border border-[#CBD5E1] bg-white px-6 py-2.5 text-sm font-semibold text-[#0F172A] shadow-sm transition hover:border-[color:var(--section-accent)] hover:bg-slate-50 hover:text-[color:var(--section-accent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--section-accent)]"
                   >
                     <span>Load More</span>
                     <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -286,7 +313,7 @@ export default function UpcomingClassesSection() {
                         Math.min(v + DESKTOP_INCREMENT, displayList.length)
                       )
                     }
-                    className="inline-flex items-center gap-2 rounded-full border border-[#CBD5E1] bg-white px-7 py-2.5 text-sm font-semibold text-[#0F172A] shadow-sm transition hover:border-[color:var(--cms-primary,#2563EB)] hover:bg-[#EFF6FF] hover:text-[color:var(--cms-primary,#2563EB)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--cms-primary,#2563EB)]"
+                    className="inline-flex items-center gap-2 rounded-full border border-[#CBD5E1] bg-white px-7 py-2.5 text-sm font-semibold text-[#0F172A] shadow-sm transition hover:border-[color:var(--section-accent)] hover:bg-slate-50 hover:text-[color:var(--section-accent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--section-accent)]"
                   >
                     <span>Load More</span>
                     <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -302,8 +329,8 @@ export default function UpcomingClassesSection() {
                   href="/#classes"
                   className="inline-flex items-center justify-center rounded-xl px-6 py-3 text-sm font-semibold shadow-sm transition hover:brightness-95"
                   style={{
-                    backgroundColor: "var(--cms-btn-primary-bg, var(--cms-primary, #2563EB))",
-                    color: "var(--cms-btn-primary-text, #ffffff)",
+                    backgroundColor: colors.buttonBg,
+                    color: colors.buttonText,
                   }}
                 >
                   Pilih Kelas Lain
@@ -357,8 +384,8 @@ export default function UpcomingClassesSection() {
                         type="button"
                         className="inline-flex shrink-0 items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold hover:brightness-95"
                         style={{
-                          backgroundColor: "var(--cms-btn-primary-bg, var(--cms-primary, #2563EB))",
-                          color: "var(--cms-btn-primary-text, #ffffff)",
+                          backgroundColor: colors.buttonBg,
+                          color: colors.buttonText,
                         }}
                         onClick={() => {
                           const classSession = classById.get(selectedCart.classId);
@@ -397,10 +424,12 @@ export default function UpcomingClassesSection() {
 
 function UpcomingClassCard({
   item,
+  colors,
   isNext: _isNext,
   onAddToCart,
 }: {
   item: HeroClassItem;
+  colors: SectionColors;
   isNext: boolean;
   onAddToCart: (qty: number) => void;
 }) {
@@ -442,7 +471,7 @@ function UpcomingClassCard({
           {/* DATE/TIME ANCHOR — subtle tinted block with blue left accent */}
           <div
             className="rounded-md border-l-[3px] bg-slate-50 px-2 py-1"
-            style={{ borderLeftColor: "var(--cms-primary, #2563EB)" }}
+            style={{ borderLeftColor: colors.accent }}
           >
             <p className="text-[15px] font-extrabold leading-snug text-[#0A1628] break-words">
               {dateAndDayLine}
@@ -454,10 +483,14 @@ function UpcomingClassCard({
 
           {/* CHIPS — below the date anchor */}
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="inline-flex items-center gap-1 rounded-full bg-[#EFF6FF] px-2.5 py-1 text-[11px] font-semibold leading-none text-[#3B82F6]">
+            <span
+              className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold leading-none"
+              style={{ color: colors.accent }}
+            >
               {isOnline ? (
                 <span
-                  className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-[#3B82F6]"
+                  className="inline-block h-1.5 w-1.5 shrink-0 rounded-full"
+                  style={{ backgroundColor: colors.accent }}
                   aria-hidden
                 />
               ) : null}
@@ -518,8 +551,8 @@ function UpcomingClassCard({
                 disabled
                   ? undefined
                   : {
-                      backgroundColor: "var(--cms-btn-primary-bg, var(--cms-primary, #0F3B7B))",
-                      color: "var(--cms-btn-primary-text, #ffffff)",
+                      backgroundColor: colors.buttonBg,
+                      color: colors.buttonText,
                     }
               }
             >

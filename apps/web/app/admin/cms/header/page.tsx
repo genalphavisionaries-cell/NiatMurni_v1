@@ -175,7 +175,7 @@ export default function AdminCmsHeaderPage() {
         <button
           type="button"
           onClick={() => setData({ ...data, menu_items: [...data.menu_items, { label: "", url: "", type: "page", has_children: false }] })}
-          className="mt-2 text-sm text-blue-600 hover:underline disabled:opacity-50"
+          className="mt-2 text-sm text-slate-700 hover:underline disabled:opacity-50"
           disabled={!enabled}
         >
           + Add menu item
@@ -268,7 +268,7 @@ export default function AdminCmsHeaderPage() {
         <button
           type="button"
           onClick={() => setData({ ...data, languages: [...data.languages, { code: "", label: "", active: true }] })}
-          className="mt-2 text-sm text-blue-600 hover:underline disabled:opacity-50"
+          className="mt-2 text-sm text-slate-700 hover:underline disabled:opacity-50"
           disabled={!enabled}
         >
           + Add language

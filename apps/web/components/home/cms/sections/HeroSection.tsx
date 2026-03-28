@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import type { PublicCmsHomepageSection, PublicCmsSite } from "@/lib/public-cms";
+import type { PublicCmsHomepageSection, PublicCmsSite, PublicCmsTheme } from "@/lib/public-cms";
 import { cmsString } from "@/lib/public-cms";
+import { getSectionColor } from "@/lib/cms-section-colors";
 import { extraString, safeHref, parseJsonSafe } from "../utils";
 import { SafeCmsHtml } from "../SafeCmsHtml";
 
@@ -24,10 +25,13 @@ type HeroSlide = {
 export default function HeroSection({
   section,
   site,
+  theme,
 }: {
   section: PublicCmsHomepageSection;
   site: PublicCmsSite;
+  theme: PublicCmsTheme;
 }) {
+  const colors = getSectionColor(section, theme);
   const baseTitle =
     cmsString(section.title) ??
     cmsString(site.site_tagline) ??
@@ -199,8 +203,8 @@ export default function HeroSection({
               href={primaryUrl}
               className="inline-flex rounded-xl px-7 py-4 text-sm font-semibold shadow-lg transition active:scale-[0.98]"
               style={{
-                backgroundColor: "var(--cms-btn-primary-bg, var(--cms-primary, #2563eb))",
-                color: "var(--cms-btn-primary-text, #ffffff)",
+                backgroundColor: colors.buttonBg,
+                color: colors.buttonText,
               }}
             >
               <SafeCmsHtml as="span" html={primaryLabel} className="[&_p]:m-0 [&_p]:inline" />

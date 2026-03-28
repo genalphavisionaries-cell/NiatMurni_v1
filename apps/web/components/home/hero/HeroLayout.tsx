@@ -5,7 +5,8 @@ import HeroHeader from "./HeroHeader";
 import HeroSlider from "./HeroSlider";
 import type { NavLink } from "@/lib/homepage-settings";
 import type { PublicCmsNavItem } from "@/lib/public-cms";
-import type { PublicCmsHomepageSection, PublicCmsSite } from "@/lib/public-cms";
+import type { PublicCmsHomepageSection, PublicCmsSite, PublicCmsTheme } from "@/lib/public-cms";
+import { EMPTY_THEME } from "@/lib/public-cms";
 import HeroSection from "../cms/sections/HeroSection";
 
 type HeroLayoutProps = {
@@ -23,6 +24,8 @@ type HeroLayoutProps = {
   heroSecondaryUrl?: string;
   heroBackgroundUrls?: string[];
   heroOverlayOpacity?: number;
+  /** When omitted, default theme matches `EMPTY_THEME` (legacy homepage). */
+  theme?: PublicCmsTheme;
 };
 
 const HERO_HEIGHT = 720;
@@ -41,6 +44,7 @@ export default function HeroLayout({
   heroSecondaryUrl,
   heroBackgroundUrls,
   heroOverlayOpacity,
+  theme = EMPTY_THEME,
 }: HeroLayoutProps) {
   const slides = useMemo(() => {
     const fallback = heroBackgroundUrls?.filter(Boolean) ?? [];
@@ -107,7 +111,7 @@ export default function HeroLayout({
   return (
     <div className="relative w-full">
       {/* Legacy fallback hero: use the same clean hero section UX as CMS */}
-      <HeroSection section={heroSection} site={heroSite} />
+      <HeroSection section={heroSection} site={heroSite} theme={theme} />
       {/* Header sits on top of the hero background */}
       <HeroHeader
         siteName={siteName}
