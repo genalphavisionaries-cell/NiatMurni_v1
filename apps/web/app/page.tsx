@@ -77,9 +77,16 @@ export default async function HomePage() {
   } else {
     console.error("CMS fetch failed:", cmsSettled.reason);
   }
+  if (cms === null) {
+    console.error("CMS FAILED TO LOAD");
+  }
 
   console.timeEnd("homepage");
   const ctx = mergePublicCmsForHome(settings, cms);
+  const isCmsDebug =
+    process.env.NODE_ENV === "development" &&
+    process.env.NEXT_PUBLIC_CMS_DEBUG === "true";
+  const showCmsFallbackBanner = isCmsDebug && cms === null;
 
   const cmsKeys = new Set(
     (cms?.homepage_sections ?? []).map((s) => (s.section_key ?? "").trim().toLowerCase())
@@ -107,6 +114,11 @@ export default async function HomePage() {
 
   return (
     <div style={ctx.themeVars as CSSProperties}>
+      {showCmsFallbackBanner ? (
+        <div className="fixed left-1/2 top-3 z-[9998] -translate-x-1/2 rounded-md border border-amber-500/80 bg-amber-900/85 px-3 py-1.5 text-xs font-semibold text-amber-100 shadow-lg backdrop-blur-sm">
+          ⚠ CMS not loaded — using fallback
+        </div>
+      ) : null}
       {useCmsRedesign && cms ? (
         <>
           <CmsHeader

@@ -1,7 +1,7 @@
 "use client";
 
 import type { ElementType } from "react";
-import { sanitizeCmsHtml } from "@/lib/sanitize-cms-html";
+import { sanitizeHtml } from "@/lib/sanitize-cms-html";
 import { cn } from "@/lib/utils";
 
 type SafeCmsHtmlProps = {
@@ -15,7 +15,7 @@ type SafeCmsHtmlProps = {
  * Renders sanitized CMS HTML. Use for TipTap / rich text fields only.
  */
 export function SafeCmsHtml({ html, className, as: Tag = "div" }: SafeCmsHtmlProps) {
-  const safe = sanitizeCmsHtml(html);
-  if (!safe.trim()) return null;
-  return <Tag className={cn("cms-html", className)} dangerouslySetInnerHTML={{ __html: safe }} />;
+  const safeHtml = sanitizeHtml(html);
+  if (!safeHtml.trim()) return null;
+  return <Tag className={cn("cms-html", className)} dangerouslySetInnerHTML={{ __html: safeHtml }} />;
 }

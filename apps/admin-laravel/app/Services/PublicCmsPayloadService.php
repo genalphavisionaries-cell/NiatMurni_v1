@@ -115,6 +115,7 @@ class PublicCmsPayloadService
             'social' => $social,
             'navigation' => $navigation,
             'homepage_sections' => $homepageSections,
+            'last_updated' => date('c'),
             'floating_menu' => $floating,
         ];
     }

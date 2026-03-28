@@ -240,7 +240,12 @@ export default function CmsHomepageRenderer({
 
   /** CMS primary: `cms.hero` from API/normalize, else first hero section; `FALLBACK.hero` only inside `mergeHeroSection` when both are absent. */
   const hero = cms?.hero ?? first("hero");
-  console.log("CMS HERO:", cms?.hero);
+  const isCmsDebug =
+    process.env.NODE_ENV === "development" &&
+    process.env.NEXT_PUBLIC_CMS_DEBUG === "true";
+  if (isCmsDebug) {
+    console.log("CMS HERO:", cms?.hero);
+  }
   const heroSection = mergeHeroSection(hero, legacy);
   const whySection = mergeWhySection(first("why_choose_us") ?? first("usp") ?? first("features"));
   const testimonialsSection = mergeTestimonialsSection(first("testimonials") ?? first("trust"));

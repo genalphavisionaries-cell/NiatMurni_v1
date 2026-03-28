@@ -119,6 +119,8 @@ export type PublicCmsPayload = {
   homepage_sections: PublicCmsHomepageSection[];
   /** First hero row from `homepage_sections` (filled by `normalizeCmsPayload`). */
   hero?: PublicCmsHomepageSection | null;
+  /** CMS payload generation timestamp (Laravel `now()`). */
+  last_updated?: string | null;
   floating_menu: PublicCmsFloatingMenu;
 };
 
@@ -170,6 +172,7 @@ const emptyPayload = (): PublicCmsPayload => ({
   navigation: { header: [], footer: [], footer_legal: [], footer_login: [] },
   homepage_sections: [],
   hero: null,
+  last_updated: null,
   floating_menu: { enabled: false, items: [] },
 });
 
@@ -230,11 +233,15 @@ function normalizeCmsPayload(data: PublicCmsPayload): PublicCmsPayload {
   const theme = data.theme ?? EMPTY_THEME;
   const sections = data.homepage_sections ?? [];
   const hero = data.hero ?? pickFirstHeroSection(sections);
+  const lastUpdated = typeof data.last_updated === "string" && data.last_updated.trim()
+    ? data.last_updated
+    : null;
 
   return {
     ...data,
     homepage_sections: sections,
     hero,
+    last_updated: lastUpdated,
     theme: {
       primary_color: theme.primary_color ?? EMPTY_THEME.primary_color,
       secondary_color: theme.secondary_color ?? EMPTY_THEME.secondary_color,

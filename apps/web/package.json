@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@floating-ui/dom": "^1.7.6",
     "@tanstack/react-table": "^8.21.3",
     "@tiptap/core": "^3.21.0",
     "@tiptap/extension-placeholder": "^3.21.0",
