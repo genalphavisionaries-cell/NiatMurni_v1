@@ -1,13 +1,14 @@
 /** Strip tags for required-text checks on TipTap HTML values. */
-export function stripHtml(html: string): string {
-  return html
+export function stripHtml(html: unknown): string {
+  const raw = typeof html === "string" ? html : "";
+  return raw
     .replace(/<[^>]*>/g, " ")
     .replace(/&nbsp;/gi, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
 
-export function hasRichText(html: string): boolean {
+export function hasRichText(html: unknown): boolean {
   return stripHtml(html).length > 0;
 }
 

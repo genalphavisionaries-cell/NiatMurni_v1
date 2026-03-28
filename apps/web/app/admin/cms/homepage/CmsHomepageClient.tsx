@@ -15,6 +15,12 @@ import { CmsMultiImageLinesField } from "@/components/admin/cms/CmsMultiImageLin
 import { CmsColorField } from "@/components/admin/cms/CmsColorField";
 
 type Tab = "hero" | "why_choose_us" | "classes" | "cta";
+type HomepageSavePayload = {
+  hero: CmsHeroData;
+  why_choose_us: CmsUspData;
+  classes: CmsClassesData;
+  cta: CmsPromoData;
+};
 
 const tabs: { key: Tab; label: string }[] = [
   { key: "hero", label: "Hero" },
@@ -79,6 +85,38 @@ function emptyUspPoint(): CmsUspPoint {
   return { icon: "", title: "", description: "", background_color: "", icon_alt: "" };
 }
 
+function firstNullSaveField(payload: HomepageSavePayload): string | null {
+  const direct: Array<[string, unknown]> = [
+    ["hero.headline", payload.hero.headline],
+    ["hero.subheadline", payload.hero.subheadline],
+    ["why_choose_us.title", payload.why_choose_us.title],
+    ["why_choose_us.description", payload.why_choose_us.description],
+    ["classes.title", payload.classes.title],
+    ["classes.description", payload.classes.description],
+    ["classes.button_text", payload.classes.button_text],
+    ["classes.button_url", payload.classes.button_url],
+    ["cta.title", payload.cta.title],
+    ["cta.description", payload.cta.description],
+  ];
+  for (const [path, value] of direct) {
+    if (value === null) return path;
+  }
+  for (let i = 0; i < payload.why_choose_us.points.length; i++) {
+    const p = payload.why_choose_us.points[i];
+    if (p?.description === null) return `why_choose_us.points[${i}].description`;
+    if (p?.title === null) return `why_choose_us.points[${i}].title`;
+    if (p?.icon === null) return `why_choose_us.points[${i}].icon`;
+  }
+  for (let i = 0; i < payload.cta.cards.length; i++) {
+    const c = payload.cta.cards[i];
+    if (c?.description === null) return `cta.cards[${i}].description`;
+    if (c?.title === null) return `cta.cards[${i}].title`;
+    if (c?.image_url === null) return `cta.cards[${i}].image_url`;
+    if (c?.url === null) return `cta.cards[${i}].url`;
+  }
+  return null;
+}
+
 function validateHomepage(
   hero: CmsHeroData,
   whyChooseUs: CmsUspData,
@@ -88,7 +126,7 @@ function validateHomepage(
   const errors: string[] = [];
 
   if (hero.enabled !== false) {
-    if (!hasRichText(hero.headline)) {
+    if (!hasRichText(safeTrim(hero.headline))) {
       errors.push("Hero: headline is required when this section is enabled.");
     }
   }
@@ -106,7 +144,7 @@ function validateHomepage(
   }
 
   if (whyChooseUs.enabled !== false) {
-    if (!hasRichText(whyChooseUs.title)) {
+    if (!hasRichText(safeTrim(whyChooseUs.title))) {
       errors.push("Why choose us: title is required when this section is enabled.");
     }
   }
@@ -117,7 +155,7 @@ function validateHomepage(
     }
   }
   whyChooseUs.points.forEach((p, i) => {
-    const hasCard = hasNonEmptyString(p.title) || hasRichText(p.description);
+    const hasCard = hasNonEmptyString(p.title) || hasRichText(safeTrim(p.description));
     if (hasCard) {
       if (!safeTrim(p.icon)) {
         errors.push(`Why choose us card ${i + 1}: upload or enter an icon/image URL.`);
@@ -139,7 +177,7 @@ function validateHomepage(
   }
 
   if (ctaSection.enabled !== false) {
-    if (!hasRichText(ctaSection.title)) {
+    if (!hasRichText(safeTrim(ctaSection.title))) {
       errors.push("CTA: title is required when this section is enabled.");
     }
   }
@@ -152,7 +190,7 @@ function validateHomepage(
   ctaSection.cards.forEach((c, i) => {
     const hasCard =
       hasNonEmptyString(c.title) ||
-      hasRichText(c.description) ||
+      hasRichText(safeTrim(c.description)) ||
       hasNonEmptyString(c.button_label) ||
       hasNonEmptyString(c.url);
     if (hasCard) {
@@ -206,14 +244,22 @@ export function CmsHomepageClient() {
 
   const handleSave = async () => {
     setMessage(null);
-    const errs = validateHomepage(hero, whyChooseUs, classes, ctaSection);
+    const payload: HomepageSavePayload = { hero, why_choose_us: whyChooseUs, classes, cta: ctaSection };
+    if (process.env.NODE_ENV === "development") {
+      console.log("DEBUG SAVE PAYLOAD:", payload);
+      const nullField = firstNullSaveField(payload);
+      if (nullField) {
+        console.error("CMS SAVE NULL FIELD:", nullField);
+      }
+    }
+    const errs = validateHomepage(payload.hero, payload.why_choose_us, payload.classes, payload.cta);
     if (errs.length) {
       setMessage({ type: "error", text: errs.join(" ") });
       return;
     }
     setSaving(true);
     try {
-      await adminApi.updateCmsHomepage({ hero, why_choose_us: whyChooseUs, classes, cta: ctaSection });
+      await adminApi.updateCmsHomepage(payload);
       setMessage({ type: "success", text: "Homepage saved." });
     } catch (err) {
       setMessage({ type: "error", text: err instanceof Error ? err.message : "Save failed." });
