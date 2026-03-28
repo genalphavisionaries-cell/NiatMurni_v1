@@ -534,11 +534,15 @@ class PublicCmsPayloadService
      */
     private function pickHomepageSection(array $homepage, string $key, string $legacyKey): array
     {
-        if (array_key_exists($key, $homepage) && is_array($homepage[$key])) {
-            return $homepage[$key];
-        }
-        if (array_key_exists($legacyKey, $homepage) && is_array($homepage[$legacyKey])) {
-            return $homepage[$legacyKey];
+        foreach ([$key, $legacyKey] as $k) {
+            if (! array_key_exists($k, $homepage) || ! is_array($homepage[$k])) {
+                continue;
+            }
+            $block = $homepage[$k];
+            // mapSection() returns [] when empty; [] must not win over a populated legacy slot
+            if ($block !== []) {
+                return $block;
+            }
         }
 
         return [];

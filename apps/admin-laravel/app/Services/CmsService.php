@@ -69,7 +69,11 @@ class CmsService
             if ($key === 'testimonials') {
                 continue;
             }
-            $section = $sections->get($key);
+            $section = match ($key) {
+                'why_choose_us' => $sections->get('why_choose_us') ?? $sections->get('usp'),
+                'cta' => $sections->get('cta') ?? $sections->get('promo'),
+                default => $sections->get($key),
+            };
             $out[$key] = $this->mapSection($section, $key);
         }
 
@@ -102,9 +106,20 @@ class CmsService
     /**
      * @return array<string, mixed>
      */
-    private function mapSection(?CmsSection $section, string $expectedKey): array
+    private function mapSection(?CmsSection $section, string $canonicalKey): array
     {
-        if ($section === null || $section->section_key !== $expectedKey) {
+        if ($section === null) {
+            return [];
+        }
+
+        $allowedKeys = match ($canonicalKey) {
+            'why_choose_us' => ['why_choose_us', 'usp'],
+            'cta' => ['cta', 'promo'],
+            'testimonials' => ['testimonials', 'trust'],
+            default => [$canonicalKey],
+        };
+
+        if (! in_array((string) $section->section_key, $allowedKeys, true)) {
             return [];
         }
 
