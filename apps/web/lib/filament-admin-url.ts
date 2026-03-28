@@ -1,7 +1,7 @@
 /**
  * Resolve the public URL for Laravel Filament (same app as API unless overridden).
  *
- * The Next.js admin shell is a static export; Filament lives on the Laravel app.
+ * The Next.js admin shell is served by the Node runtime (`next start`); Filament lives on the Laravel app.
  * Set NEXT_PUBLIC_FILAMENT_BASE_URL to the Laravel origin (no trailing slash), e.g.
  *   https://niatmurniacademy.com
  *

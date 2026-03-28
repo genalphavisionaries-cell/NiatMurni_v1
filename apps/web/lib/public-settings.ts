@@ -33,7 +33,7 @@ export async function fetchPublicSettings(): Promise<PublicSettingsPayload | nul
   if (!base) return null;
   try {
     const res = await fetch(`${base}/api/public/settings`, {
-      next: { revalidate: 60 },
+      cache: "no-store",
       headers: { Accept: "application/json" },
     });
     if (!res.ok) return null;

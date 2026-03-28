@@ -1,11 +1,36 @@
+export const dynamic = "force-dynamic";
+
 import type { Metadata } from "next";
-import HomePageRuntime from "@/components/home/HomePageRuntime";
+import type { CSSProperties } from "react";
+import {
+  Footer,
+  HeroLayout,
+  PromoStrip,
+  PromoGrid,
+  UpcomingClassesSection,
+  WhyChooseSection,
+  SocialProofSection,
+  CmsHeader,
+  CmsFooter,
+  CmsHomepageRenderer,
+  CmsDebugPanel,
+} from "@/components/home";
 import {
   defaultHomepageSettings,
   getHomepageSettings,
   type HomepageSettings,
 } from "@/lib/homepage-settings";
-import { fetchPublicCms, cmsString, type PublicCmsPayload } from "@/lib/public-cms";
+import {
+  fetchPublicCms,
+  cmsString,
+  EMPTY_THEME,
+  EMPTY_FLOATING_MENU,
+  type PublicCmsPayload,
+} from "@/lib/public-cms";
+import { cmsFlatNavToLinks, mergePublicCmsForHome } from "@/lib/merge-public-cms";
+import { getCmsThemeStyleObject } from "@/lib/cms-theme-vars";
+import PublicFloatingLayer from "@/components/public/PublicFloatingLayer";
+import { defaultPublicSettings, fetchPublicSettings } from "@/lib/public-settings";
 
 const DEFAULT_TITLE = "Niat Murni Academy";
 const DEFAULT_DESC =
@@ -45,9 +70,10 @@ export default async function HomePage() {
   let settings: HomepageSettings = defaultHomepageSettings;
   let cms: PublicCmsPayload | null = null;
 
-  const [settingsSettled, cmsSettled] = await Promise.allSettled([
+  const [settingsSettled, cmsSettled, pubSettled] = await Promise.allSettled([
     getHomepageSettings(),
     fetchPublicCms(),
+    fetchPublicSettings(),
   ]);
 
   if (settingsSettled.status === "fulfilled") {
@@ -65,5 +91,140 @@ export default async function HomePage() {
     console.error("CMS FAILED TO LOAD");
   }
 
-  return <HomePageRuntime initialSettings={settings} initialCms={cms} />;
+  const pub = pubSettled.status === "fulfilled" ? pubSettled.value : null;
+  const whatsapp = pub?.whatsapp ?? defaultPublicSettings().whatsapp;
+  const floatingMenu = cms?.floating_menu ?? EMPTY_FLOATING_MENU;
+
+  const ctx = mergePublicCmsForHome(settings, cms);
+  const isCmsDebug =
+    process.env.NODE_ENV === "development" && process.env.NEXT_PUBLIC_CMS_DEBUG === "true";
+  const showCmsFallbackBanner = isCmsDebug && cms === null;
+
+  const cmsKeys = new Set((cms?.homepage_sections ?? []).map((s) => (s.section_key ?? "").trim().toLowerCase()));
+  const useCmsRedesign =
+    !!cms &&
+    (cmsKeys.has("hero") ||
+      cmsKeys.has("why_choose_us") ||
+      cmsKeys.has("usp") ||
+      cmsKeys.has("features") ||
+      cmsKeys.has("testimonials") ||
+      cmsKeys.has("trust") ||
+      cmsKeys.has("cta") ||
+      cmsKeys.has("promo") ||
+      cmsKeys.has("classes"));
+
+  const legacyHeroBg = settings.hero.backgroundImageUrl ?? "/images/food-handling-hero.svg";
+  const legacyHeroSlides = [
+    legacyHeroBg,
+    settings.mainBanners?.[0]?.imageUrl ?? legacyHeroBg,
+    settings.mainBanners?.[1]?.imageUrl ?? legacyHeroBg,
+  ].filter((v, idx, arr) => !!v && arr.indexOf(v) === idx);
+
+  const cmsThemeVars = getCmsThemeStyleObject(cms);
+  const mergedThemeVars = { ...ctx.themeVars, ...cmsThemeVars };
+
+  return (
+    <div style={mergedThemeVars as CSSProperties}>
+      {showCmsFallbackBanner ? (
+        <div className="fixed left-1/2 top-3 z-[9998] -translate-x-1/2 rounded-md border border-amber-500/80 bg-amber-900/85 px-3 py-1.5 text-xs font-semibold text-amber-100 shadow-lg backdrop-blur-sm">
+          ⚠ CMS not loaded — using fallback
+        </div>
+      ) : null}
+      {useCmsRedesign && cms ? (
+        <>
+          <CmsHeader
+            siteName={ctx.siteName}
+            logoUrl={ctx.logoUrl}
+            navTree={ctx.headerNavTree}
+            fallbackNav={ctx.fallbackHeaderNav}
+            primaryCta={ctx.primaryCta}
+          />
+          <main>
+            <CmsHomepageRenderer cms={cms} legacy={settings} />
+
+            {!cmsKeys.has("why_choose_us") && !cmsKeys.has("usp") && !cmsKeys.has("features") ? (
+              <WhyChooseSection data={settings.whyChoose} />
+            ) : null}
+            {!cmsKeys.has("testimonials") && !cmsKeys.has("trust") ? (
+              <SocialProofSection data={settings.socialProof} />
+            ) : null}
+          </main>
+          <CmsFooter
+            siteName={ctx.siteName}
+            logoUrl={ctx.logoUrl}
+            footerNavColumns={ctx.cmsFooterColumns}
+            footerBackgroundColor={cmsString(cms?.theme.footer_background_color)}
+            cmsFooter={cms.footer}
+            cmsContact={cms.contact}
+            cmsSocial={cms.social}
+            legalLinks={cmsFlatNavToLinks(cms.navigation.footer_legal)}
+            loginLinks={cmsFlatNavToLinks(cms.navigation.footer_login)}
+            paymentMethodIcons={settings.paymentMethodIcons}
+            legacyFooterSslBadgeUrl={settings.footerSslBadgeUrl}
+            legacyFooterDescription={settings.footerDescription}
+            legacyFooterBottom={settings.footerBottom}
+          />
+        </>
+      ) : (
+        <>
+          <main>
+            <HeroLayout
+              siteName={ctx.siteName}
+              logoUrl={ctx.logoUrl}
+              navTree={ctx.headerNavTree}
+              fallbackNav={ctx.fallbackHeaderNav}
+              primaryCta={ctx.primaryCta}
+              heroTitle={settings.hero.headline}
+              heroSubtitle={settings.hero.subheadline}
+              heroPrimaryLabel={settings.hero.ctaText}
+              heroPrimaryUrl={settings.hero.ctaHref}
+              heroSecondaryLabel={settings.mainBanners?.[0]?.ctaText ?? "Lihat Kelas"}
+              heroSecondaryUrl={settings.mainBanners?.[0]?.ctaHref ?? "#classes"}
+              heroBackgroundUrls={legacyHeroSlides}
+              heroOverlayOpacity={settings.hero.overlayOpacity}
+              theme={cms?.theme ?? EMPTY_THEME}
+            />
+            <WhyChooseSection data={settings.whyChoose} />
+            <UpcomingClassesSection
+              theme={cms?.theme ?? EMPTY_THEME}
+              section={
+                cms?.homepage_sections?.find(
+                  (s) => (s.section_key ?? "").trim().toLowerCase() === "classes"
+                ) ?? null
+              }
+            />
+            <SocialProofSection data={settings.socialProof} />
+            <PromoStrip />
+            <PromoGrid />
+          </main>
+          <Footer
+            settings={{
+              footerColumns: settings.footerColumns,
+              footerBottom: settings.footerBottom,
+              siteName: ctx.siteName,
+              paymentMethodIcons: settings.paymentMethodIcons,
+              footerLogoUrl: settings.footerLogoUrl,
+              footerDescription: settings.footerDescription,
+              footerSslBadgeUrl: settings.footerSslBadgeUrl,
+            }}
+            cmsFooterColumns={ctx.cmsFooterColumns}
+            footerBackgroundColor={cmsString(cms?.theme.footer_background_color)}
+            cmsGlobal={
+              cms
+                ? {
+                    footer: cms.footer,
+                    contact: cms.contact,
+                    social: cms.social,
+                    legalLinks: cmsFlatNavToLinks(cms.navigation.footer_legal),
+                    loginLinks: cmsFlatNavToLinks(cms.navigation.footer_login),
+                  }
+                : null
+            }
+          />
+        </>
+      )}
+      <PublicFloatingLayer floatingMenu={floatingMenu} whatsapp={whatsapp} />
+      {cms ? <CmsDebugPanel cms={cms} /> : null}
+    </div>
+  );
 }

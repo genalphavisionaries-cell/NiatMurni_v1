@@ -114,6 +114,8 @@ export type PublicCmsFloatingMenu = {
   items: PublicCmsFloatingMenuItem[];
 };
 
+export const EMPTY_FLOATING_MENU: PublicCmsFloatingMenu = { enabled: false, items: [] };
+
 export type PublicCmsHeaderColors = {
   background: string;
   border: string;
@@ -386,8 +388,7 @@ export async function fetchPublicCmsWithValidation(): Promise<ValidationResult |
   if (!base) return validateCmsPayload(null);
   
   try {
-    const runtimeBust = typeof window !== "undefined" ? `?ts=${Date.now()}` : "";
-    const res = await fetch(`${base}/api/public/cms${runtimeBust}`, {
+    const res = await fetch(`${base}/api/public/cms`, {
       cache: "no-store",
       headers: { Accept: "application/json" },
     });

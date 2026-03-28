@@ -1,49 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { fetchPublicCms } from "@/lib/public-cms";
-import { defaultPublicSettings, fetchPublicSettings, type PublicSettingsPayload } from "@/lib/public-settings";
+import type { PublicCmsFloatingMenu } from "@/lib/public-cms";
+import type { PublicWhatsAppSettings } from "@/lib/public-settings";
 import FloatingBottomNav from "./FloatingBottomNav";
 import WhatsAppChatWidget from "./WhatsAppChatWidget";
 
+type Props = {
+  floatingMenu: PublicCmsFloatingMenu;
+  whatsapp: PublicWhatsAppSettings;
+};
+
 /**
- * Loads floating bottom nav + WhatsApp widget from public APIs.
- * Mount once on public/marketing layouts (not admin/user/tutor).
+ * Floating bottom nav + WhatsApp widget. Data is loaded on the server and passed in
+ * (no client-side CMS refetch).
  */
-export default function PublicFloatingLayer() {
-  const [menu, setMenu] = useState(() => ({
-    enabled: false,
-    items: [] as { label: string; url: string | null; icon?: string; action?: "whatsapp" | "link" }[],
-  }));
-  const [whatsapp, setWhatsapp] = useState<PublicSettingsPayload["whatsapp"]>(() => defaultPublicSettings().whatsapp);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const [cms, pub] = await Promise.all([fetchPublicCms(), fetchPublicSettings()]);
-        if (cancelled) return;
-        if (cms?.floating_menu) {
-          setMenu(cms.floating_menu);
-        }
-        if (pub?.whatsapp) {
-          setWhatsapp(pub.whatsapp);
-        }
-      } finally {
-        if (!cancelled) setReady(true);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const navVisible = ready && menu.enabled && menu.items.length === 4;
+export default function PublicFloatingLayer({ floatingMenu, whatsapp }: Props) {
+  const navVisible = floatingMenu.enabled && floatingMenu.items.length === 4;
 
   return (
     <>
-      {navVisible ? <FloatingBottomNav config={{ enabled: menu.enabled, items: menu.items }} /> : null}
+      {navVisible ? <FloatingBottomNav config={{ enabled: floatingMenu.enabled, items: floatingMenu.items }} /> : null}
       <WhatsAppChatWidget settings={whatsapp} reserveBottomNavSpace={navVisible} />
     </>
   );
