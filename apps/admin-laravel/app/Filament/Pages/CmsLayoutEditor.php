@@ -57,6 +57,14 @@ class CmsLayoutEditor extends Page implements HasForms
 
     public ?array $data = [];
 
+    /**
+     * Safe string normalization to prevent null trim() errors.
+     */
+    private function safeString($value): string
+    {
+        return is_string($value) ? trim($value) : '';
+    }
+
     public function mount(): void
     {
         $this->form->fill($this->loadFormData());
@@ -506,15 +514,79 @@ class CmsLayoutEditor extends Page implements HasForms
 
     public function save(): void
     {
-        $data = $this->form->getState();
-        DB::transaction(function () use ($data) {
-            $this->persistHeader($data['header'] ?? []);
-            $this->persistFooter($data['footer'] ?? []);
-            $this->persistFloating($data['floating'] ?? []);
-        });
-        app(CmsService::class)->forgetCache();
+        \Log::info('CMS LAYOUT SAVE: Starting save process');
+        
+        try {
+            // Validate form first with safe error handling
+            try {
+                $this->form->validate();
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                \Log::error('CMS LAYOUT SAVE: Form validation failed', ['errors' => $e->errors()]);
+                throw $e;
+            }
 
-        Notification::make()->title('Layout saved')->success()->send();
+            $data = $this->form->getState();
+            \Log::info('CMS LAYOUT SAVE: Form data retrieved', ['data_keys' => array_keys($data)]);
+            
+            if (empty($data)) {
+                throw new \Exception('No form data received. Please refresh and try again.');
+            }
+            
+            DB::transaction(function () use ($data) {
+                \Log::info('CMS LAYOUT SAVE: Starting transaction');
+                
+                if (isset($data['header'])) {
+                    \Log::info('CMS LAYOUT SAVE: Persisting header');
+                    $this->persistHeader($data['header']);
+                }
+                
+                if (isset($data['footer'])) {
+                    \Log::info('CMS LAYOUT SAVE: Persisting footer');
+                    $this->persistFooter($data['footer']);
+                }
+                
+                if (isset($data['floating'])) {
+                    \Log::info('CMS LAYOUT SAVE: Persisting floating menu');
+                    $this->persistFloating($data['floating']);
+                }
+                
+                \Log::info('CMS LAYOUT SAVE: All sections persisted');
+            });
+            
+            app(CmsService::class)->forgetCache();
+            \Log::info('CMS LAYOUT SAVE: Cache cleared');
+
+            Notification::make()
+                ->title('✅ Layout Saved Successfully')
+                ->body('Your header and footer changes have been saved!')
+                ->success()
+                ->duration(5000)
+                ->send();
+            
+            \Log::info('CMS LAYOUT SAVE: Success notification sent');
+                
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('CMS LAYOUT SAVE: Validation failed', ['errors' => $e->errors()]);
+            
+            Notification::make()
+                ->title('Validation Failed')
+                ->body('Please fix the form errors before saving.')
+                ->danger()
+                ->send();
+                
+        } catch (\Throwable $e) {
+            \Log::error('CMS LAYOUT SAVE: Failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            Notification::make()
+                ->title('❌ Save Failed')
+                ->body('Could not save your changes: ' . $e->getMessage() . ' Please try again or contact support.')
+                ->danger()
+                ->persistent()
+                ->send();
+        }
     }
 
     protected function getHeaderActions(): array

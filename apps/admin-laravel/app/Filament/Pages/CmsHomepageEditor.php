@@ -60,6 +60,14 @@ class CmsHomepageEditor extends Page implements HasForms
     
     public bool $isSaving = false;
 
+    /**
+     * Safe string normalization to prevent null trim() errors.
+     */
+    private function safeString($value): string
+    {
+        return is_string($value) ? trim($value) : '';
+    }
+
     public function mount(): void
     {
         $this->form->fill($this->loadFormData());
@@ -475,8 +483,13 @@ class CmsHomepageEditor extends Page implements HasForms
         \Log::info('CMS SAVE DRAFT: Starting save process');
         
         try {
-            // Validate form first
-            $this->form->validate();
+            // Validate form first with safe error handling
+            try {
+                $this->form->validate();
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                \Log::error('CMS SAVE DRAFT: Form validation failed', ['errors' => $e->errors()]);
+                throw $e; // Re-throw to be caught by outer catch
+            }
             
             $data = $this->form->getState();
             \Log::info('CMS SAVE DRAFT: Form data retrieved', ['data_keys' => array_keys($data)]);
@@ -694,7 +707,7 @@ class CmsHomepageEditor extends Page implements HasForms
         ]);
         
         $points = $why['points'] ?? [];
-        $validPoints = array_filter($points, fn($p) => !empty(trim($p['title'] ?? '')));
+        $validPoints = array_filter($points, fn($p) => !empty($this->safeString($p['title'] ?? '')));
         if (empty($validPoints)) {
             $whyErrors[] = "• Why Choose Us: At least 1 benefit point is required to showcase your value";
         }
@@ -713,7 +726,7 @@ class CmsHomepageEditor extends Page implements HasForms
         ]);
         
         $cards = $cta['cards'] ?? [];
-        $validCards = array_filter($cards, fn($c) => !empty(trim($c['title'] ?? '')));
+        $validCards = array_filter($cards, fn($c) => !empty($this->safeString($c['title'] ?? '')));
         if (empty($validCards)) {
             $ctaErrors[] = "• Promotions: At least 1 promotional offer is required to drive conversions";
         }
@@ -752,7 +765,8 @@ class CmsHomepageEditor extends Page implements HasForms
         $errors = [];
         
         foreach ($requiredFields as $field => $message) {
-            if (empty(trim($section[$field] ?? ''))) {
+            $value = $this->safeString($section[$field] ?? '');
+            if (empty($value)) {
                 $errors[] = "• {$sectionName}: {$message}";
             }
         }

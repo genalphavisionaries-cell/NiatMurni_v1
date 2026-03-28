@@ -389,11 +389,11 @@ class PublicCmsPayloadService
             if (! is_array($row)) {
                 continue;
             }
-            $t = trim((string) ($row['title'] ?? ''));
+            $t = is_string($row['title'] ?? null) ? trim($row['title']) : '';
             if ($t !== '') {
                 $brands[] = [
                     'company_name' => $t,
-                    'logo' => trim((string) ($row['image_url'] ?? '')) ?: null,
+                    'logo' => is_string($row['image_url'] ?? null) ? (trim($row['image_url']) ?: null) : null,
                 ];
             }
         }
@@ -419,7 +419,8 @@ class PublicCmsPayloadService
         $extra['review_summary_json'] = json_encode(['rating' => 4.9, 'count' => 1300]);
 
         $displayTitle = ! $this->isEffectivelyEmpty($heading) ? $heading : 'Apa Kata Peserta Kami';
-        $displaySubtitle = (! $this->isEffectivelyEmpty($sectionHeading) && ! $this->isEffectivelyEmpty($googleBlurb) && trim($sectionHeading) !== trim($googleBlurb))
+        $displaySubtitle = (! $this->isEffectivelyEmpty($sectionHeading) && ! $this->isEffectivelyEmpty($googleBlurb) && 
+            (is_string($sectionHeading) ? trim($sectionHeading) : '') !== (is_string($googleBlurb) ? trim($googleBlurb) : ''))
             ? $googleBlurb
             : null;
 
@@ -475,7 +476,7 @@ class PublicCmsPayloadService
 
         $ribbon = 'Promosi Terhad';
         if (! $this->isEffectivelyEmpty($sectionDesc)) {
-            $d = trim($sectionDesc);
+            $d = is_string($sectionDesc) ? trim($sectionDesc) : '';
             $ribbon = mb_strlen($d) > 80 ? mb_substr($d, 0, 77).'...' : $d;
         }
 
@@ -547,7 +548,7 @@ class PublicCmsPayloadService
     private function themeColorSetting(string $key, string $defaultHex): string
     {
         $raw = $this->settings->get('branding', $key, $defaultHex);
-        $s = trim((string) $raw);
+        $s = is_string($raw) ? trim($raw) : '';
         if ($s === '') {
             return $defaultHex;
         }
@@ -620,9 +621,9 @@ class PublicCmsPayloadService
     /**
      * Validate hex color or return default.
      */
-    private function validateHexColor(string $color, string $default): string
+    private function validateHexColor($color, string $default): string
     {
-        $color = trim($color);
+        $color = is_string($color) ? trim($color) : '';
         
         // Allow transparent and rgba values
         if ($color === 'transparent' || str_starts_with($color, 'rgba(')) {

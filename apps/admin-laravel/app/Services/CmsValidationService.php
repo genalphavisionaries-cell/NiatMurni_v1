@@ -57,16 +57,16 @@ class CmsValidationService
                 continue; // Skip non-array items
             }
             
-            $title = trim((string) ($point['title'] ?? ''));
+            $title = is_string($point['title'] ?? null) ? trim($point['title']) : '';
             if (empty($title)) {
                 continue; // Skip items without title
             }
 
             $validated[] = [
                 'title' => $title,
-                'description' => trim((string) ($point['description'] ?? '')),
-                'background_color' => trim((string) ($point['background_color'] ?? '')),
-                'icon_alt' => trim((string) ($point['icon_alt'] ?? '')),
+                'description' => is_string($point['description'] ?? null) ? trim($point['description']) : '',
+                'background_color' => is_string($point['background_color'] ?? null) ? trim($point['background_color']) : '',
+                'icon_alt' => is_string($point['icon_alt'] ?? null) ? trim($point['icon_alt']) : '',
             ];
 
             // Limit to 6 items maximum
@@ -90,19 +90,19 @@ class CmsValidationService
                 continue; // Skip non-array items
             }
 
-            $title = trim((string) ($card['title'] ?? ''));
+            $title = is_string($card['title'] ?? null) ? trim($card['title']) : '';
             if (empty($title)) {
                 continue; // Skip items without title
             }
 
             $validated[] = [
                 'title' => $title,
-                'description' => trim((string) ($card['description'] ?? '')),
-                'image_url' => $this->validateUrl($card['image_url'] ?? ''),
-                'url' => $this->validateUrl($card['url'] ?? ''),
-                'button_label' => trim((string) ($card['button_label'] ?? '')),
-                'card_color' => trim((string) ($card['card_color'] ?? '')),
-                'image_alt' => trim((string) ($card['image_alt'] ?? '')),
+                'description' => is_string($card['description'] ?? null) ? trim($card['description']) : '',
+                'image_url' => $this->validateUrl($card['image_url'] ?? null),
+                'url' => $this->validateUrl($card['url'] ?? null),
+                'button_label' => is_string($card['button_label'] ?? null) ? trim($card['button_label']) : '',
+                'card_color' => is_string($card['card_color'] ?? null) ? trim($card['card_color']) : '',
+                'image_alt' => is_string($card['image_alt'] ?? null) ? trim($card['image_alt']) : '',
             ];
 
             // Limit to 10 cards maximum
@@ -126,14 +126,14 @@ class CmsValidationService
                 continue; // Skip non-array items
             }
 
-            $title = trim((string) ($logo['title'] ?? ''));
+            $title = is_string($logo['title'] ?? null) ? trim($logo['title']) : '';
             if (empty($title)) {
                 continue; // Skip items without title
             }
 
             $validated[] = [
                 'title' => $title,
-                'image_url' => $this->validateUrl($logo['image_url'] ?? ''),
+                'image_url' => $this->validateUrl($logo['image_url'] ?? null),
             ];
 
             // Limit to 20 logos maximum
@@ -157,14 +157,14 @@ class CmsValidationService
                 continue; // Skip non-array items
             }
 
-            $label = trim((string) ($item['label'] ?? ''));
+            $label = is_string($item['label'] ?? null) ? trim($item['label']) : '';
             if (empty($label)) {
                 continue; // Skip items without label
             }
 
             $validated[] = [
                 'label' => $label,
-                'url' => $this->validateUrl($item['url'] ?? ''),
+                'url' => $this->validateUrl($item['url'] ?? null),
                 'type' => in_array($item['type'] ?? '', ['page', 'external']) ? $item['type'] : 'page',
                 'has_children' => (bool) ($item['has_children'] ?? false),
             ];
@@ -181,9 +181,9 @@ class CmsValidationService
     /**
      * Basic URL validation and sanitization.
      */
-    private function validateUrl(string $url): ?string
+    private function validateUrl($url): ?string
     {
-        $url = trim($url);
+        $url = is_string($url) ? trim($url) : '';
         
         if (empty($url)) {
             return null;
@@ -267,7 +267,9 @@ class CmsValidationService
 
             // Validate section has meaningful content
             $content = $section->content_json ?? [];
-            $title = trim($content['title'] ?? $section->title ?? '');
+            $title = is_string($content['title'] ?? $section->title ?? null) 
+                ? trim($content['title'] ?? $section->title) 
+                : '';
             
             if (empty($title)) {
                 $errors[] = "The {$key} section must have a title.";
