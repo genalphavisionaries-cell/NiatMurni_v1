@@ -5,7 +5,7 @@
  * Set NEXT_PUBLIC_FILAMENT_BASE_URL to the Laravel origin (no trailing slash), e.g.
  *   https://niatmurniacademy.com
  *
- * If unset, falls back to `getApiBase()` (Laravel API origin, no /api suffix).
+ * If unset, falls back to `getApiBase()` (NEXT_PUBLIC_API_BASE_URL / NEXT_PUBLIC_API_URL; no /api suffix).
  */
 import { getApiBase } from "./config";
 

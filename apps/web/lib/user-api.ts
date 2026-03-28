@@ -3,13 +3,7 @@
  * Backend participant endpoints remain unchanged during frontend migration.
  */
 
-import { getApiBase } from "./config";
-
-function getBaseURL(): string {
-  const base = getApiBase();
-  if (base && (base.startsWith("http://") || base.startsWith("https://"))) return base;
-  return "";
-}
+import { apiUrl } from "./config";
 
 export type ParticipantCertificate = {
   certificate_number: string;
@@ -32,14 +26,19 @@ async function request<T>(
   options: RequestInit & { params?: Record<string, string> } = {}
 ): Promise<T> {
   const { params, ...init } = options;
-  const base = getBaseURL();
-  if (!base)
-    throw new Error("User API base URL is not configured. Set NEXT_PUBLIC_API_URL.");
-  const url = new URL(path.startsWith("/") ? path : `/${path}`, base);
-  if (params) {
-    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  const p = path.startsWith("/") ? path : `/${path}`;
+  let fullUrl = apiUrl(p);
+  if (!fullUrl) {
+    throw new Error(
+      "User API base URL is not configured. Set NEXT_PUBLIC_API_BASE_URL or NEXT_PUBLIC_API_URL."
+    );
   }
-  const res = await fetch(url.toString(), {
+  if (params) {
+    const u = new URL(fullUrl);
+    Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v));
+    fullUrl = u.toString();
+  }
+  const res = await fetch(fullUrl, {
     ...init,
     credentials: "include",
     headers: {

@@ -1,7 +1,39 @@
-const LARAVEL_API =
-  process.env.NEXT_PUBLIC_API_URL ||
-  process.env.NEXT_PUBLIC_LARAVEL_API_URL ||
-  "http://localhost:8000";
+function apiBaseFromEnv(): string {
+  const raw = (
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    process.env.NEXT_PUBLIC_LARAVEL_API_URL ||
+    ""
+  )
+    .trim()
+    .replace(/\/+$/, "");
+  if (!raw) return "";
+  const withoutApi = raw.endsWith("/api") ? raw.slice(0, -4).replace(/\/+$/, "") : raw;
+  if (!withoutApi.startsWith("http://") && !withoutApi.startsWith("https://")) {
+    return "";
+  }
+  try {
+    const u = new URL(withoutApi);
+    const isLoopback =
+      u.hostname === "localhost" ||
+      u.hostname === "127.0.0.1" ||
+      u.hostname === "[::1]";
+    if (process.env.NODE_ENV === "production" && !isLoopback && u.protocol === "http:") {
+      u.protocol = "https:";
+    }
+    return `${u.protocol}//${u.host}`;
+  } catch {
+    return "";
+  }
+}
+
+function apiUrl(path: string): string {
+  const base = apiBaseFromEnv();
+  if (!base) return "";
+  const p = path.startsWith("/") ? path : `/${path}`;
+  return `${base}${p}`;
+}
+
 const MISSING_BACKEND_PREFIX = "[backend missing]";
 
 function asObject(value: unknown): Record<string, unknown> | null {
@@ -84,8 +116,13 @@ export async function fetchUpcomingClasses(filters?: {
   if (filters?.mode) params.set("mode", filters.mode);
   if (filters?.language) params.set("language", filters.language);
   const q = params.toString();
+  const baseUrl = apiUrl("/api/public/classes/upcoming");
+  if (!baseUrl) {
+    logMissingBackendApi("/api/public/classes/upcoming");
+    return [];
+  }
   try {
-    const res = await fetch(`${LARAVEL_API}/api/public/classes/upcoming${q ? `?${q}` : ""}`);
+    const res = await fetch(`${baseUrl}${q ? `?${q}` : ""}`);
     if (!res.ok) {
       if (res.status === 404) logMissingBackendApi("/api/public/classes/upcoming", res.status);
       return [];
@@ -99,8 +136,13 @@ export async function fetchUpcomingClasses(filters?: {
 }
 
 export async function fetchClass(id: number): Promise<ClassSession | null> {
+  const url = apiUrl(`/api/public/classes/${id}`);
+  if (!url) {
+    logMissingBackendApi(`/api/public/classes/${id}`);
+    return null;
+  }
   try {
-    const res = await fetch(`${LARAVEL_API}/api/public/classes/${id}`);
+    const res = await fetch(url);
     if (!res.ok) {
       if (res.status === 404) logMissingBackendApi(`/api/public/classes/${id}`, res.status);
       return null;
@@ -123,7 +165,11 @@ export type RegisterPayload = {
 };
 
 export async function registerForClass(payload: RegisterPayload): Promise<{ redirect_url: string }> {
-  const res = await fetch(`${LARAVEL_API}/api/register`, {
+  const url = apiUrl("/api/register");
+  if (!url) {
+    throw new Error("API base URL is not configured. Set NEXT_PUBLIC_API_BASE_URL or NEXT_PUBLIC_API_URL.");
+  }
+  const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -152,8 +198,13 @@ export type BookingStatus = {
 };
 
 export async function fetchBookingStatus(bookingId: number): Promise<BookingStatus | null> {
+  const url = apiUrl(`/api/public/bookings/${bookingId}`);
+  if (!url) {
+    logMissingBackendApi(`/api/public/bookings/${bookingId}`);
+    return null;
+  }
   try {
-    const res = await fetch(`${LARAVEL_API}/api/public/bookings/${bookingId}`);
+    const res = await fetch(url);
     if (!res.ok) {
       if (res.status === 404) logMissingBackendApi(`/api/public/bookings/${bookingId}`, res.status);
       return null;

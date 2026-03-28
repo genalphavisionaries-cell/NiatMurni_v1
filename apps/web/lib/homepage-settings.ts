@@ -1,9 +1,9 @@
 /**
- * Homepage settings shape — to be loaded from Laravel when NEXT_PUBLIC_API_URL is set.
+ * Homepage settings shape — to be loaded from Laravel when NEXT_PUBLIC_API_BASE_URL (or NEXT_PUBLIC_API_URL) is set.
  * All sections are optional; defaults used when missing.
  */
 
-import { getApiBase } from "./config";
+import { apiUrl, getApiBase } from "./config";
 
 export type NavLink = {
   label: string;
@@ -227,14 +227,15 @@ function deepMerge<T extends object>(defaults: T, overrides: Partial<T> | null |
 }
 
 /**
- * Fetch homepage settings from Laravel when NEXT_PUBLIC_API_URL is set.
+ * Fetch homepage settings from Laravel when NEXT_PUBLIC_API_BASE_URL (or NEXT_PUBLIC_API_URL) is set.
  * Falls back to defaultHomepageSettings on failure or when env is not set.
  */
 export async function getHomepageSettings(): Promise<HomepageSettings> {
-  const base = getApiBase();
-  if (!base) return defaultHomepageSettings;
+  if (!getApiBase()) return defaultHomepageSettings;
+  const url = apiUrl("/api/homepage-settings");
+  if (!url) return defaultHomepageSettings;
   try {
-    const res = await fetch(`${base}/api/homepage-settings`, {
+    const res = await fetch(url, {
       cache: "no-store",
     });
     if (!res.ok) return defaultHomepageSettings;

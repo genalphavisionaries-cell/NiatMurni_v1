@@ -1,9 +1,9 @@
 /**
  * Public structured CMS from Laravel GET /api/public/cms.
- * Base URL: same as `getApiBase()` (NEXT_PUBLIC_API_URL without trailing /api).
+ * Base URL: {@link getApiBase} (NEXT_PUBLIC_API_BASE_URL or NEXT_PUBLIC_API_URL).
  */
 
-import { getApiBase } from "./config";
+import { apiUrl, getApiBase } from "./config";
 import { validateCmsPayload, type ValidationResult } from "./cms-validation";
 
 export type { ValidationResult } from "./cms-validation";
@@ -384,11 +384,11 @@ export async function fetchPublicCms(): Promise<PublicCmsPayload | null> {
 }
 
 export async function fetchPublicCmsWithValidation(): Promise<ValidationResult | null> {
-  const base = getPublicApiBase();
-  if (!base) return validateCmsPayload(null);
-  
+  const url = apiUrl("/api/public/cms");
+  if (!url) return validateCmsPayload(null);
+
   try {
-    const res = await fetch(`${base}/api/public/cms`, {
+    const res = await fetch(url, {
       cache: "no-store",
       headers: { Accept: "application/json" },
     });

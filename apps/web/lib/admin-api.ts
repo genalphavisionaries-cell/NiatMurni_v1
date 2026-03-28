@@ -1,10 +1,9 @@
 /**
  * Admin API client for Laravel backend.
- * Base URL: NEXT_PUBLIC_API_URL only.
- * Uses credentials (cookies) for auth.
+ * Base URL: NEXT_PUBLIC_API_BASE_URL (or NEXT_PUBLIC_API_URL). Uses credentials (cookies) for auth.
  */
 
-import { getApiBase } from "./config";
+import { getApiBase, apiUrl } from "./config";
 
 export const adminApiBaseURL = getApiBase();
 
@@ -245,13 +244,18 @@ async function request<T>(
   options: RequestInit & { params?: Record<string, string> } = {}
 ): Promise<T> {
   const { params, ...init } = options;
-  const base = getApiBase();
-  if (!base) throw new Error("Admin API base URL is not configured. Set NEXT_PUBLIC_API_URL.");
-  const url = new URL(path, base);
-  if (params) {
-    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  let fullUrl = apiUrl(path.startsWith("/") ? path : `/${path}`);
+  if (!fullUrl) {
+    throw new Error(
+      "Admin API base URL is not configured. Set NEXT_PUBLIC_API_BASE_URL or NEXT_PUBLIC_API_URL."
+    );
   }
-  const res = await fetch(url.toString(), {
+  if (params) {
+    const u = new URL(fullUrl);
+    Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v));
+    fullUrl = u.toString();
+  }
+  const res = await fetch(fullUrl, {
     ...init,
     credentials: "include",
     headers: {
@@ -353,9 +357,14 @@ export type Booking = {
 export const adminApi = {
   login(email: string, password: string): Promise<LoginResponse> {
     const data = { email, password };
-    const base = getApiBase();
-    console.log("LOGIN API:", `${base}/api/admin/login`);
-    return fetch(`${base}/api/admin/login`, {
+    const loginUrl = apiUrl("/api/admin/login");
+    if (!loginUrl) {
+      return Promise.reject(
+        new Error("Admin API base URL is not configured. Set NEXT_PUBLIC_API_BASE_URL or NEXT_PUBLIC_API_URL.")
+      );
+    }
+    console.log("LOGIN API:", loginUrl);
+    return fetch(loginUrl, {
       method: "POST",
       credentials: "include",
       headers: {

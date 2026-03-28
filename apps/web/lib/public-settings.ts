@@ -2,7 +2,7 @@
  * Public widget settings from Laravel GET /api/public/settings.
  */
 
-import { getPublicApiBase } from "./public-cms";
+import { apiUrl, getApiBase } from "./config";
 
 export type PublicWhatsAppSettings = {
   enabled: boolean;
@@ -29,10 +29,11 @@ const defaults: PublicSettingsPayload = {
 };
 
 export async function fetchPublicSettings(): Promise<PublicSettingsPayload | null> {
-  const base = getPublicApiBase();
-  if (!base) return null;
+  if (!getApiBase()) return null;
+  const url = apiUrl("/api/public/settings");
+  if (!url) return null;
   try {
-    const res = await fetch(`${base}/api/public/settings`, {
+    const res = await fetch(url, {
       cache: "no-store",
       headers: { Accept: "application/json" },
     });
