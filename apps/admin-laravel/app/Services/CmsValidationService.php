@@ -68,10 +68,6 @@ class CmsValidationService
                 continue;
             }
 
-            if ($title === '') {
-                continue;
-            }
-
             $validated[] = [
                 'title' => $title,
                 'description' => $description !== '' ? $description : null,
@@ -101,16 +97,27 @@ class CmsValidationService
             }
 
             $title = is_string($card['title'] ?? null) ? trim($card['title']) : '';
-            if (empty($title)) {
-                continue; // Skip items without title
+            $description = is_string($card['description'] ?? null) ? trim($card['description']) : '';
+            $imageRaw = $card['image_url'] ?? null;
+            $imageStr = is_string($imageRaw) ? trim($imageRaw) : '';
+            $urlRaw = $card['url'] ?? null;
+            $urlStr = is_string($urlRaw) ? trim($urlRaw) : '';
+            $btnRaw = $card['button_label'] ?? null;
+            $btnStr = is_string($btnRaw) ? trim($btnRaw) : '';
+            $cardColor = is_string($card['card_color'] ?? null) ? trim((string) $card['card_color']) : '';
+            $imageAlt = is_string($card['image_alt'] ?? null) ? trim((string) $card['image_alt']) : '';
+
+            $hasAny = $title !== '' || $description !== '' || $imageStr !== '' || $urlStr !== '' || $btnStr !== '' || $cardColor !== '' || $imageAlt !== '';
+            if (! $hasAny) {
+                continue;
             }
 
             $validated[] = [
                 'title' => $title,
-                'description' => is_string($card['description'] ?? null) ? trim($card['description']) : '',
-                'image_url' => $this->validateUrl($card['image_url'] ?? null),
-                'url' => $this->validateUrl($card['url'] ?? null),
-                'button_label' => is_string($card['button_label'] ?? null) ? trim($card['button_label']) : '',
+                'description' => $description !== '' ? $description : '',
+                'image_url' => $this->validateUrl($imageStr !== '' ? $imageStr : null),
+                'url' => $this->validateUrl($urlStr !== '' ? $urlStr : null),
+                'button_label' => $btnStr,
                 'card_color' => is_string($card['card_color'] ?? null) ? trim($card['card_color']) : '',
                 'image_alt' => is_string($card['image_alt'] ?? null) ? trim($card['image_alt']) : '',
             ];
@@ -137,13 +144,15 @@ class CmsValidationService
             }
 
             $title = is_string($logo['title'] ?? null) ? trim($logo['title']) : '';
-            if (empty($title)) {
-                continue; // Skip items without title
+            $imageRaw = $logo['image_url'] ?? null;
+            $imageStr = is_string($imageRaw) ? trim($imageRaw) : '';
+            if ($title === '' && $imageStr === '') {
+                continue;
             }
 
             $validated[] = [
                 'title' => $title,
-                'image_url' => $this->validateUrl($logo['image_url'] ?? null),
+                'image_url' => $this->validateUrl($imageStr !== '' ? $imageStr : null),
             ];
 
             // Limit to 20 logos maximum
@@ -256,59 +265,4 @@ class CmsValidationService
         return $this->validateJsonField(json_encode($item->extra_json));
     }
 
-    /**
-     * Validate that critical sections exist and have content.
-     * 
-     * @param Collection<CmsSection> $sections
-     * @throws \Illuminate\Validation\ValidationException
-     */
-    public function validateCriticalSections($sections): void
-    {
-        $sectionsByKey = $sections->keyBy('section_key');
-        $errors = [];
-
-        // Check critical sections exist and are active
-        $criticalSections = ['hero', 'why_choose_us', 'cta'];
-        
-        foreach ($criticalSections as $key) {
-            $section = $sectionsByKey->get($key);
-            
-            if (!$section || !$section->is_active) {
-                $errors[] = "The {$key} section is critical and cannot be disabled or removed.";
-                continue;
-            }
-
-            // Validate section has meaningful content
-            $content = $section->content_json ?? [];
-            $title = is_string($content['title'] ?? $section->title ?? null) 
-                ? trim($content['title'] ?? $section->title) 
-                : '';
-            
-            if (empty($title)) {
-                $errors[] = "The {$key} section must have a title.";
-            }
-
-            // Section-specific content validation
-            if ($key === 'why_choose_us') {
-                $items = $section->items()->where('type', 'usp')->where('is_active', true)->count();
-                if ($items === 0) {
-                    $errors[] = "The Why Choose Us section must have at least 1 benefit point.";
-                }
-            }
-
-            if ($key === 'cta') {
-                $items = $section->items()->where('type', 'promo_card')->where('is_active', true)->count();
-                if ($items === 0) {
-                    $errors[] = "The CTA section must have at least 1 promotional card.";
-                }
-            }
-        }
-
-        if (!empty($errors)) {
-            throw new \Illuminate\Validation\ValidationException(
-                validator([], []),
-                response()->json(['errors' => ['critical_sections' => $errors]], 422)
-            );
-        }
-    }
 }

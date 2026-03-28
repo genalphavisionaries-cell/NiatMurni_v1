@@ -366,7 +366,7 @@ export async function fetchPublicCmsWithValidation(): Promise<ValidationResult |
   
   try {
     const res = await fetch(`${base}/api/public/cms`, {
-      next: { revalidate: 10 },
+      cache: "no-store",
       headers: { Accept: "application/json" },
     });
     if (!res.ok) return validateCmsPayload(null);

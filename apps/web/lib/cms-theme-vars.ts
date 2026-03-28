@@ -13,17 +13,21 @@ export function generateCmsThemeVars(cms: PublicCmsPayload | null): Record<strin
   const headerColors = cms.header_colors;
   const footerColors = cms.footer_colors;
 
+  const primaryBtn = theme.primary_button_color || theme.primary_color || "#2563EB";
+  const primaryBtnText = theme.primary_button_text_color || "#FFFFFF";
+
   return {
     // Base theme colors
-    '--cms-primary': theme.primary_color || '#2563EB',
-    '--cms-secondary': theme.secondary_color || '#64748B',
-    '--cms-accent': theme.accent_color || '#F59E0B',
-    '--cms-background': theme.background_color || '#FFFFFF',
-    '--cms-text': theme.text_color || '#0F172A',
+    "--cms-primary": theme.primary_color || "#2563EB",
+    "--cms-secondary": theme.secondary_color || "#64748B",
+    "--cms-accent": theme.accent_color || "#F59E0B",
+    "--cms-background": theme.background_color || "#FFFFFF",
+    "--cms-text": theme.text_color || "#0F172A",
 
-    // Button colors
-    '--cms-btn-primary-bg': theme.primary_button_color || theme.primary_color || '#2563EB',
-    '--cms-btn-primary-text': theme.primary_button_text_color || '#FFFFFF',
+    // Button colors (aliases for admin / docs)
+    "--cms-btn-primary": primaryBtn,
+    "--cms-btn-primary-text": primaryBtnText,
+    "--cms-btn-primary-bg": primaryBtn,
     '--cms-btn-secondary-bg': theme.secondary_button_color || 'transparent',
     '--cms-btn-secondary-text': theme.secondary_button_text_color || theme.primary_color || '#2563EB',
     '--cms-btn-secondary-border': theme.secondary_button_border_color || theme.primary_color || '#2563EB',
@@ -65,8 +69,9 @@ export function getDefaultThemeVars(): Record<string, string> {
     '--cms-text': '#0F172A',
 
     // Buttons
-    '--cms-btn-primary-bg': '#2563EB',
-    '--cms-btn-primary-text': '#FFFFFF',
+    "--cms-btn-primary": "#2563EB",
+    "--cms-btn-primary-bg": "#2563EB",
+    "--cms-btn-primary-text": "#FFFFFF",
     '--cms-btn-secondary-bg': 'transparent',
     '--cms-btn-secondary-text': '#2563EB',
     '--cms-btn-secondary-border': '#2563EB',

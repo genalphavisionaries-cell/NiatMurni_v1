@@ -197,8 +197,11 @@ export default function HeroSection({
           <div className="mt-10 flex flex-wrap items-center gap-4">
             <Link
               href={primaryUrl}
-              className="inline-flex rounded-xl px-7 py-4 text-sm font-semibold text-white shadow-lg transition active:scale-[0.98]"
-              style={{ background: "var(--cms-primary, #eab308)" }}
+              className="inline-flex rounded-xl px-7 py-4 text-sm font-semibold shadow-lg transition active:scale-[0.98]"
+              style={{
+                backgroundColor: "var(--cms-btn-primary-bg, var(--cms-primary, #2563eb))",
+                color: "var(--cms-btn-primary-text, #ffffff)",
+              }}
             >
               <SafeCmsHtml as="span" html={primaryLabel} className="[&_p]:m-0 [&_p]:inline" />
             </Link>

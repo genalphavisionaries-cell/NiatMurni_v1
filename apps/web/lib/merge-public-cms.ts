@@ -1,6 +1,7 @@
 import type { NavLink, HomepageSettings } from "@/lib/homepage-settings";
 import type { PublicCmsNavItem, PublicCmsPayload } from "@/lib/public-cms";
 import { cmsString } from "@/lib/public-cms";
+import { generateCmsThemeVars } from "@/lib/cms-theme-vars";
 
 export type MergedHomePageContext = {
   settings: HomepageSettings;
@@ -84,21 +85,7 @@ export function mergePublicCmsForHome(
         }
       : { label: "Register", url: "/#classes" };
 
-  const themeVars: Record<string, string> = {};
-  if (cms?.theme) {
-    const t = cms.theme;
-    const set = (k: string, v: string) => {
-      const x = cmsString(v);
-      if (x) themeVars[k] = x;
-    };
-    set("--cms-primary", t.primary_color);
-    set("--cms-secondary", t.secondary_color);
-    set("--cms-accent", t.accent_color);
-    set("--cms-bg", t.background_color);
-    set("--cms-text", t.text_color);
-    set("--cms-header-bg", t.header_background_color);
-    set("--cms-footer-bg", t.footer_background_color);
-  }
+  const themeVars: Record<string, string> = generateCmsThemeVars(cms);
 
   const footerCols = cms?.navigation?.footer?.length
     ? footerColumnsFromCms(cms.navigation.footer)

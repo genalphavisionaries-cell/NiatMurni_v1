@@ -127,7 +127,7 @@ export default function TestimonialsSection({ section }: { section: PublicCmsHom
             <SafeCmsHtml html={title} className="max-w-none [&_p]:m-0" />
           </div>
           {subtitle ? (
-            <div className="mx-auto mt-3 max-w-2xl text-[#64748B] [&_a]:text-[#2563EB] [&_a]:underline">
+            <div className="mx-auto mt-3 max-w-2xl text-[#64748B] [&_a]:text-[color:var(--cms-primary,#2563EB)] [&_a]:underline">
               <SafeCmsHtml html={subtitle} className="max-w-none prose-p:my-2" />
             </div>
           ) : null}
@@ -176,7 +176,11 @@ export default function TestimonialsSection({ section }: { section: PublicCmsHom
             href={GOOGLE_REVIEW_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="shrink-0 rounded-lg bg-[#2563EB] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#1D4ED8] focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-2"
+            className="shrink-0 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors hover:brightness-95 focus:outline focus:outline-2 focus:outline-[color:var(--cms-primary,#2563EB)] focus:outline-offset-2"
+            style={{
+              backgroundColor: "var(--cms-btn-primary-bg, var(--cms-primary, #2563EB))",
+              color: "var(--cms-btn-primary-text, #ffffff)",
+            }}
           >
             Write a Review
           </a>
@@ -256,7 +260,7 @@ function TestimonialCard({
         <button
           type="button"
           onClick={() => setExpanded(true)}
-          className="mt-1 text-[13px] font-medium text-[#2563EB] hover:underline focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-1"
+          className="mt-1 text-[13px] font-medium text-[color:var(--cms-primary,#2563EB)] hover:underline focus:outline focus:outline-2 focus:outline-[color:var(--cms-primary,#2563EB)] focus:outline-offset-1"
         >
           Read more
         </button>

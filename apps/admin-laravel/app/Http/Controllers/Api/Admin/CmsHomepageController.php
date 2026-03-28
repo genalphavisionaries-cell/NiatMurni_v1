@@ -170,8 +170,9 @@ class CmsHomepageController extends Controller
             'message' => 'Validation failed. Please check the issues below before publishing.',
             'validation_errors' => $errors,
             'errors_by_section' => $errorsBySection,
+            'errors' => $e->errors(),
             'can_save_draft' => true,
-            'can_publish' => count(array_filter($errors, fn($e) => $e['severity'] === 'error')) === 0,
+            'can_publish' => count(array_filter($errors, fn ($row) => $row['severity'] === 'error')) === 0,
         ], 422);
     }
 

@@ -83,14 +83,14 @@ export default function PromotionsSection({
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div
-              className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl [&_a]:text-[#2563EB] [&_a]:underline"
+              className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl [&_a]:text-[color:var(--cms-primary,#2563EB)] [&_a]:underline"
               role="heading"
               aria-level={2}
             >
               <SafeCmsHtml html={title} className="max-w-none [&_p]:m-0" />
             </div>
             {description ? (
-              <div className="mx-auto mt-2 max-w-xl text-sm text-slate-600 [&_a]:text-[#2563EB]">
+              <div className="mx-auto mt-2 max-w-xl text-sm text-slate-600 [&_a]:text-[color:var(--cms-primary,#2563EB)]">
                 <SafeCmsHtml html={description} className="max-w-none prose-p:my-1" />
               </div>
             ) : null}
@@ -130,11 +130,11 @@ export default function PromotionsSection({
                   </div>
 
                   <div className="p-5">
-                    <div className="text-base font-semibold text-slate-900 [&_a]:text-[#2563EB] [&_a]:underline">
+                    <div className="text-base font-semibold text-slate-900 [&_a]:text-[color:var(--cms-primary,#2563EB)] [&_a]:underline">
                       <SafeCmsHtml html={pTitle} className="max-w-none [&_p]:m-0" />
                     </div>
                     {pDesc ? (
-                      <div className="mt-1 text-sm text-slate-600 [&_a]:text-[#2563EB]">
+                      <div className="mt-1 text-sm text-slate-600 [&_a]:text-[color:var(--cms-primary,#2563EB)]">
                         <SafeCmsHtml html={pDesc} className="max-w-none prose-p:my-1" />
                       </div>
                     ) : null}

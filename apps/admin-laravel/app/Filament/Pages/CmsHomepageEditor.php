@@ -680,98 +680,23 @@ class CmsHomepageEditor extends Page implements HasForms
         });
     }
 
+    /**
+     * Publish gate: do not block on empty images, cards, or points (aligned with API / UpdateHomepageRequest).
+     */
     private function validateEntireHomepageForPublish(array $data): array
     {
-        $errors = [];
-        $sections = [];
-        
-        // Validate ALL critical sections regardless of individual toggles
-        
-        // 1. Validate Hero Section
-        $hero = $data['hero'] ?? [];
-        $heroErrors = $this->validateSectionData('Hero', $hero, [
-            'headline' => 'Main headline is required to attract visitors',
-            'subheadline' => 'Description helps explain your service',
-        ]);
-        if (!empty($heroErrors)) {
-            $errors = array_merge($errors, $heroErrors);
-            $sections['hero'] = 'incomplete';
-        } else {
-            $sections['hero'] = 'ready';
-        }
-        
-        // 2. Validate Why Choose Us Section  
-        $why = $data['why_choose_us'] ?? [];
-        $whyErrors = $this->validateSectionData('Why Choose Us', $why, [
-            'title' => 'Section title is required to highlight your advantages',
-        ]);
-        
-        $points = $why['points'] ?? [];
-        $validPoints = array_filter($points, fn($p) => !empty($this->safeString($p['title'] ?? '')));
-        if (empty($validPoints)) {
-            $whyErrors[] = "• Why Choose Us: At least 1 benefit point is required to showcase your value";
-        }
-        
-        if (!empty($whyErrors)) {
-            $errors = array_merge($errors, $whyErrors);
-            $sections['why_choose_us'] = 'incomplete';
-        } else {
-            $sections['why_choose_us'] = 'ready';
-        }
-        
-        // 3. Validate CTA/Promotions Section
-        $cta = $data['cta'] ?? [];
-        $ctaErrors = $this->validateSectionData('Promotions', $cta, [
-            'title' => 'Section title is required to drive customer action',
-        ]);
-        
-        $cards = $cta['cards'] ?? [];
-        $validCards = array_filter($cards, fn($c) => !empty($this->safeString($c['title'] ?? '')));
-        if (empty($validCards)) {
-            $ctaErrors[] = "• Promotions: At least 1 promotional offer is required to drive conversions";
-        }
-        
-        if (!empty($ctaErrors)) {
-            $errors = array_merge($errors, $ctaErrors);
-            $sections['cta'] = 'incomplete';
-        } else {
-            $sections['cta'] = 'ready';
-        }
-
-        // Build comprehensive response
-        if (!empty($errors)) {
-            $message = "Homepage cannot be published until all required sections are complete:\n\n" . 
-                      implode("\n", $errors) . 
-                      "\n\n💡 You can still save as draft to preserve your work.";
-                      
-            return [
-                'can_publish' => false,
-                'message' => $message,
-                'errors' => $errors,
-                'sections_status' => $sections,
-            ];
-        }
+        $sections = [
+            'hero' => 'ready',
+            'why_choose_us' => 'ready',
+            'cta' => 'ready',
+        ];
 
         return [
             'can_publish' => true,
-            'message' => 'All sections are ready for publishing!',
+            'message' => 'Publishing with current content.',
             'errors' => [],
             'sections_status' => $sections,
         ];
-    }
-
-    private function validateSectionData(string $sectionName, array $section, array $requiredFields): array
-    {
-        $errors = [];
-        
-        foreach ($requiredFields as $field => $message) {
-            $value = $this->safeString($section[$field] ?? '');
-            if (empty($value)) {
-                $errors[] = "• {$sectionName}: {$message}";
-            }
-        }
-        
-        return $errors;
     }
 
     protected function getHeaderActions(): array

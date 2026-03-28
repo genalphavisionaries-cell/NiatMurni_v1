@@ -199,7 +199,10 @@ export default function UpcomingClassesSection() {
         <div className="mt-10">
           {loading ? (
             <div className="flex justify-center py-16">
-              <div className="h-10 w-10 animate-spin rounded-full border-2 border-[#2563EB] border-t-transparent" />
+              <div
+                className="h-10 w-10 animate-spin rounded-full border-2 border-t-transparent"
+                style={{ borderColor: "var(--cms-primary, #2563EB)", borderTopColor: "transparent" }}
+              />
             </div>
           ) : (
             <>
@@ -263,7 +266,7 @@ export default function UpcomingClassesSection() {
                         Math.min(v + MOBILE_INCREMENT, displayList.length)
                       )
                     }
-                    className="inline-flex items-center gap-2 rounded-full border border-[#CBD5E1] bg-white px-6 py-2.5 text-sm font-semibold text-[#0F172A] shadow-sm transition hover:border-[#2563EB] hover:bg-[#EFF6FF] hover:text-[#2563EB] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#2563EB]"
+                    className="inline-flex items-center gap-2 rounded-full border border-[#CBD5E1] bg-white px-6 py-2.5 text-sm font-semibold text-[#0F172A] shadow-sm transition hover:border-[color:var(--cms-primary,#2563EB)] hover:bg-[#EFF6FF] hover:text-[color:var(--cms-primary,#2563EB)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--cms-primary,#2563EB)]"
                   >
                     <span>Load More</span>
                     <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -283,7 +286,7 @@ export default function UpcomingClassesSection() {
                         Math.min(v + DESKTOP_INCREMENT, displayList.length)
                       )
                     }
-                    className="inline-flex items-center gap-2 rounded-full border border-[#CBD5E1] bg-white px-7 py-2.5 text-sm font-semibold text-[#0F172A] shadow-sm transition hover:border-[#2563EB] hover:bg-[#EFF6FF] hover:text-[#2563EB] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#2563EB]"
+                    className="inline-flex items-center gap-2 rounded-full border border-[#CBD5E1] bg-white px-7 py-2.5 text-sm font-semibold text-[#0F172A] shadow-sm transition hover:border-[color:var(--cms-primary,#2563EB)] hover:bg-[#EFF6FF] hover:text-[color:var(--cms-primary,#2563EB)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--cms-primary,#2563EB)]"
                   >
                     <span>Load More</span>
                     <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -297,7 +300,11 @@ export default function UpcomingClassesSection() {
               <div className="mt-10 flex flex-col items-center justify-center gap-3 md:flex-row">
                 <Link
                   href="/#classes"
-                  className="inline-flex items-center justify-center rounded-xl bg-[#2563EB] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1D4ED8]"
+                  className="inline-flex items-center justify-center rounded-xl px-6 py-3 text-sm font-semibold shadow-sm transition hover:brightness-95"
+                  style={{
+                    backgroundColor: "var(--cms-btn-primary-bg, var(--cms-primary, #2563EB))",
+                    color: "var(--cms-btn-primary-text, #ffffff)",
+                  }}
                 >
                   Pilih Kelas Lain
                 </Link>
@@ -348,7 +355,11 @@ export default function UpcomingClassesSection() {
                       </div>
                       <button
                         type="button"
-                        className="inline-flex shrink-0 items-center justify-center rounded-lg bg-[#2563EB] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1D4ED8]"
+                        className="inline-flex shrink-0 items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold hover:brightness-95"
+                        style={{
+                          backgroundColor: "var(--cms-btn-primary-bg, var(--cms-primary, #2563EB))",
+                          color: "var(--cms-btn-primary-text, #ffffff)",
+                        }}
                         onClick={() => {
                           const classSession = classById.get(selectedCart.classId);
                           if (!classSession) return;
@@ -429,7 +440,10 @@ function UpcomingClassCard({
         <div className="flex min-w-0 flex-1 flex-col justify-between gap-1">
 
           {/* DATE/TIME ANCHOR — subtle tinted block with blue left accent */}
-          <div className="rounded-md border-l-[3px] border-[#2563EB] bg-slate-50 px-2 py-1">
+          <div
+            className="rounded-md border-l-[3px] bg-slate-50 px-2 py-1"
+            style={{ borderLeftColor: "var(--cms-primary, #2563EB)" }}
+          >
             <p className="text-[15px] font-extrabold leading-snug text-[#0A1628] break-words">
               {dateAndDayLine}
             </p>
@@ -498,10 +512,16 @@ function UpcomingClassCard({
                 onAddToCart(qty);
               }}
               className={`inline-flex h-[26px] min-w-[3.75rem] shrink-0 items-center justify-center rounded-md px-2 text-[11px] font-bold leading-none shadow-sm transition ${
-                disabled
-                  ? "cursor-not-allowed bg-slate-300 text-[#64748B]"
-                  : "bg-[#0F3B7B] text-white hover:bg-[#0b2e5f]"
+                disabled ? "cursor-not-allowed bg-slate-300 text-[#64748B]" : "hover:brightness-95"
               }`}
+              style={
+                disabled
+                  ? undefined
+                  : {
+                      backgroundColor: "var(--cms-btn-primary-bg, var(--cms-primary, #0F3B7B))",
+                      color: "var(--cms-btn-primary-text, #ffffff)",
+                    }
+              }
             >
               {pastSession ? "Selesai" : "Daftar"}
             </button>

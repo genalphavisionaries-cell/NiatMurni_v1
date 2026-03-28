@@ -115,7 +115,8 @@ export default function CmsHeader({
   }, [navTree]);
 
   const headerBg = "var(--cms-header-bg, rgba(255,255,255,0.92))";
-  const ctaBg = "var(--cms-primary, #2563eb)";
+  const ctaBg = "var(--cms-btn-primary-bg, var(--cms-primary, #2563eb))";
+  const ctaFg = "var(--cms-btn-primary-text, #ffffff)";
 
   return (
     <header
@@ -162,12 +163,13 @@ export default function CmsHeader({
               href={primaryCta.url.startsWith("#") ? `/${primaryCta.url}` : primaryCta.url}
               label={primaryCta.label}
               external={primaryCta.url.startsWith("http")}
-              className="rounded-full px-4 py-2 text-sm font-semibold text-white shadow-sm"
+              className="rounded-full px-4 py-2 text-sm font-semibold shadow-sm"
               onNavigate={() => setMobileOpen(false)}
             />
             <style jsx>{`
               a.rounded-full {
                 background: ${ctaBg};
+                color: ${ctaFg};
               }
               a.rounded-full:hover {
                 filter: brightness(0.95);
@@ -183,7 +185,7 @@ export default function CmsHeader({
               id="lang-select"
               value={lang}
               onChange={(e) => setLang(e.target.value as "BM" | "EN")}
-              className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm outline-none focus:ring-2 focus:ring-[#2563EB]"
+              className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm outline-none focus:ring-2 focus:ring-[color:var(--cms-primary,#2563EB)]"
               aria-label="Language"
             >
               <option value="BM">BM</option>
@@ -272,12 +274,13 @@ export default function CmsHeader({
               href={primaryCta.url.startsWith("#") ? `/${primaryCta.url}` : primaryCta.url}
               label={primaryCta.label}
               external={primaryCta.url.startsWith("http")}
-              className="mt-2 rounded-full px-4 py-2 text-center text-sm font-semibold text-white"
+              className="mt-2 rounded-full px-4 py-2 text-center text-sm font-semibold"
               onNavigate={() => setMobileOpen(false)}
             />
             <style jsx>{`
               a.mt-2.rounded-full {
                 background: ${ctaBg};
+                color: ${ctaFg};
               }
               a.mt-2.rounded-full:hover {
                 filter: brightness(0.95);
