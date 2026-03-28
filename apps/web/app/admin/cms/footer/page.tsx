@@ -6,6 +6,7 @@ import { adminApi } from "@/lib/admin-api";
 import type { CmsFooterData, CmsFooterLink } from "@/lib/admin-api";
 import { cn } from "@/lib/utils";
 import { hasRichText, isValidHttpOrRelativeUrl } from "@/lib/cms-admin-validation";
+import { safeTrim, splitAndTrimLines } from "@/lib/safe-string-utils";
 import { CmsFieldGroup } from "@/components/admin/cms/CmsFieldGroup";
 import { SectionEnabledSwitch } from "@/components/admin/cms/SectionEnabledSwitch";
 import { CmsRichTextField } from "@/components/admin/cms/CmsRichTextField";
@@ -33,27 +34,27 @@ const tabs: { key: Tab; label: string }[] = [
 function validateFooter(d: CmsFooterData): string[] {
   const e: string[] = [];
   if (d.enabled !== false) {
-    if (!hasRichText(d.brand?.description ?? "") && !d.brand?.logo_url?.trim()) {
+    if (!hasRichText(d.brand?.description ?? "") && !safeTrim(d.brand?.logo_url)) {
       e.push("Footer: add brand description or logo when the section is enabled.");
     }
   }
-  if (d.brand?.logo_url?.trim() && !isValidHttpOrRelativeUrl(d.brand.logo_url)) {
+  if (safeTrim(d.brand?.logo_url) && !isValidHttpOrRelativeUrl(d.brand.logo_url)) {
     e.push("Footer: brand logo URL is invalid.");
   }
   const linkLists = [...(d.quick_links ?? []), ...(d.buttons ?? []), ...(d.legal_links ?? [])];
   for (const link of linkLists) {
-    if (link.url?.trim() && !isValidHttpOrRelativeUrl(link.url)) {
+    if (safeTrim(link.url) && !isValidHttpOrRelativeUrl(link.url)) {
       e.push("Footer: a link has an invalid URL.");
       break;
     }
   }
-  for (const line of d.payment.icons_urls.split("\n").map((x) => x.trim()).filter(Boolean)) {
+  for (const line of splitAndTrimLines(d.payment.icons_urls)) {
     if (!isValidHttpOrRelativeUrl(line)) {
       e.push("Footer: invalid payment icon URL.");
       break;
     }
   }
-  if (d.bottom.ssl_badge_url?.trim() && !isValidHttpOrRelativeUrl(d.bottom.ssl_badge_url)) {
+  if (safeTrim(d.bottom.ssl_badge_url) && !isValidHttpOrRelativeUrl(d.bottom.ssl_badge_url)) {
     e.push("Footer: SSL badge URL is invalid.");
   }
   return e;

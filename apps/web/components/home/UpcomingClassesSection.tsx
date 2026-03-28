@@ -5,6 +5,7 @@ import Link from "next/link";
 import { fetchUpcomingClasses, type ClassSession } from "@/lib/api";
 import QuantitySelector from "@/components/home/QuantitySelector";
 import { useCart } from "@/components/cart/CartProvider";
+import { safeTrim } from "@/lib/safe-string-utils";
 
 type HeroClassItem = {
   id: string;
@@ -70,7 +71,7 @@ function modeLabel(mode: string): string {
 }
 
 function toMalayMonthShort(month: string) {
-  const m = month.trim().toLowerCase();
+  const m = safeTrim(month).toLowerCase();
   const map: Record<string, string> = {
     jan: "Jan",
     feb: "Feb",
@@ -400,10 +401,11 @@ function UpcomingClassCard({
   const { dayNumber, month, year } = formatClassDate(item.date);
   const timeText = item.time.replace(/\s*–\s*/g, " – ");
   const monthShort = month ? toMalayMonthShort(month) : "";
-  const dateLine = `${dayNumber}${monthShort ? ` ${monthShort}` : ""}${
+  const dateLineRaw = `${dayNumber}${monthShort ? ` ${monthShort}` : ""}${
     year ? ` ${year}` : ""
-  }`.trim();
-  const dateAndDayLine = `${dateLine}, ${item.day}`.replace(/\s+/g, " ").trim();
+  }`;
+  const dateLine = safeTrim(dateLineRaw);
+  const dateAndDayLine = safeTrim(`${dateLine}, ${item.day}`.replace(/\s+/g, " "));
 
   const resolvedMode = modeLabel(item.mode);
   const isOnline = resolvedMode === "Online (Zoom)";

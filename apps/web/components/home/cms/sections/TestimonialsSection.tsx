@@ -4,6 +4,7 @@ import type { PublicCmsHomepageSection } from "@/lib/public-cms";
 import { cmsString } from "@/lib/public-cms";
 import { cmsPlainTextForAttribute } from "@/lib/sanitize-cms-html";
 import { extraString, parseJsonSafe } from "../utils";
+import { safeTrim, safeStringTrim } from "@/lib/safe-string-utils";
 import { useRef, useState } from "react";
 import { SafeCmsHtml } from "../SafeCmsHtml";
 
@@ -55,16 +56,16 @@ function normalizeBrands(raw: unknown): BrandItem[] {
   for (const item of raw) {
     if (typeof item === "string") {
       // Legacy format: array of strings
-      const name = item.trim();
+      const name = safeTrim(item);
       if (name) out.push({ company_name: name, logo: null });
       continue;
     }
     if (item && typeof item === "object") {
       // New format: array of objects with company_name and logo
       const o = item as Record<string, unknown>;
-      const company_name = String(o.company_name ?? o.title ?? o.name ?? "").trim();
+      const company_name = safeStringTrim(o.company_name ?? o.title ?? o.name);
       if (!company_name) continue;
-      const logo = String(o.logo ?? o.image_url ?? "").trim() || null;
+      const logo = safeStringTrim(o.logo ?? o.image_url) || null;
       out.push({ company_name, logo });
     }
   }

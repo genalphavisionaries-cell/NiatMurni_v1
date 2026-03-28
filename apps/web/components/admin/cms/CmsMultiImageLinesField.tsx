@@ -3,18 +3,19 @@
 import { useMemo } from "react";
 import { FormLabel } from "@/components/dashboard";
 import { CmsImageUploadField } from "./CmsImageUploadField";
+import { safeTrim, splitAndTrimLines } from "@/lib/safe-string-utils";
 
 function parseLines(s: string): string[] {
-  return s.split("\n").map((x) => x.trim());
+  return splitAndTrimLines(s);
 }
 
 function packFromSlots(slots: { url: string; alt: string }[]): { urls: string; alts: string } {
   const ku: string[] = [];
   const ka: string[] = [];
   for (const s of slots) {
-    if (s.url.trim()) {
-      ku.push(s.url.trim());
-      ka.push(s.alt.trim());
+    if (safeTrim(s.url)) {
+      ku.push(safeTrim(s.url));
+      ka.push(safeTrim(s.alt));
     }
   }
   return { urls: ku.join("\n"), alts: ka.join("\n") };

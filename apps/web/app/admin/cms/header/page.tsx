@@ -6,6 +6,7 @@ import { adminApi } from "@/lib/admin-api";
 import type { CmsHeaderData, CmsMenuItem } from "@/lib/admin-api";
 import { cn } from "@/lib/utils";
 import { isValidHttpOrRelativeUrl } from "@/lib/cms-admin-validation";
+import { safeTrim } from "@/lib/safe-string-utils";
 import { CmsFieldGroup } from "@/components/admin/cms/CmsFieldGroup";
 import { SectionEnabledSwitch } from "@/components/admin/cms/SectionEnabledSwitch";
 import { CmsImageUploadField } from "@/components/admin/cms/CmsImageUploadField";
@@ -22,14 +23,14 @@ const emptyHeader: CmsHeaderData = {
 
 function validateHeader(d: CmsHeaderData): string[] {
   const e: string[] = [];
-  if (d.logo_url?.trim() && !isValidHttpOrRelativeUrl(d.logo_url)) {
+  if (safeTrim(d.logo_url) && !isValidHttpOrRelativeUrl(d.logo_url)) {
     e.push("Header: logo URL is invalid.");
   }
-  if (d.cta.url?.trim() && !isValidHttpOrRelativeUrl(d.cta.url)) {
+  if (safeTrim(d.cta.url) && !isValidHttpOrRelativeUrl(d.cta.url)) {
     e.push("Header: CTA URL is invalid.");
   }
   for (const item of d.menu_items) {
-    if (item.url?.trim() && !isValidHttpOrRelativeUrl(item.url)) {
+    if (safeTrim(item.url) && !isValidHttpOrRelativeUrl(item.url)) {
       e.push("Header: a menu item has an invalid URL.");
       break;
     }

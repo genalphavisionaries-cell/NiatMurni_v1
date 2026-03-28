@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { FormLabel, TextInput } from "@/components/dashboard";
 import { adminApi } from "@/lib/admin-api";
 import { cn } from "@/lib/utils";
+import { safeTrim } from "@/lib/safe-string-utils";
 
 type Props = {
   label: string;
@@ -56,7 +57,7 @@ export function CmsImageUploadField({
       {(urlError || uploadErr) && <p className="mt-0.5 text-xs text-red-600">{urlError || uploadErr}</p>}
       <div className={cn("mt-1 flex flex-col gap-3 rounded-lg border border-[var(--border)] bg-gray-50/80 p-3 sm:flex-row sm:items-start", urlError && "border-red-300")}>
         <div className="flex shrink-0 items-center justify-center overflow-hidden rounded-md border border-gray-200 bg-white" style={{ width: 96, height: 96 }}>
-          {url.trim() ? (
+          {safeTrim(url) ? (
             <img src={url} alt="" className="max-h-full max-w-full object-contain" />
           ) : (
             <span className="px-2 text-center text-xs text-gray-400">No image</span>

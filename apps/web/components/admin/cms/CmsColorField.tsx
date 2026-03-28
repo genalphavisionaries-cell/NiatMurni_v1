@@ -2,6 +2,7 @@
 
 import { FormLabel, TextInput } from "@/components/dashboard";
 import { cn } from "@/lib/utils";
+import { safeTrim } from "@/lib/safe-string-utils";
 
 export function CmsColorField({
   label,
@@ -14,7 +15,7 @@ export function CmsColorField({
   onChange: (v: string) => void;
   className?: string;
 }) {
-  const hex = value?.trim() || "#000000";
+  const hex = safeTrim(value) || "#000000";
   const pickerSafe = /^#[0-9A-Fa-f]{6}$/.test(hex) ? hex : "#000000";
 
   return (

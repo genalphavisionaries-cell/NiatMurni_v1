@@ -6,6 +6,7 @@ import { adminApi } from "@/lib/admin-api";
 import type { CmsHeroData, CmsUspData, CmsClassesData, CmsPromoData, CmsPromoCard, CmsUspPoint } from "@/lib/admin-api";
 import { cn } from "@/lib/utils";
 import { hasRichText, isValidHttpOrRelativeUrl, isValidHttpOrRelativeUrlRequired } from "@/lib/cms-admin-validation";
+import { safeTrim, hasNonEmptyString, splitAndTrimLines } from "@/lib/safe-string-utils";
 import { CmsFieldGroup } from "@/components/admin/cms/CmsFieldGroup";
 import { SectionEnabledSwitch } from "@/components/admin/cms/SectionEnabledSwitch";
 import { CmsRichTextField } from "@/components/admin/cms/CmsRichTextField";
@@ -91,14 +92,14 @@ function validateHomepage(
       errors.push("Hero: headline is required when this section is enabled.");
     }
   }
-  for (const line of hero.background_urls.split("\n").map((t) => t.trim()).filter(Boolean)) {
+  for (const line of splitAndTrimLines(hero.background_urls)) {
     if (!isValidHttpOrRelativeUrl(line)) {
       errors.push(`Hero: invalid background image URL.`);
       break;
     }
   }
   for (const b of hero.buttons) {
-    if (b.url.trim() && !isValidHttpOrRelativeUrl(b.url)) {
+    if (safeTrim(b.url) && !isValidHttpOrRelativeUrl(b.url)) {
       errors.push("Hero: a button has an invalid URL.");
       break;
     }
@@ -109,31 +110,31 @@ function validateHomepage(
       errors.push("Why choose us: title is required when this section is enabled.");
     }
   }
-  for (const line of whyChooseUs.side_images_urls.split("\n").map((t) => t.trim()).filter(Boolean)) {
+  for (const line of splitAndTrimLines(whyChooseUs.side_images_urls)) {
     if (!isValidHttpOrRelativeUrl(line)) {
       errors.push("Why choose us: invalid side image URL.");
       break;
     }
   }
   whyChooseUs.points.forEach((p, i) => {
-    const hasCard = p.title.trim().length > 0 || hasRichText(p.description);
+    const hasCard = hasNonEmptyString(p.title) || hasRichText(p.description);
     if (hasCard) {
-      if (!p.icon?.trim()) {
+      if (!safeTrim(p.icon)) {
         errors.push(`Why choose us card ${i + 1}: upload or enter an icon/image URL.`);
       } else if (!isValidHttpOrRelativeUrlRequired(p.icon)) {
         errors.push(`Why choose us card ${i + 1}: icon URL is invalid.`);
       }
-    } else if (p.icon?.trim() && !isValidHttpOrRelativeUrl(p.icon)) {
+    } else if (safeTrim(p.icon) && !isValidHttpOrRelativeUrl(p.icon)) {
       errors.push(`Why choose us card ${i + 1}: icon URL is invalid.`);
     }
   });
 
   if (classes.enabled !== false) {
-    if (!classes.title?.trim()) {
+    if (!safeTrim(classes.title)) {
       errors.push("Classes: title is required when this section is enabled.");
     }
   }
-  if (classes.button_url.trim() && !isValidHttpOrRelativeUrl(classes.button_url)) {
+  if (safeTrim(classes.button_url) && !isValidHttpOrRelativeUrl(classes.button_url)) {
     errors.push("Classes: button URL is invalid.");
   }
 
@@ -142,7 +143,7 @@ function validateHomepage(
       errors.push("CTA: title is required when this section is enabled.");
     }
   }
-  for (const line of ctaSection.banner_urls.split("\n").map((t) => t.trim()).filter(Boolean)) {
+  for (const line of splitAndTrimLines(ctaSection.banner_urls)) {
     if (!isValidHttpOrRelativeUrl(line)) {
       errors.push("CTA: invalid banner image URL.");
       break;
@@ -150,18 +151,18 @@ function validateHomepage(
   }
   ctaSection.cards.forEach((c, i) => {
     const hasCard =
-      c.title.trim().length > 0 ||
+      hasNonEmptyString(c.title) ||
       hasRichText(c.description) ||
-      c.button_label.trim().length > 0 ||
-      c.url.trim().length > 0;
+      hasNonEmptyString(c.button_label) ||
+      hasNonEmptyString(c.url);
     if (hasCard) {
-      if (!c.image_url?.trim()) {
+      if (!safeTrim(c.image_url)) {
         errors.push(`CTA card ${i + 1}: image is required when the card has content or a button.`);
       } else if (!isValidHttpOrRelativeUrlRequired(c.image_url)) {
         errors.push(`CTA card ${i + 1}: image URL is invalid.`);
       }
     }
-    if (c.url.trim() && !isValidHttpOrRelativeUrl(c.url)) {
+    if (safeTrim(c.url) && !isValidHttpOrRelativeUrl(c.url)) {
       errors.push(`CTA card ${i + 1}: link URL is invalid.`);
     }
   });
