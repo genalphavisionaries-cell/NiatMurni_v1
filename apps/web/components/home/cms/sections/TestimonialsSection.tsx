@@ -1,8 +1,10 @@
+"use client";
+
 import type { PublicCmsHomepageSection } from "@/lib/public-cms";
 import { cmsString } from "@/lib/public-cms";
 import { cmsPlainTextForAttribute } from "@/lib/sanitize-cms-html";
 import { extraString, parseJsonSafe } from "../utils";
-import Link from "next/link";
+import { useRef, useState } from "react";
 import { SafeCmsHtml } from "../SafeCmsHtml";
 
 type Testimonial = {
@@ -12,9 +14,17 @@ type Testimonial = {
   date?: string;
 };
 
-function Stars({ rating, size = "md" }: { rating: number; size?: "sm" | "md" }) {
+type BrandItem = {
+  company_name: string;
+  logo?: string | null;
+};
+
+const GOOGLE_REVIEW_URL = "https://www.google.com/search?q=Niat+Murni+Academy+reviews";
+const REVIEW_TRUNCATE_LENGTH = 120;
+
+function Stars({ rating, size = "md" }: { rating: number; size?: "md" | "lg" }) {
   const r = Math.min(5, Math.max(0, Math.round(rating)));
-  const cls = size === "sm" ? "text-xs text-[#F59E0B]" : "text-sm text-[#F59E0B]";
+  const cls = size === "lg" ? "text-xl text-[#EAB308]" : "text-sm text-[#EAB308]";
   return (
     <span className={cls} aria-hidden>
       {"★".repeat(r)}{"☆".repeat(5 - r)}
@@ -22,45 +32,47 @@ function Stars({ rating, size = "md" }: { rating: number; size?: "sm" | "md" }) 
   );
 }
 
-/** Rating bar Google badge — bar variant only */
-function GoogleBadge() {
+function GoogleGMark({ className = "h-5 w-5" }: { className?: string }) {
   return (
-    <div className="flex items-center gap-2" aria-label="Google Reviews">
-      <span
-        className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#4285F4] text-[13px] font-bold text-white leading-none select-none"
-        aria-hidden
-      >
-        G
-      </span>
-      <span className="text-sm font-semibold text-[#0F172A]">Google Reviews</span>
-    </div>
+    <span
+      className={`inline-flex shrink-0 items-center justify-center rounded-full bg-white text-lg font-semibold ${className}`}
+      style={{ color: "#4285F4" }}
+      aria-hidden
+    >
+      G
+    </span>
   );
 }
 
-/** Avatar circle — letter initial with a soft background */
-function Avatar({ name }: { name: string }) {
-  const letter = (name ?? "?").trim().slice(0, 1).toUpperCase();
-  const COLORS = [
-    "bg-blue-100 text-blue-700",
-    "bg-emerald-100 text-emerald-700",
-    "bg-violet-100 text-violet-700",
-    "bg-amber-100 text-amber-700",
-    "bg-rose-100 text-rose-700",
-    "bg-cyan-100 text-cyan-700",
-  ];
-  const idx = letter.charCodeAt(0) % COLORS.length;
-  return (
-    <div
-      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold ${COLORS[idx]}`}
-    >
-      {letter}
-    </div>
-  );
+function plainText(html: string | null | undefined): string {
+  if (!html) return "";
+  return html.replace(/<[^>]*>/g, " ").replace(/&nbsp;/gi, " ").replace(/\s+/g, " ").trim();
+}
+
+function normalizeBrands(raw: unknown): BrandItem[] {
+  if (!Array.isArray(raw)) return [];
+  const out: BrandItem[] = [];
+  for (const item of raw) {
+    if (typeof item === "string") {
+      const name = item.trim();
+      if (name) out.push({ company_name: name, logo: null });
+      continue;
+    }
+    if (item && typeof item === "object") {
+      const o = item as Record<string, unknown>;
+      const company_name = String(o.company_name ?? o.title ?? o.name ?? "").trim();
+      if (!company_name) continue;
+      const logo = String(o.logo ?? o.image_url ?? "").trim() || null;
+      out.push({ company_name, logo });
+    }
+  }
+  return out;
 }
 
 export default function TestimonialsSection({ section }: { section: PublicCmsHomepageSection }) {
-  const title = cmsString(section.title) ?? "Kepercayaan & Ulasan";
-  const subtitle = cmsString(section.subtitle) ?? cmsString(section.description);
+  const title = cmsString(section.title) ?? "Kepercayaan & Ulasan Peserta";
+  const subtitle = cmsString(section.subtitle) ?? cmsString(section.description) ?? "";
+  const testimonialRef = useRef<HTMLDivElement>(null);
 
   const items =
     parseJsonSafe<Testimonial[]>(extraString(section.extra_data, "items_json")) ?? [];
@@ -79,149 +91,173 @@ export default function TestimonialsSection({ section }: { section: PublicCmsHom
       ? summaryJson.count
       : 2500;
 
-  const brands =
-    parseJsonSafe<string[]>(extraString(section.extra_data, "brands_json")) ??
-    ["Google Reviews", "KKM", "Dipercayai", "Kualiti", "Respons Pantas", "Seluruh Malaysia"];
+  const brandsParsed = parseJsonSafe<unknown[]>(extraString(section.extra_data, "brands_json")) ?? [];
+  const brands = normalizeBrands(brandsParsed);
+  const brandItems = brands.length
+    ? brands
+    : [
+        { company_name: "Google Reviews", logo: null },
+        { company_name: "KKM", logo: null },
+        { company_name: "Dipercayai", logo: null },
+        { company_name: "Kualiti", logo: null },
+        { company_name: "Respons Pantas", logo: null },
+      ];
 
-  if (!cmsString(title) && !subtitle && !visible.length) return null;
+  const scrollTestimonials = () => {
+    if (testimonialRef.current) {
+      testimonialRef.current.scrollBy({ left: 320, behavior: "smooth" });
+    }
+  };
+
+  if (!cmsString(title) && !subtitle && !visible.length && !brandItems.length) return null;
 
   return (
-    <section id="testimonials" className="bg-white py-16 sm:py-20">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-
-        {/* ── Section heading ── */}
-        <div className="mx-auto max-w-2xl text-center">
-          <div className="text-3xl font-bold tracking-tight text-[#0F172A] sm:text-4xl" role="heading" aria-level={2}>
+    <section
+      id="testimonials"
+      className="bg-[#F8FAFC] py-20"
+      style={{ paddingTop: 80, paddingBottom: 80 }}
+      aria-labelledby="social-proof-heading"
+    >
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <header className="text-center">
+          <div id="social-proof-heading" className="text-2xl font-bold text-[#0F172A] sm:text-3xl" role="heading" aria-level={2}>
             <SafeCmsHtml html={title} className="max-w-none [&_p]:m-0" />
           </div>
           {subtitle ? (
-            <div className="mt-3 text-base leading-relaxed text-[#64748B] [&_a]:text-[#2563EB]">
+            <div className="mx-auto mt-3 max-w-2xl text-[#64748B] [&_a]:text-[#2563EB] [&_a]:underline">
               <SafeCmsHtml html={subtitle} className="max-w-none prose-p:my-2" />
             </div>
           ) : null}
-        </div>
+        </header>
 
-        {/* ── Google rating summary card ── */}
-        <div className="mt-10 flex justify-center">
-          <div className="flex w-full max-w-2xl flex-col items-center gap-4 rounded-2xl border border-slate-200 bg-white px-6 py-5 shadow-sm sm:flex-row sm:gap-6">
-
-            {/* Google badge */}
-            <GoogleBadge />
-
-            {/* Divider */}
-            <div className="hidden h-8 w-px bg-slate-200 sm:block" />
-
-            {/* Rating number + stars */}
-            <div className="flex items-center gap-3">
-              <span className="text-4xl font-extrabold leading-none text-[#0F172A]">
-                {summaryRating.toFixed(1)}
-              </span>
-              <div className="flex flex-col">
-                <Stars rating={summaryRating} />
-                <span className="mt-0.5 text-[11px] text-[#64748B]">
-                  {summaryCount.toLocaleString("en-US")} ulasan
-                </span>
-              </div>
-            </div>
-
-            {/* Divider */}
-            <div className="hidden h-8 w-px bg-slate-200 sm:block" />
-
-            {/* CTA */}
-            <Link
-              href="https://www.google.com/search?q=Niat+Murni+Academy+reviews"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-full border border-[#2563EB] px-4 py-1.5 text-xs font-semibold text-[#2563EB] transition hover:bg-[#EFF6FF]"
-            >
-              Lihat Semua Ulasan
-              <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" aria-hidden>
-                <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </Link>
-          </div>
-        </div>
-
-        {/* ── Brand trust marquee ── */}
-        <div className="mt-6 overflow-hidden">
+        <div className="relative mt-10 flex items-center justify-center overflow-hidden">
           <div
-            className="flex gap-3 animate-[marquee_22s_linear_infinite]"
-            style={{ width: "max-content" }}
+            className="flex w-full snap-x snap-mandatory items-center gap-6 overflow-x-auto scroll-smooth py-2 [&::-webkit-scrollbar]:hidden"
+            style={{ scrollbarWidth: "none" }}
           >
-            {Array.from({ length: 2 }).flatMap((_, rep) =>
-              brands.map((b, i) => (
-                <div
-                  key={`${rep}-${b}-${i}`}
-                  className="flex h-9 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-xs font-medium text-[#475569] whitespace-nowrap shadow-sm"
-                >
-                  {b}
-                </div>
-              ))
-            )}
+            {brandItems.map((item, i) => (
+              <div
+                key={`${item.company_name}-${i}`}
+                className="flex h-[72px] w-[120px] min-w-[120px] shrink-0 snap-center items-center justify-center rounded-lg border border-[#E5E8F0] bg-[#FAFAFA] transition-colors hover:border-[#CBD5E1] hover:bg-white"
+              >
+                {item.logo ? (
+                  <img
+                    src={item.logo}
+                    alt={item.company_name}
+                    className="max-h-12 w-auto max-w-[90%] object-contain opacity-80 transition-opacity hover:opacity-100"
+                    loading="lazy"
+                  />
+                ) : (
+                  <span className="line-clamp-2 px-2 text-center text-xs font-medium text-[#94A3B8]">
+                    {item.company_name}
+                  </span>
+                )}
+              </div>
+            ))}
           </div>
         </div>
 
-        <style>{`
-          @keyframes marquee {
-            0%   { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-          }
-        `}</style>
-
-        {/* ── Testimonial cards ── */}
-        {visible.length ? (
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {visible.slice(0, 9).map((t, idx) => {
-              const rating = typeof t.rating === "number" ? t.rating : summaryRating;
-              const namePlain = cmsPlainTextForAttribute(t.name) || t.name;
-              return (
-                <div
-                  key={`${namePlain}-${idx}`}
-                  className="flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_1px_4px_rgba(15,23,42,0.06)] transition hover:shadow-[0_4px_16px_rgba(15,23,42,0.10)]"
-                >
-                  {/* Row 1: avatar + name + date */}
-                  <div className="flex items-start gap-3">
-                    <Avatar name={namePlain} />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-[#0F172A]">{namePlain}</p>
-                      {t.date ? (
-                        <p className="mt-0.5 text-[11px] text-[#94A3B8]">{t.date}</p>
-                      ) : null}
-                    </div>
-                  </div>
-
-                  {/* Row 2: stars */}
-                  <div className="mt-3">
-                    <Stars rating={rating} size="sm" />
-                  </div>
-
-                  {/* Row 3: review text */}
-                  <div className="mt-2.5 flex-1 text-sm leading-relaxed text-[#475569] [&_a]:text-[#2563EB]">
-                    <span className="sr-only">Review: </span>
-                    <SafeCmsHtml html={t.review} className="max-w-none prose-p:my-1" />
-                  </div>
-
-                </div>
-              );
-            })}
+        <div className="mt-10 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#E5E7EB] bg-[#FAFAFA] px-6 py-5">
+          <div className="flex flex-wrap items-center gap-6">
+            <div className="flex items-center gap-3">
+              <GoogleGMark className="h-8 w-8" />
+              <span className="text-base font-semibold text-[#0F172A]">Google Rating</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-2xl font-bold text-[#0F172A]">{summaryRating.toFixed(1)}</span>
+              <Stars rating={summaryRating} size="lg" />
+              <span className="text-sm text-[#64748B]">{summaryCount.toLocaleString("en-US")} reviews</span>
+            </div>
           </div>
-        ) : null}
+          <a
+            href={GOOGLE_REVIEW_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 rounded-lg bg-[#2563EB] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#1D4ED8] focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-2"
+          >
+            Write a Review
+          </a>
+        </div>
 
-        {/* ── Bottom CTA ── */}
         {visible.length ? (
-          <div className="mt-10 flex justify-center">
-            <Link
-              href="/#classes"
-              className="inline-flex items-center gap-2 rounded-full bg-[#2563EB] px-7 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1D4ED8]"
+          <div className="relative mt-8">
+            <div
+              ref={testimonialRef}
+              className="flex gap-6 overflow-x-auto scroll-smooth pb-2 [&::-webkit-scrollbar]:hidden"
+              style={{ scrollbarWidth: "none" }}
             >
-              Daftar kelas seterusnya
-              <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none" aria-hidden>
-                <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </Link>
+              {visible.map((t, idx) => (
+                <TestimonialCard
+                  key={`${cmsPlainTextForAttribute(t.name) || t.name}-${idx}`}
+                  testimonial={t}
+                  fallbackRating={summaryRating}
+                />
+              ))}
+            </div>
+            {visible.length > 1 ? (
+              <button
+                type="button"
+                aria-label="More reviews"
+                onClick={scrollTestimonials}
+                className="absolute right-0 top-1/2 flex h-10 w-10 -translate-y-1/2 shrink-0 items-center justify-center rounded-full border border-[#E5E7EB] bg-white text-[#64748B] shadow-sm transition-colors hover:bg-[#F9FAFB] hover:text-[#0F172A]"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            ) : null}
           </div>
         ) : null}
       </div>
     </section>
+  );
+}
+
+function TestimonialCard({
+  testimonial: t,
+  fallbackRating,
+}: {
+  testimonial: Testimonial;
+  fallbackRating: number;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const fullReview = plainText(t.review);
+  const needsTruncate = fullReview.length > REVIEW_TRUNCATE_LENGTH;
+  const displayText = expanded || !needsTruncate
+    ? fullReview
+    : fullReview.slice(0, REVIEW_TRUNCATE_LENGTH) + "…";
+  const rating = typeof t.rating === "number" ? t.rating : fallbackRating;
+  const name = cmsPlainTextForAttribute(t.name) || t.name;
+
+  return (
+    <div className="w-[300px] shrink-0 snap-start rounded-xl border border-[#E5E7EB] bg-white p-5 shadow-sm transition-shadow hover:shadow-md sm:w-[320px]">
+      <div className="flex items-start gap-3">
+        <div
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#E5E7EB] text-sm font-semibold text-[#64748B]"
+          aria-hidden
+        >
+          {(name || "?").charAt(0).toUpperCase()}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-[#0F172A]">{name}</p>
+          <div className="mt-1 flex items-center gap-2">
+            <Stars rating={rating} />
+            {t.date ? <span className="text-xs text-[#64748B]">{t.date}</span> : null}
+          </div>
+        </div>
+      </div>
+      <p className="mt-3 text-[14px] leading-relaxed text-[#334155]">
+        &ldquo;{displayText}&rdquo;
+      </p>
+      {needsTruncate && !expanded ? (
+        <button
+          type="button"
+          onClick={() => setExpanded(true)}
+          className="mt-1 text-[13px] font-medium text-[#2563EB] hover:underline focus:outline focus:outline-2 focus:outline-[#2563EB] focus:outline-offset-1"
+        >
+          Read more
+        </button>
+      ) : null}
+    </div>
   );
 }

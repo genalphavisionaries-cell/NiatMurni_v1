@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import type { HomepageSettings, NavLink } from "@/lib/homepage-settings";
 import type { PublicCmsContactBlock, PublicCmsFooterBlock, PublicCmsSocialBlock } from "@/lib/public-cms";
@@ -109,192 +111,202 @@ export default function CmsFooter({
   const sslCaption = cmsString(cmsFooter.ssl_caption) ?? DEFAULT_SSL_CAPTION;
 
   return (
-    <footer className="text-white/90" style={{ background: bg }}>
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
-          <div className="lg:col-span-4">
-            <div className="flex items-center gap-3">
+    <footer className="text-[#E5E7EB]" style={{ background: bg }}>
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-12">
+        <div
+          className={`grid grid-cols-1 gap-8 sm:grid-cols-2 ${showPayment ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}
+        >
+          <div>
+            <div className="flex items-center">
               {logoUrl ? (
                 <>
                   <img
                     src={logoUrl}
                     alt={siteName}
-                    className="h-10 w-auto max-w-[220px] object-contain"
+                    className="h-9 w-auto max-w-[200px] object-contain object-left"
                     onError={(e) => {
                       e.currentTarget.style.display = "none";
+                      const next = e.currentTarget.nextElementSibling;
+                      if (next instanceof HTMLElement) next.style.display = "block";
                     }}
                   />
-                  <p className="text-lg font-semibold text-white">{siteName}</p>
+                  <p className="text-lg font-bold text-white">{siteName}</p>
                 </>
               ) : (
-                <p className="text-lg font-semibold text-white">{siteName}</p>
+                <p className="text-lg font-bold text-white">{siteName}</p>
               )}
             </div>
-            <div className="mt-4 whitespace-pre-line text-sm leading-relaxed text-white/75 [&_a]:text-white [&_a]:underline">
-              <SafeCmsHtml html={desc} className="max-w-none [&_p]:my-2 [&_p]:text-white/75 first:[&_p]:mt-0" />
+            <div className="mt-3 whitespace-pre-line text-sm leading-relaxed text-white/90 [&_a]:text-white [&_a]:underline">
+              <SafeCmsHtml html={desc} className="max-w-none [&_p]:my-1" />
             </div>
-            <p className="mt-2 text-xs text-white/60">Berdaftar di Malaysia</p>
+            <p className="mt-2 text-xs text-white/70">Berdaftar di Malaysia</p>
           </div>
 
-          <div className="lg:col-span-8">
-            {footerNavColumns?.length ? (
-              <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
-                {footerNavColumns.map((col) => (
-                  <div key={col.heading}>
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-white">
-                      {col.heading}
-                    </h3>
-                    <ul className="mt-4 space-y-2">
-                      {col.links.map((l) => (
-                        <li key={l.href + l.label}>
-                          {l.external ? (
-                            <a
-                              href={l.href}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-sm text-white/80 hover:text-white"
-                            >
-                              {l.label}
-                            </a>
-                          ) : (
-                            <Link
-                              href={l.href}
-                              className="text-sm text-white/80 hover:text-white"
-                            >
-                              {l.label}
-                            </Link>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
-                <div>
+          <div className="space-y-8">
+            {footerNavColumns && footerNavColumns.length > 0 ? (
+              footerNavColumns.map((col) => (
+                <div key={col.heading}>
                   <h3 className="text-xs font-semibold uppercase tracking-wider text-white">
-                    Quick Links
+                    {col.heading}
                   </h3>
                   <ul className="mt-4 space-y-2">
-                    {DEFAULT_QUICK_LINKS.map((l) => (
-                      <li key={l.href + l.label}>
-                        <Link href={l.href} className="text-sm text-white/80 hover:text-white">
-                          {l.label}
-                        </Link>
+                    {col.links.map((link) => (
+                      <li key={link.href + link.label}>
+                        {link.external ? (
+                          <a
+                            href={link.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-white/90 transition hover:text-white"
+                          >
+                            {link.label}
+                          </a>
+                        ) : (
+                          <Link
+                            href={link.href.startsWith("http") ? link.href : link.href}
+                            className="text-sm text-white/90 transition hover:text-white"
+                          >
+                            {link.label}
+                          </Link>
+                        )}
                       </li>
                     ))}
                   </ul>
                 </div>
-              </div>
-            )}
-
-            <div
-              className={`mt-10 grid gap-6 ${showPayment ? "lg:grid-cols-2" : ""}`}
-            >
+              ))
+            ) : (
               <div>
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-white/80">
-                  Log masuk
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-white">
+                  Quick Links
                 </h3>
-                <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap lg:flex-col">
-                  {logins.map((link) =>
-                    link.external ? (
-                      <a
-                        key={link.href + link.label}
-                        href={link.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center rounded border border-white/30 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-white/10"
-                      >
-                        {link.label}
-                      </a>
-                    ) : (
+                <ul className="mt-4 space-y-2">
+                  {DEFAULT_QUICK_LINKS.map((link) => (
+                    <li key={link.href + link.label}>
                       <Link
-                        key={link.href + link.label}
                         href={link.href}
-                        className="inline-flex items-center justify-center rounded border border-white/30 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-white/10"
+                        className="text-sm text-white/90 transition hover:text-white"
                       >
                         {link.label}
                       </Link>
-                    )
-                  )}
-                </div>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              {showPayment ? (
-                <div className="rounded-xl bg-white p-4 text-[#0F172A] shadow-lg">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <PadlockIcon className="h-5 w-5 shrink-0" />
-                      <span className="text-sm font-medium [&_a]:text-[#0F172A] [&_a]:underline">
-                        <SafeCmsHtml html={paymentHeadline} as="span" className="[&_p]:m-0 [&_p]:inline" />
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1.5 rounded bg-[#32325D] px-2.5 py-1.5">
-                      <span className="text-[10px] font-medium text-white">Powered by</span>
-                      <span className="text-sm font-semibold text-white">Stripe</span>
-                    </div>
-                  </div>
-                  <div className="my-3 h-px bg-[#E5E7EB]" />
-                  <div className="flex flex-wrap items-center gap-2">
-                    {PAYMENT_METHODS.map(({ id, label }) => {
-                      const iconUrl =
-                        paymentMethodIcons?.[id] ?? `/images/payment/${id}.svg`;
-                      return (
-                        <span
-                          key={id}
-                          className="inline-flex h-7 w-10 items-center justify-center overflow-hidden rounded bg-[#F3F4F6] px-1 py-0.5"
-                          title={label}
-                        >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={iconUrl}
-                            alt={label}
-                            className="h-5 w-auto max-w-full object-contain"
-                          />
-                        </span>
-                      );
-                    })}
-                  </div>
-                </div>
-              ) : null}
+            )}
+          </div>
+
+          <div>
+            <div className="flex flex-col gap-2">
+              {logins.map((link) =>
+                link.external ? (
+                  <a
+                    key={link.href + link.label}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center rounded border border-white/30 bg-transparent px-4 py-2.5 text-sm font-medium text-white transition hover:bg-white/10"
+                  >
+                    {link.label}
+                  </a>
+                ) : (
+                  <Link
+                    key={link.href + link.label}
+                    href={link.href}
+                    className="flex items-center justify-center rounded border border-white/30 bg-transparent px-4 py-2.5 text-sm font-medium text-white transition hover:bg-white/10"
+                  >
+                    {link.label}
+                  </Link>
+                )
+              )}
             </div>
           </div>
+
+          {showPayment ? (
+            <div className="sm:col-span-2 lg:col-span-1">
+              <div className="rounded-xl bg-white p-4 shadow-lg">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <PadlockIcon className="h-5 w-5 text-[#0F172A]" />
+                    <span className="text-sm font-medium text-[#0F172A] [&_a]:text-[#0F172A] [&_a]:underline">
+                      <SafeCmsHtml html={paymentHeadline} as="span" className="[&_p]:m-0 [&_p]:inline" />
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 rounded bg-[#32325D] px-2.5 py-1.5">
+                    <span className="text-[10px] font-medium text-white">Powered by</span>
+                    <span className="text-sm font-semibold text-white" style={{ fontFamily: "inherit" }}>
+                      Stripe
+                    </span>
+                  </div>
+                </div>
+                <div className="my-3 h-px bg-[#E5E7EB]" />
+                <div className="flex flex-wrap items-center gap-2">
+                  {PAYMENT_METHODS.map(({ id, label }) => {
+                    const iconUrl = paymentMethodIcons?.[id] ?? `/images/payment/${id}.svg`;
+                    return (
+                      <span
+                        key={id}
+                        className="inline-flex h-7 w-10 items-center justify-center overflow-hidden rounded bg-[#F3F4F6] px-1 py-0.5"
+                        title={label}
+                      >
+                        <img
+                          src={iconUrl}
+                          alt={label}
+                          className="h-5 w-auto max-w-full object-contain"
+                          onError={(e) => {
+                            const el = e.currentTarget;
+                            el.style.display = "none";
+                            const fallback = el.nextElementSibling as HTMLElement | null;
+                            if (fallback) fallback.style.display = "inline";
+                          }}
+                        />
+                        <span
+                          className="text-[10px] font-medium text-[#374151]"
+                          style={{ display: "none" }}
+                        >
+                          {label}
+                        </span>
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          ) : null}
         </div>
 
-        <div className="mt-10 border-t border-white/10 pt-6">
+        <div className="mt-10 border-t border-[#334155] pt-8">
           <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
             <div className="text-center sm:text-left">
               <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 sm:justify-start">
-                {legal.map((l) =>
-                  l.external ? (
+                {legal.map((link) =>
+                  link.external ? (
                     <a
-                      key={l.href + l.label}
-                      href={l.href}
+                      key={link.href + link.label}
+                      href={link.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-white/80 hover:text-white"
+                      className="text-sm text-white/90 transition hover:text-white"
                     >
-                      {l.label}
+                      {link.label}
                     </a>
                   ) : (
                     <Link
-                      key={l.href + l.label}
-                      href={l.href}
-                      className="text-sm text-white/80 hover:text-white"
+                      key={link.href + link.label}
+                      href={link.href}
+                      className="text-sm text-white/90 transition hover:text-white"
                     >
-                      {l.label}
+                      {link.label}
                     </Link>
                   )
                 )}
               </div>
-              <div className="mt-2 max-w-xl whitespace-pre-line text-center text-xs text-white/60 sm:text-left [&_a]:text-white/80 [&_a]:underline">
+              <div className="mt-2 whitespace-pre-line text-xs text-white/70 [&_a]:text-white/90 [&_a]:underline">
                 <SafeCmsHtml html={bottomLine} className="max-w-none [&_p]:my-1" />
               </div>
             </div>
-            <div className="flex flex-col items-center sm:items-end">
+            <div className="flex flex-col items-center sm:mr-14 sm:items-end">
               {sslBadgeUrl ? (
                 <div className="relative">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={sslBadgeUrl}
                     alt="SSL / security badge"
@@ -306,32 +318,34 @@ export default function CmsFooter({
                     }}
                   />
                   <div
-                    className="flex items-center gap-2 rounded border-2 border-[#EAB308] bg-white px-3 py-2 text-[#0F172A]"
+                    className="flex items-center gap-2 rounded border-2 border-[#EAB308] bg-white px-3 py-2"
                     style={{ display: "none" }}
                   >
-                    <PadlockIcon className="h-5 w-5 shrink-0" />
+                    <PadlockIcon className="h-5 w-5 shrink-0 text-[#0F172A]" />
                     <div className="text-center">
-                      <p className="text-[10px] font-semibold uppercase leading-tight">
+                      <p className="text-[10px] font-semibold uppercase leading-tight text-[#0F172A]">
                         Secured by
                       </p>
-                      <p className="text-xs font-bold">
+                      <p className="text-xs font-bold text-[#0F172A]">
                         positive<span className="text-[#16A34A]">SSL</span>
                       </p>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 rounded border-2 border-[#EAB308] bg-white px-3 py-2 text-[#0F172A]">
-                  <PadlockIcon className="h-5 w-5 shrink-0" />
+                <div className="flex items-center gap-2 rounded border-2 border-[#EAB308] bg-white px-3 py-2">
+                  <PadlockIcon className="h-5 w-5 shrink-0 text-[#0F172A]" />
                   <div className="text-center">
-                    <p className="text-[10px] font-semibold uppercase leading-tight">Secured by</p>
-                    <p className="text-xs font-bold">
+                    <p className="text-[10px] font-semibold uppercase leading-tight text-[#0F172A]">
+                      Secured by
+                    </p>
+                    <p className="text-xs font-bold text-[#0F172A]">
                       positive<span className="text-[#16A34A]">SSL</span>
                     </p>
                   </div>
                 </div>
               )}
-              <div className="mt-1.5 max-w-[220px] text-center text-[11px] text-white/50 sm:text-right [&_a]:text-white/70 [&_a]:underline">
+              <div className="mt-1.5 max-w-[220px] text-center text-[11px] text-white/60 sm:text-right [&_a]:text-white/80 [&_a]:underline">
                 <SafeCmsHtml html={sslCaption} className="max-w-none [&_p]:m-0 [&_p]:inline" />
               </div>
             </div>
