@@ -373,15 +373,18 @@ class PublicCmsPayloadService
         $logos = $trust['items']['logo'] ?? [];
         $brands = [];
         if (is_array($logos)) {
-            foreach ($logos as $row) {
-                if (! is_array($row)) {
-                    continue;
-                }
-                $t = trim((string) ($row['title'] ?? ''));
-                if ($t !== '') {
-                    $brands[] = $t;
-                }
+        foreach ($logos as $row) {
+            if (! is_array($row)) {
+                continue;
             }
+            $t = trim((string) ($row['title'] ?? ''));
+            if ($t !== '') {
+                $brands[] = [
+                    'company_name' => $t,
+                    'logo' => trim((string) ($row['image_url'] ?? '')) ?: null,
+                ];
+            }
+        }
         }
 
         $content = is_array($trust['content'] ?? null) ? $trust['content'] : [];

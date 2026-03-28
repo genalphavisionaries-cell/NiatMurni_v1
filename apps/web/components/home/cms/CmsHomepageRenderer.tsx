@@ -153,8 +153,9 @@ function mergeWhySection(s: PublicCmsHomepageSection | null): PublicCmsHomepageS
   const parsed = parseJsonSafe<Array<{ title?: string; description?: string }>>(
     typeof raw === "string" ? raw : null
   );
-  const hasItems = !!(parsed?.some((i) => cmsString(i?.title)));
-  const itemsJson = hasItems ? (typeof raw === "string" && raw.trim() ? raw : JSON.stringify(parsed)) : JSON.stringify(WHY_ITEMS_FALLBACK);
+  // Only use fallback if CMS section exists but has NO items_json at all (null/undefined)
+  // If CMS provides empty array or empty items, respect that (don't override with fallback)
+  const itemsJson = raw == null ? JSON.stringify(WHY_ITEMS_FALLBACK) : (typeof raw === "string" ? raw : JSON.stringify(parsed ?? []));
   return {
     ...s,
     title: cmsString(s.title) || FALLBACK.why_choose_us.title,
@@ -243,14 +244,36 @@ export default function CmsHomepageRenderer({
   const isCmsDebug =
     process.env.NODE_ENV === "development" &&
     process.env.NEXT_PUBLIC_CMS_DEBUG === "true";
-  if (isCmsDebug) {
-    console.log("CMS HERO:", cms?.hero);
-  }
+
   const heroSection = mergeHeroSection(hero, legacy);
   const whySection = mergeWhySection(first("why_choose_us") ?? first("usp") ?? first("features"));
   const testimonialsSection = mergeTestimonialsSection(first("testimonials") ?? first("trust"));
   const ctaSection = mergeCtaSection(first("cta") ?? first("promo"));
   const contactSection = first("contact");
+
+  if (isCmsDebug) {
+    console.log("CMS HERO:", cms?.hero);
+    
+    // Validate critical fields for each section
+    if (!hero || !cmsString(hero.title)) {
+      console.warn("CMS MISSING DATA:", "hero", { title: hero?.title, hasImage: !!hero?.image_url });
+    }
+    
+    const whyRaw = first("why_choose_us") ?? first("usp") ?? first("features");
+    if (!whyRaw || !cmsString(whyRaw.title)) {
+      console.warn("CMS MISSING DATA:", "why_choose_us", { title: whyRaw?.title, hasItems: !!whyRaw?.extra_data?.items_json });
+    }
+    
+    const testimonialRaw = first("testimonials") ?? first("trust");
+    if (!testimonialRaw || !cmsString(testimonialRaw.title)) {
+      console.warn("CMS MISSING DATA:", "testimonials", { title: testimonialRaw?.title, hasItems: !!testimonialRaw?.extra_data?.items_json });
+    }
+    
+    const ctaRaw = first("cta") ?? first("promo");
+    if (!ctaRaw || !cmsString(ctaRaw.title)) {
+      console.warn("CMS MISSING DATA:", "cta", { title: ctaRaw?.title, hasPromos: !!ctaRaw?.extra_data?.promos_json });
+    }
+  }
 
   return (
     <>

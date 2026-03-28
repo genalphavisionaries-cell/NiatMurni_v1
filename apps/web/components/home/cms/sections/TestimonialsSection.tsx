@@ -54,11 +54,13 @@ function normalizeBrands(raw: unknown): BrandItem[] {
   const out: BrandItem[] = [];
   for (const item of raw) {
     if (typeof item === "string") {
+      // Legacy format: array of strings
       const name = item.trim();
       if (name) out.push({ company_name: name, logo: null });
       continue;
     }
     if (item && typeof item === "object") {
+      // New format: array of objects with company_name and logo
       const o = item as Record<string, unknown>;
       const company_name = String(o.company_name ?? o.title ?? o.name ?? "").trim();
       if (!company_name) continue;
