@@ -230,6 +230,10 @@ class UpdateHomepageRequest extends FormRequest
             $keys = explode('.', $field);
             $value = $input;
             foreach ($keys as $key) {
+                if (! is_array($value)) {
+                    $value = null;
+                    break;
+                }
                 $value = $value[$key] ?? null;
                 if ($value === null) {
                     break;

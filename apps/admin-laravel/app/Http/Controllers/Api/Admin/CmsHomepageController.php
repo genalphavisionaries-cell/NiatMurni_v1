@@ -140,6 +140,19 @@ class CmsHomepageController extends Controller
     }
 
     /**
+     * @return array<string, mixed>|array<int, mixed>
+     */
+    private function asArray(mixed $value): array
+    {
+        return is_array($value) ? $value : [];
+    }
+
+    private function asString(mixed $value): string
+    {
+        return is_string($value) ? $value : '';
+    }
+
+    /**
      * Format validation errors into structured response for better admin UX.
      */
     private function formatValidationErrors(\Illuminate\Validation\ValidationException $e): JsonResponse
@@ -209,13 +222,15 @@ class CmsHomepageController extends Controller
         }
         $c = $s->content_json ?? [];
         $urls = $c['background_urls'] ?? [];
+        $alts = $c['background_alts'] ?? [];
+        $buttons = $c['buttons'] ?? [];
 
         return [
             'headline' => $c['headline'] ?? '',
             'subheadline' => $c['subheadline'] ?? '',
-            'buttons' => $c['buttons'] ?? [],
+            'buttons' => is_array($buttons) ? $buttons : [],
             'background_urls' => implode("\n", is_array($urls) ? $urls : []),
-            'background_alts' => implode("\n", $c['background_alts'] ?? []),
+            'background_alts' => implode("\n", is_array($alts) ? $alts : []),
             'accent_color' => $c['accent_color'] ?? '',
             'button_color' => $c['button_color'] ?? '',
             'enabled' => (bool) $s->is_active,
@@ -225,13 +240,14 @@ class CmsHomepageController extends Controller
     private function persistHero(CmsPage $page, array $hero): void
     {
         $section = $this->section($page, 'hero');
-        $lines = $this->splitLines($hero['background_urls'] ?? '');
+        $lines = $this->splitLines($this->asString($hero['background_urls'] ?? ''));
         $urls = array_slice($lines, 0, 5);
-        $alts = array_slice($this->zipAlts($urls, $hero['background_alts'] ?? ''), 0, count($urls));
+        $alts = array_slice($this->zipAlts($urls, $this->asString($hero['background_alts'] ?? '')), 0, count($urls));
+        $buttons = $this->asArray($hero['buttons'] ?? []);
         $section->content_json = [
             'headline' => $hero['headline'] ?? '',
             'subheadline' => $hero['subheadline'] ?? '',
-            'buttons' => $hero['buttons'] ?? [],
+            'buttons' => $buttons,
             'background_urls' => $urls,
             'background_alts' => $alts,
             'accent_color' => $hero['accent_color'] ?? '',
@@ -273,13 +289,14 @@ class CmsHomepageController extends Controller
         }
 
         $sideUrls = $c['side_images_urls'] ?? [];
+        $sideAlts = $c['side_images_alts'] ?? [];
 
         return [
             'title' => $c['title'] ?? '',
             'description' => $c['description'] ?? '',
             'points' => $points,
             'side_images_urls' => implode("\n", is_array($sideUrls) ? $sideUrls : []),
-            'side_images_alts' => implode("\n", $c['side_images_alts'] ?? []),
+            'side_images_alts' => implode("\n", is_array($sideAlts) ? $sideAlts : []),
             'accent_color' => $c['accent_color'] ?? '',
             'button_color' => $c['button_color'] ?? '',
             'enabled' => (bool) $s->is_active,
@@ -291,7 +308,7 @@ class CmsHomepageController extends Controller
         $validator = app(CmsValidationService::class);
         
         $section = $this->section($page, 'why_choose_us');
-        $existingContent = $section->content_json ?? [];
+        $existingContent = $this->asArray($section->content_json ?? []);
         
         // Only update fields that are explicitly provided (prevent data loss)
         $updates = [];
@@ -302,8 +319,8 @@ class CmsHomepageController extends Controller
             $updates['description'] = $usp['description'] ?? '';
         }
         if (array_key_exists('side_images_urls', $usp)) {
-            $lines = $this->splitLines($usp['side_images_urls'] ?? '');
-            $alts = $this->zipAlts($lines, $usp['side_images_alts'] ?? '');
+            $lines = $this->splitLines($this->asString($usp['side_images_urls'] ?? ''));
+            $alts = $this->zipAlts($lines, $this->asString($usp['side_images_alts'] ?? ''));
             $updates['side_images_urls'] = $lines;
             $updates['side_images_alts'] = $alts;
         }
@@ -323,7 +340,7 @@ class CmsHomepageController extends Controller
         $section->save();
 
         $section->items()->where('type', 'usp')->delete();
-        $validatedPoints = $validator->validateUspItems($usp['points'] ?? []);
+        $validatedPoints = $validator->validateUspItems($this->asArray($usp['points'] ?? []));
         foreach ($validatedPoints as $i => $point) {
             CmsItem::query()->create([
                 'section_id' => $section->id,
@@ -405,6 +422,7 @@ class CmsHomepageController extends Controller
             ];
         }
         $c = $s->content_json ?? [];
+        $rating = $this->asArray($c['google_rating'] ?? []);
         $logos = [];
         foreach (($s->items ?? collect())->where('type', 'logo') as $item) {
             $extra = is_array($item->extra_json) ? $item->extra_json : [];
@@ -417,9 +435,9 @@ class CmsHomepageController extends Controller
 
         return [
             'logos' => $logos,
-            'google_rating_text' => $c['google_rating']['text'] ?? '',
-            'google_button_label' => $c['google_rating']['button_label'] ?? '',
-            'google_button_url' => $c['google_rating']['button_url'] ?? '',
+            'google_rating_text' => $rating['text'] ?? '',
+            'google_button_label' => $rating['button_label'] ?? '',
+            'google_button_url' => $rating['button_url'] ?? '',
             'accent_color' => $c['accent_color'] ?? '',
             'button_color' => $c['button_color'] ?? '',
             'enabled' => (bool) $s->is_active,
@@ -445,7 +463,7 @@ class CmsHomepageController extends Controller
 
         $section->items()->where('type', 'logo')->delete();
         $validator = app(CmsValidationService::class);
-        $validatedLogos = $validator->validateBrandLogos($trust['logos'] ?? []);
+        $validatedLogos = $validator->validateBrandLogos($this->asArray($trust['logos'] ?? []));
         foreach ($validatedLogos as $i => $logo) {
             CmsItem::query()->create([
                 'section_id' => $section->id,
@@ -470,6 +488,7 @@ class CmsHomepageController extends Controller
                 'banner_urls' => '',
                 'banner_alts' => '',
                 'accent_color' => '',
+                'button_color' => '',
                 'cards' => [],
                 'enabled' => true,
             ];
@@ -489,12 +508,13 @@ class CmsHomepageController extends Controller
             ];
         }
         $banners = $c['banner_urls'] ?? [];
+        $bannerAlts = $c['banner_alts'] ?? [];
 
         return [
             'title' => $c['title'] ?? '',
             'description' => $c['description'] ?? '',
             'banner_urls' => implode("\n", is_array($banners) ? $banners : []),
-            'banner_alts' => implode("\n", $c['banner_alts'] ?? []),
+            'banner_alts' => implode("\n", is_array($bannerAlts) ? $bannerAlts : []),
             'accent_color' => $c['accent_color'] ?? '',
             'button_color' => $c['button_color'] ?? '',
             'cards' => $cards,
@@ -507,9 +527,9 @@ class CmsHomepageController extends Controller
         $validator = app(CmsValidationService::class);
         
         $section = $this->section($page, 'cta');
-        $lines = $this->splitLines($promo['banner_urls'] ?? '');
+        $lines = $this->splitLines($this->asString($promo['banner_urls'] ?? ''));
         $urls = array_slice($lines, 0, 3);
-        $alts = array_slice($this->zipAlts($urls, $promo['banner_alts'] ?? ''), 0, count($urls));
+        $alts = array_slice($this->zipAlts($urls, $this->asString($promo['banner_alts'] ?? '')), 0, count($urls));
         
         $contentJson = $validator->validateSectionContent([
             'title' => $promo['title'] ?? '',
@@ -527,7 +547,7 @@ class CmsHomepageController extends Controller
         $section->save();
 
         $section->items()->where('type', 'promo_card')->delete();
-        $validatedCards = $validator->validatePromoCards($promo['cards'] ?? []);
+        $validatedCards = $validator->validatePromoCards($this->asArray($promo['cards'] ?? []));
         foreach ($validatedCards as $i => $card) {
             CmsItem::query()->create([
                 'section_id' => $section->id,
@@ -562,6 +582,8 @@ class CmsHomepageController extends Controller
             ];
         }
         $c = $s->content_json ?? [];
+        $cta = $this->asArray($c['cta'] ?? []);
+        $languages = $this->asArray($c['languages'] ?? []);
         $menu = [];
         foreach (($s->items ?? collect())->where('type', 'menu_item') as $item) {
             $extra = $item->extra_json ?? [];
@@ -576,8 +598,8 @@ class CmsHomepageController extends Controller
         return [
             'logo_url' => $c['logo_url'] ?? '',
             'logo_alt' => $c['logo_alt'] ?? '',
-            'cta' => $c['cta'] ?? ['label' => '', 'url' => '', 'bg_color' => '', 'text_color' => ''],
-            'languages' => $c['languages'] ?? [],
+            'cta' => array_merge(['label' => '', 'url' => '', 'bg_color' => '', 'text_color' => ''], $cta),
+            'languages' => $languages,
             'menu_items' => $menu,
             'enabled' => (bool) $s->is_active,
         ];
@@ -586,11 +608,13 @@ class CmsHomepageController extends Controller
     private function persistHeader(CmsPage $page, array $header): void
     {
         $section = $this->section($page, 'header');
+        $cta = $this->asArray($header['cta'] ?? []);
+        $languages = $this->asArray($header['languages'] ?? []);
         $section->content_json = [
             'logo_url' => $header['logo_url'] ?? '',
             'logo_alt' => $header['logo_alt'] ?? '',
-            'cta' => $header['cta'] ?? [],
-            'languages' => $header['languages'] ?? [],
+            'cta' => $cta,
+            'languages' => $languages,
         ];
         if (array_key_exists('enabled', $header)) {
             $section->is_active = (bool) $header['enabled'];
@@ -599,7 +623,7 @@ class CmsHomepageController extends Controller
 
         $section->items()->where('type', 'menu_item')->delete();
         $validator = app(CmsValidationService::class);
-        $validatedMenuItems = $validator->validateMenuItems($header['menu_items'] ?? []);
+        $validatedMenuItems = $validator->validateMenuItems($this->asArray($header['menu_items'] ?? []));
         foreach ($validatedMenuItems as $i => $item) {
             CmsItem::query()->create([
                 'section_id' => $section->id,
@@ -644,9 +668,11 @@ class CmsHomepageController extends Controller
         foreach (($s->items ?? collect())->where('type', 'legal_link') as $item) {
             $legal[] = ['label' => $item->title, 'url' => $item->link_url];
         }
-        $icons = $c['payment']['icons'] ?? [];
-        $iconAlts = $c['payment']['icon_alts'] ?? [];
-        $brand = $c['brand'] ?? ['logo_url' => '', 'description' => '', 'logo_alt' => ''];
+        $payment = $this->asArray($c['payment'] ?? []);
+        $icons = $payment['icons'] ?? [];
+        $iconAlts = $payment['icon_alts'] ?? [];
+        $brand = $this->asArray($c['brand'] ?? []);
+        $bottom = $this->asArray($c['bottom'] ?? []);
 
         return [
             'brand' => [
@@ -657,12 +683,15 @@ class CmsHomepageController extends Controller
             'quick_links' => $quick,
             'buttons' => $buttons,
             'payment' => [
-                'title' => $c['payment']['title'] ?? '',
+                'title' => $payment['title'] ?? '',
                 'icons_urls' => is_array($icons) ? implode("\n", $icons) : '',
                 'icons_alts' => is_array($iconAlts) ? implode("\n", $iconAlts) : '',
             ],
             'legal_links' => $legal,
-            'bottom' => $c['bottom'] ?? ['copyright' => '', 'ssl_badge_url' => ''],
+            'bottom' => [
+                'copyright' => $bottom['copyright'] ?? '',
+                'ssl_badge_url' => $bottom['ssl_badge_url'] ?? '',
+            ],
             'enabled' => (bool) $s->is_active,
         ];
     }
@@ -670,9 +699,11 @@ class CmsHomepageController extends Controller
     private function persistFooter(CmsPage $page, array $footer): void
     {
         $section = $this->section($page, 'footer');
-        $lines = $this->splitLines($footer['payment']['icons_urls'] ?? '');
-        $alts = $this->zipAlts($lines, $footer['payment']['icons_alts'] ?? '');
-        $brand = $footer['brand'] ?? [];
+        $payment = $this->asArray($footer['payment'] ?? []);
+        $brand = $this->asArray($footer['brand'] ?? []);
+        $bottom = $this->asArray($footer['bottom'] ?? []);
+        $lines = $this->splitLines($this->asString($payment['icons_urls'] ?? ''));
+        $alts = $this->zipAlts($lines, $this->asString($payment['icons_alts'] ?? ''));
         $section->content_json = [
             'brand' => [
                 'logo_url' => $brand['logo_url'] ?? '',
@@ -680,11 +711,14 @@ class CmsHomepageController extends Controller
                 'logo_alt' => $brand['logo_alt'] ?? '',
             ],
             'payment' => [
-                'title' => $footer['payment']['title'] ?? '',
+                'title' => $payment['title'] ?? '',
                 'icons' => $lines,
                 'icon_alts' => $alts,
             ],
-            'bottom' => $footer['bottom'] ?? [],
+            'bottom' => [
+                'copyright' => $bottom['copyright'] ?? '',
+                'ssl_badge_url' => $bottom['ssl_badge_url'] ?? '',
+            ],
         ];
         if (array_key_exists('enabled', $footer)) {
             $section->is_active = (bool) $footer['enabled'];
@@ -694,14 +728,23 @@ class CmsHomepageController extends Controller
         $section->items()->whereIn('type', ['quick_link', 'footer_button', 'legal_link'])->delete();
         $quickLinks = is_array($footer['quick_links'] ?? null) ? $footer['quick_links'] : [];
         foreach ($quickLinks as $i => $row) {
+            if (! is_array($row)) {
+                continue;
+            }
             CmsItem::query()->create(['section_id' => $section->id, 'type' => 'quick_link', 'title' => $row['label'] ?? '', 'link_url' => $row['url'] ?? null, 'sort_order' => $i, 'is_active' => true]);
         }
         $buttons = is_array($footer['buttons'] ?? null) ? $footer['buttons'] : [];
         foreach ($buttons as $i => $row) {
+            if (! is_array($row)) {
+                continue;
+            }
             CmsItem::query()->create(['section_id' => $section->id, 'type' => 'footer_button', 'title' => $row['label'] ?? '', 'link_url' => $row['url'] ?? null, 'sort_order' => $i, 'is_active' => true]);
         }
         $legalLinks = is_array($footer['legal_links'] ?? null) ? $footer['legal_links'] : [];
         foreach ($legalLinks as $i => $row) {
+            if (! is_array($row)) {
+                continue;
+            }
             CmsItem::query()->create(['section_id' => $section->id, 'type' => 'legal_link', 'title' => $row['label'] ?? '', 'link_url' => $row['url'] ?? null, 'sort_order' => $i, 'is_active' => true]);
         }
     }
@@ -730,7 +773,7 @@ class CmsHomepageController extends Controller
     {
         $section = $this->section($page, 'floating_menu');
         $style = null;
-        $raw = trim($floating['style_json'] ?? '');
+        $raw = trim($this->asString($floating['style_json'] ?? ''));
         if ($raw !== '') {
             $decoded = json_decode($raw, true);
             $style = is_array($decoded) ? $decoded : null;
@@ -744,6 +787,9 @@ class CmsHomepageController extends Controller
         $section->items()->where('type', 'quick_link')->delete();
         $items = is_array($floating['items'] ?? null) ? $floating['items'] : [];
         foreach ($items as $i => $row) {
+            if (! is_array($row)) {
+                continue;
+            }
             CmsItem::query()->create([
                 'section_id' => $section->id,
                 'type' => 'quick_link',

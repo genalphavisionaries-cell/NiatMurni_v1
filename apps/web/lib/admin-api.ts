@@ -260,9 +260,22 @@ async function request<T>(
       ...init.headers,
     },
   });
-  const data = await res.json().catch(() => ({}));
+  const raw = await res.text();
+  let data: unknown = {};
+  if (raw.trim().length > 0) {
+    try {
+      data = JSON.parse(raw);
+    } catch {
+      data = {};
+    }
+  }
   if (!res.ok) {
-    throw new Error((data as { message?: string }).message || `Request failed: ${res.status}`);
+    const parsed = data as { message?: string };
+    const textSnippet =
+      raw && !raw.startsWith("<!DOCTYPE html")
+        ? raw.slice(0, 240).trim()
+        : "";
+    throw new Error(parsed.message || textSnippet || `Request failed: ${res.status}`);
   }
   return data as T;
 }
