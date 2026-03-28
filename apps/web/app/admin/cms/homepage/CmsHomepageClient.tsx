@@ -36,6 +36,7 @@ const emptyHero: CmsHeroData = {
   background_urls: "",
   background_alts: "",
   accent_color: "",
+  button_color: "",
   enabled: true,
 };
 
@@ -46,6 +47,7 @@ const emptyUsp: CmsUspData = {
   side_images_urls: "",
   side_images_alts: "",
   accent_color: "",
+  button_color: "",
   enabled: true,
 };
 
@@ -56,6 +58,7 @@ const emptyClasses: CmsClassesData = {
   button_url: "",
   max_items: 20,
   accent_color: "",
+  button_color: "",
   enabled: true,
 };
 
@@ -65,6 +68,7 @@ const emptyPromo: CmsPromoData = {
   banner_urls: "",
   banner_alts: "",
   accent_color: "",
+  button_color: "",
   cards: [],
   enabled: true,
 };
@@ -368,6 +372,7 @@ function HeroTab({ data, onChange }: { data: CmsHeroData; onChange: (d: CmsHeroD
       </CmsFieldGroup>
       <CmsFieldGroup title="Styling">
         <CmsColorField label="Section accent" value={data.accent_color ?? ""} onChange={(v) => set("accent_color", v)} />
+        <CmsColorField label="Primary button color" value={data.button_color ?? ""} onChange={(v) => set("button_color", v)} />
       </CmsFieldGroup>
     </FormSection>
   );
@@ -472,6 +477,7 @@ function UspTab({ data, onChange }: { data: CmsUspData; onChange: (d: CmsUspData
       </CmsFieldGroup>
       <CmsFieldGroup title="Styling">
         <CmsColorField label="Section accent" value={data.accent_color ?? ""} onChange={(v) => set("accent_color", v)} />
+        <CmsColorField label="Primary button color" value={data.button_color ?? ""} onChange={(v) => set("button_color", v)} />
       </CmsFieldGroup>
     </FormSection>
   );
@@ -521,6 +527,7 @@ function ClassesTab({ data, onChange }: { data: CmsClassesData; onChange: (d: Cm
       </CmsFieldGroup>
       <CmsFieldGroup title="Styling">
         <CmsColorField label="Section accent" value={data.accent_color ?? ""} onChange={(v) => set("accent_color", v)} />
+        <CmsColorField label="Primary button color" value={data.button_color ?? ""} onChange={(v) => set("button_color", v)} />
       </CmsFieldGroup>
     </FormSection>
   );
@@ -649,6 +656,7 @@ function PromoTab({ data, onChange }: { data: CmsPromoData; onChange: (d: CmsPro
       </CmsFieldGroup>
       <CmsFieldGroup title="Styling">
         <CmsColorField label="Section accent" value={data.accent_color ?? ""} onChange={(v) => set("accent_color", v)} />
+        <CmsColorField label="Primary button color" value={data.button_color ?? ""} onChange={(v) => set("button_color", v)} />
       </CmsFieldGroup>
     </FormSection>
   );

@@ -10,12 +10,15 @@ import { safeTrim } from "@/lib/safe-string-utils";
 import { CmsFieldGroup } from "@/components/admin/cms/CmsFieldGroup";
 import { SectionEnabledSwitch } from "@/components/admin/cms/SectionEnabledSwitch";
 import { CmsImageUploadField } from "@/components/admin/cms/CmsImageUploadField";
+import { CmsColorField } from "@/components/admin/cms/CmsColorField";
 
 const emptyTrust: CmsTrustData = {
   logos: [],
   google_rating_text: "",
   google_button_label: "",
   google_button_url: "",
+  accent_color: "",
+  button_color: "",
   enabled: true,
 };
 
@@ -197,6 +200,20 @@ export default function AdminCmsLogosPage() {
                   disabled={!enabled}
                 />
               </div>
+            </div>
+          </CmsFieldGroup>
+          <CmsFieldGroup title="Styling">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <CmsColorField
+                label="Section accent"
+                value={data.accent_color ?? ""}
+                onChange={(v) => setData({ ...data, accent_color: v })}
+              />
+              <CmsColorField
+                label="Primary button color"
+                value={data.button_color ?? ""}
+                onChange={(v) => setData({ ...data, button_color: v })}
+              />
             </div>
           </CmsFieldGroup>
         </FormSection>

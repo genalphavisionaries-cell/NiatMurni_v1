@@ -5,7 +5,7 @@ import type { PublicCmsHomepageSection, PublicCmsTheme } from "@/lib/public-cms"
 import { cmsString } from "@/lib/public-cms";
 import { getSectionColor } from "@/lib/cms-section-colors";
 import { cmsPlainTextForAttribute } from "@/lib/sanitize-cms-html";
-import { extraString, parseJsonSafe } from "../utils";
+import { extraString, parseJsonSafe, safeHref } from "../utils";
 import { safeTrim, safeStringTrim } from "@/lib/safe-string-utils";
 import { useRef, useState } from "react";
 import { SafeCmsHtml } from "../SafeCmsHtml";
@@ -84,6 +84,8 @@ export default function TestimonialsSection({
   const colors = getSectionColor(section, theme);
   const title = cmsString(section.title) ?? "Kepercayaan & Ulasan Peserta";
   const subtitle = cmsString(section.subtitle) ?? cmsString(section.description) ?? "";
+  const googleReviewLabel = cmsString(section.button_primary_label) ?? "Write a Review";
+  const googleReviewUrl = safeHref(section.button_primary_url) ?? GOOGLE_REVIEW_URL;
   const testimonialRef = useRef<HTMLDivElement>(null);
 
   const items =
@@ -188,7 +190,7 @@ export default function TestimonialsSection({
             </div>
           </div>
           <a
-            href={GOOGLE_REVIEW_URL}
+            href={googleReviewUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="shrink-0 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors hover:brightness-95 focus:outline focus:outline-2 focus:outline-offset-2"
@@ -198,7 +200,7 @@ export default function TestimonialsSection({
               outlineColor: colors.accent,
             }}
           >
-            Write a Review
+            {googleReviewLabel}
           </a>
         </div>
 

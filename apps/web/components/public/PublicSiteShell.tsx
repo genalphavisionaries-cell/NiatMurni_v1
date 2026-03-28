@@ -1,9 +1,7 @@
-import type { CSSProperties, ReactNode } from "react";
-import { CmsHeader, CmsFooter, Footer } from "@/components/home";
+import type { ReactNode } from "react";
 import { getHomepageSettings } from "@/lib/homepage-settings";
-import { fetchPublicCms, cmsString } from "@/lib/public-cms";
-import { cmsFlatNavToLinks, mergePublicCmsForHome } from "@/lib/merge-public-cms";
-import PublicFloatingLayer from "@/components/public/PublicFloatingLayer";
+import { fetchPublicCms } from "@/lib/public-cms";
+import PublicSiteShellRuntime from "./PublicSiteShellRuntime";
 
 type Props = {
   children: ReactNode;
@@ -19,58 +17,18 @@ export default async function PublicSiteShell({
   children,
   mainClassName = "min-h-[60vh] flex-1 bg-stone-50",
 }: Props) {
-  const [settings, cms] = await Promise.all([
+  const [initialSettings, initialCms] = await Promise.all([
     getHomepageSettings(),
     fetchPublicCms(),
   ]);
-  const ctx = mergePublicCmsForHome(settings, cms);
 
   return (
-    <div
-      className="flex min-h-screen flex-col"
-      style={ctx.themeVars as CSSProperties}
+    <PublicSiteShellRuntime
+      mainClassName={mainClassName}
+      initialSettings={initialSettings}
+      initialCms={initialCms}
     >
-      <CmsHeader
-        siteName={ctx.siteName}
-        logoUrl={ctx.logoUrl}
-        navTree={ctx.headerNavTree}
-        fallbackNav={ctx.fallbackHeaderNav}
-        primaryCta={ctx.primaryCta}
-      />
-      <main className={mainClassName}>{children}</main>
-      {cms ? (
-        <CmsFooter
-          siteName={ctx.siteName}
-          logoUrl={ctx.logoUrl}
-          footerNavColumns={ctx.cmsFooterColumns}
-          footerBackgroundColor={cmsString(cms.theme.footer_background_color)}
-          cmsFooter={cms.footer}
-          cmsContact={cms.contact}
-          cmsSocial={cms.social}
-          legalLinks={cmsFlatNavToLinks(cms.navigation.footer_legal)}
-          loginLinks={cmsFlatNavToLinks(cms.navigation.footer_login)}
-          paymentMethodIcons={settings.paymentMethodIcons}
-          legacyFooterSslBadgeUrl={settings.footerSslBadgeUrl}
-          legacyFooterDescription={settings.footerDescription}
-          legacyFooterBottom={settings.footerBottom}
-        />
-      ) : (
-        <Footer
-          settings={{
-            footerColumns: settings.footerColumns,
-            footerBottom: settings.footerBottom,
-            siteName: ctx.siteName,
-            paymentMethodIcons: settings.paymentMethodIcons,
-            footerLogoUrl: settings.footerLogoUrl,
-            footerDescription: settings.footerDescription,
-            footerSslBadgeUrl: settings.footerSslBadgeUrl,
-          }}
-          cmsFooterColumns={ctx.cmsFooterColumns}
-          footerBackgroundColor={null}
-          cmsGlobal={null}
-        />
-      )}
-      <PublicFloatingLayer />
-    </div>
+      {children}
+    </PublicSiteShellRuntime>
   );
 }

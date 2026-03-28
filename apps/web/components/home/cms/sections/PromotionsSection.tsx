@@ -51,9 +51,15 @@ export default function PromotionsSection({
   const promos =
     parseJsonSafe<PromoItem[]>(extraString(section.extra_data, "promos_json")) ??
     DEFAULT_PROMOS;
+  const bannerImages = parseJsonSafe<string[]>(
+    extraString(section.extra_data, "banner_images_json")
+  ) ?? [];
 
   const visible = promos.filter((p) => cmsString(p.title) || cmsString(p.description)).slice(0, 3);
-  const stripImage = safeHref(section.image_url) ?? safeHref(visible[0]?.image_url ?? null);
+  const stripImage =
+    safeHref(section.image_url) ??
+    safeHref(bannerImages[0] ?? null) ??
+    safeHref(visible[0]?.image_url ?? null);
   const stripLink = safeHref(visible[0]?.button_url ?? "/#classes") ?? "/#classes";
 
   return (

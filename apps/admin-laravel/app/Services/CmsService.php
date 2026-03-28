@@ -23,7 +23,7 @@ class CmsService
 {
     public const CACHE_KEY = 'cms_homepage';
 
-    public const CACHE_TTL_SECONDS = 300;
+    public const CACHE_TTL_SECONDS = 30;
 
     /**
      * Cached homepage payload for the public API.

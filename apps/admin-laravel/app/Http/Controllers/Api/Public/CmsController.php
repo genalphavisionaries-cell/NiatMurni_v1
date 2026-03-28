@@ -14,6 +14,10 @@ class CmsController extends Controller
 {
     public function __invoke(PublicCmsPayloadService $payload): JsonResponse
     {
-        return response()->json($payload->build());
+        return response()
+            ->json($payload->build())
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
 }

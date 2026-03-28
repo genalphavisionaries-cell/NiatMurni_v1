@@ -5,10 +5,11 @@ import type { PublicCmsHomepageSection, PublicCmsTheme } from "@/lib/public-cms"
 import { cmsString } from "@/lib/public-cms";
 import { getSectionColor } from "@/lib/cms-section-colors";
 import { extraString, parseJsonSafe, safeHref } from "../utils";
+import { safeTrim } from "@/lib/safe-string-utils";
 import { useMemo } from "react";
 import { SafeCmsHtml } from "../SafeCmsHtml";
 
-type Item = { title: string; description?: string; icon?: string };
+type Item = { title: string; description?: string; icon?: string; background_color?: string };
 
 function iconSvg(path: React.ReactNode, accent: string) {
   return (
@@ -44,15 +45,20 @@ function benefitIcons(accent: string): Record<string, React.ReactNode> {
 }
 
 function BenefitIcon({ name, icons }: { name?: string; icons: Record<string, React.ReactNode> }) {
+  const iconUrl = safeHref(name ?? null);
+  if (iconUrl) {
+    return <img src={iconUrl} alt="" className="h-5 w-5 object-contain" loading="lazy" />;
+  }
   return <>{icons[name ?? ""] ?? icons.award}</>;
 }
 
 function UspCard({ item, icons }: { item: Item; icons: Record<string, React.ReactNode> }) {
+  const cardBg = safeTrim(item.background_color ?? "") || "#F3F4F6";
   return (
     <div className="flex gap-4 rounded-[14px] bg-white p-[18px] shadow-[0_8px_20px_rgba(0,0,0,0.06)]">
       <div
-        className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-[10px] bg-[#F3F4F6]"
-        style={{ width: 44, height: 44 }}
+        className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-[10px]"
+        style={{ width: 44, height: 44, backgroundColor: cardBg }}
       >
         <BenefitIcon name={item.icon} icons={icons} />
       </div>

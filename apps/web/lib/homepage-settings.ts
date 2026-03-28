@@ -234,9 +234,12 @@ export async function getHomepageSettings(): Promise<HomepageSettings> {
   const base = getApiBase();
   if (!base) return defaultHomepageSettings;
   try {
-    const res = await fetch(`${base}/api/homepage-settings`, {
-      next: { revalidate: 10 },
-    });
+    const isBrowser = typeof window !== "undefined";
+    const runtimeBust = isBrowser ? `?ts=${Date.now()}` : "";
+    const res = await fetch(
+      `${base}/api/homepage-settings${runtimeBust}`,
+      isBrowser ? { cache: "no-store" } : { next: { revalidate: 10 } }
+    );
     if (!res.ok) return defaultHomepageSettings;
     const data = (await res.json()) as Partial<HomepageSettings>;
     return deepMerge(defaultHomepageSettings, data);

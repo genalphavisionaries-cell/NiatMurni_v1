@@ -95,6 +95,20 @@ function toMalayMonthShort(month: string) {
   return map[key] ?? month;
 }
 
+function normalizeHref(url: string | null | undefined, fallback: string): string {
+  const t = safeTrim(url ?? "");
+  if (!t) return fallback;
+  if (
+    t.startsWith("/") ||
+    t.startsWith("#") ||
+    t.startsWith("http://") ||
+    t.startsWith("https://")
+  ) {
+    return t;
+  }
+  return `/${t.replace(/^\/+/, "")}`;
+}
+
 /** Map API class to hero-style item for ClassCard */
 function toHeroItem(c: ClassSession): HeroClassItem {
   const starts = new Date(c.starts_at);
@@ -171,6 +185,13 @@ export default function UpcomingClassesSection({
     return apiClasses.map(toHeroItem).slice(0, MAX_CLASSES);
   }, [apiClasses]);
   const isRecentCompletedFallback = displayList.length > 0 && displayList.every((x) => x.recentPast);
+  const classesTitle = safeTrim(section?.title ?? "") || "Kelas Terkini";
+  const defaultClassesDescription = isRecentCompletedFallback
+    ? "Tiada sesi akan datang buat masa ini. Paparan ini menunjukkan 6 sesi terkini yang telah selesai."
+    : "Daftar untuk sesi seterusnya. Online dan bersemuka tersedia.";
+  const classesDescription = safeTrim(section?.description ?? "") || defaultClassesDescription;
+  const classesCtaLabel = safeTrim(section?.button_primary_label ?? "") || "Pilih Kelas Lain";
+  const classesCtaUrl = normalizeHref(section?.button_primary_url, "/#classes");
 
   const firstRecommendedId = displayList[0]?.id;
 
@@ -212,12 +233,10 @@ export default function UpcomingClassesSection({
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <h2 className="text-3xl font-bold tracking-tight text-[#0F172A] sm:text-4xl">
-            Kelas Terkini
+            {classesTitle}
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-[#64748B]">
-            {isRecentCompletedFallback
-              ? "Tiada sesi akan datang buat masa ini. Paparan ini menunjukkan 6 sesi terkini yang telah selesai."
-              : "Daftar untuk sesi seterusnya. Online dan bersemuka tersedia."}
+            {classesDescription}
           </p>
         </div>
 
@@ -326,14 +345,14 @@ export default function UpcomingClassesSection({
               {/* Secondary CTA */}
               <div className="mt-10 flex flex-col items-center justify-center gap-3 md:flex-row">
                 <Link
-                  href="/#classes"
+                  href={classesCtaUrl}
                   className="inline-flex items-center justify-center rounded-xl px-6 py-3 text-sm font-semibold shadow-sm transition hover:brightness-95"
                   style={{
                     backgroundColor: colors.buttonBg,
                     color: colors.buttonText,
                   }}
                 >
-                  Pilih Kelas Lain
+                  {classesCtaLabel}
                 </Link>
                 <div className="hidden text-xs text-[#64748B] md:block">
                   {isRecentCompletedFallback

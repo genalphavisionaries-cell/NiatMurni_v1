@@ -53,6 +53,7 @@ export type CmsHeroData = {
   background_urls: string;
   background_alts?: string;
   accent_color?: string;
+  button_color?: string;
   enabled?: boolean;
 };
 export type CmsUspPoint = {
@@ -69,6 +70,7 @@ export type CmsUspData = {
   side_images_urls: string;
   side_images_alts?: string;
   accent_color?: string;
+  button_color?: string;
   enabled?: boolean;
 };
 export type CmsClassesData = {
@@ -78,6 +80,7 @@ export type CmsClassesData = {
   button_url: string;
   max_items: number;
   accent_color?: string;
+  button_color?: string;
   enabled?: boolean;
 };
 export type CmsTrustLogo = { image_url: string; title: string; image_alt?: string };
@@ -86,6 +89,8 @@ export type CmsTrustData = {
   google_rating_text: string;
   google_button_label: string;
   google_button_url: string;
+  accent_color?: string;
+  button_color?: string;
   enabled?: boolean;
 };
 export type CmsPromoCard = {
@@ -103,6 +108,7 @@ export type CmsPromoData = {
   banner_urls: string;
   banner_alts?: string;
   accent_color?: string;
+  button_color?: string;
   cards: CmsPromoCard[];
   enabled?: boolean;
 };

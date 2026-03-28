@@ -108,6 +108,8 @@ class SettingService
 
         $this->forgetCache($group, $key);
         Cache::forget('setting.'.$key);
+        // Keep public CMS endpoint responsive to branding/theme setting edits.
+        app(CmsService::class)->forgetCache();
 
         return $setting;
     }

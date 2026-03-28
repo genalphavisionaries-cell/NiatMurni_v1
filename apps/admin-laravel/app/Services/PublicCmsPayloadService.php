@@ -326,9 +326,12 @@ class PublicCmsPayloadService
                 if (! is_array($row)) {
                     continue;
                 }
+                $extra = is_array($row['extra'] ?? null) ? $row['extra'] : [];
                 $items[] = [
                     'title' => (string) ($row['title'] ?? ''),
                     'description' => (string) ($row['description'] ?? ''),
+                    'icon' => (string) ($row['icon_url'] ?? ''),
+                    'background_color' => (string) ($extra['background_color'] ?? ''),
                 ];
             }
         }
@@ -415,6 +418,8 @@ class PublicCmsPayloadService
         $content = is_array($trust['content'] ?? null) ? $trust['content'] : [];
         $gr = is_array($content['google_rating'] ?? null) ? $content['google_rating'] : [];
         $googleBlurb = (string) ($gr['text'] ?? '');
+        $googleButtonLabel = (string) ($gr['button_label'] ?? '');
+        $googleButtonUrl = (string) ($gr['button_url'] ?? '');
         $sectionHeading = (string) ($trust['title'] ?? '');
 
         $heading = ! $this->isEffectivelyEmpty($sectionHeading) ? $sectionHeading : (! $this->isEffectivelyEmpty($googleBlurb) ? $googleBlurb : '');
@@ -447,8 +452,8 @@ class PublicCmsPayloadService
             'subtitle' => $displaySubtitle,
             'description' => null,
             'image_url' => null,
-            'button_primary_label' => null,
-            'button_primary_url' => null,
+            'button_primary_label' => ! $this->isEffectivelyEmpty($googleButtonLabel) ? $googleButtonLabel : null,
+            'button_primary_url' => ! $this->isEffectivelyEmpty($googleButtonUrl) ? $googleButtonUrl : null,
             'button_secondary_label' => null,
             'button_secondary_url' => null,
             'accent_color' => $colors['accent_color'],
@@ -472,10 +477,13 @@ class PublicCmsPayloadService
         $content = is_array($classes['content'] ?? null) ? $classes['content'] : [];
         $title = (string) ($content['title'] ?? '');
         $desc = (string) ($content['description'] ?? '');
+        $buttonText = (string) ($content['button_text'] ?? '');
+        $buttonUrl = (string) ($content['button_url'] ?? '');
         $colors = $this->sectionColorFields($content);
         $hasCopy = ! $this->isEffectivelyEmpty($title) || ! $this->isEffectivelyEmpty($desc);
+        $hasButtonCta = ! $this->isEffectivelyEmpty($buttonText) || ! $this->isEffectivelyEmpty($buttonUrl);
         $hasColors = $colors['accent_color'] !== null || $colors['button_color'] !== null;
-        if (! $hasCopy && ! $hasColors) {
+        if (! $hasCopy && ! $hasColors && ! $hasButtonCta) {
             return null;
         }
 
@@ -487,8 +495,8 @@ class PublicCmsPayloadService
             'subtitle' => null,
             'description' => ! $this->isEffectivelyEmpty($desc) ? $desc : null,
             'image_url' => null,
-            'button_primary_label' => null,
-            'button_primary_url' => null,
+            'button_primary_label' => ! $this->isEffectivelyEmpty($buttonText) ? $buttonText : null,
+            'button_primary_url' => ! $this->isEffectivelyEmpty($buttonUrl) ? $buttonUrl : null,
             'button_secondary_label' => null,
             'button_secondary_url' => null,
             'accent_color' => $colors['accent_color'],
@@ -508,6 +516,11 @@ class PublicCmsPayloadService
         $content = is_array($promo['content'] ?? null) ? $promo['content'] : [];
         $sectionTitle = (string) ($content['title'] ?? '');
         $sectionDesc = (string) ($content['description'] ?? '');
+        $bannerUrls = $content['banner_urls'] ?? [];
+        if (! is_array($bannerUrls)) {
+            $bannerUrls = [];
+        }
+        $bannerUrls = array_values(array_filter(array_map('trim', $bannerUrls), fn ($u) => $u !== ''));
 
         $cards = $promo['items']['promo_card'] ?? [];
         $promos = [];
@@ -541,6 +554,9 @@ class PublicCmsPayloadService
             'promos_json' => json_encode($promos),
             'banner_text' => $ribbon,
         ];
+        if ($bannerUrls !== []) {
+            $extra['banner_images_json'] = json_encode($bannerUrls);
+        }
 
         $colors = $this->sectionColorFields($content);
 
@@ -551,7 +567,7 @@ class PublicCmsPayloadService
             'title' => ! $this->isEffectivelyEmpty($sectionTitle) ? $sectionTitle : null,
             'subtitle' => $ribbon,
             'description' => ! $this->isEffectivelyEmpty($sectionDesc) ? $sectionDesc : null,
-            'image_url' => null,
+            'image_url' => $bannerUrls[0] ?? null,
             'button_primary_label' => null,
             'button_primary_url' => null,
             'button_secondary_label' => null,
