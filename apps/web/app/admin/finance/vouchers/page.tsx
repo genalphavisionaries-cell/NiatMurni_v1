@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { adminApi, type ClassSession, type Voucher, type VoucherStatus, type VoucherType } from "@/lib/admin-api";
+import { safeTrim } from "@/lib/safe-string-utils";
 
 type VoucherFormState = {
   id?: number;
@@ -114,7 +115,7 @@ export default function AdminFinanceVouchersPage() {
     setError(null);
     try {
       const payload = {
-        code: form.code.trim(),
+        code: safeTrim(form.code),
         type: form.type,
         value: form.type === "free_delivery" ? null : (form.value ? Number(form.value) : null),
         min_seats: form.min_seats ? Number(form.min_seats) : null,

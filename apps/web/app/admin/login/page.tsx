@@ -4,6 +4,7 @@ import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { FormField, FormLabel, TextInput } from "@/components/dashboard";
+import { safeTrim } from "@/lib/safe-string-utils";
 import { cn } from "@/lib/utils";
 import { adminApi } from "@/lib/admin-api";
 import { Lock, Mail, ArrowRight, Shield, Chrome } from "lucide-react";
@@ -23,7 +24,7 @@ function LoginForm() {
     setError("");
     setLoading(true);
     try {
-      await adminApi.login(email.trim(), password);
+      await adminApi.login(safeTrim(email), password);
       router.push(redirect);
       router.refresh();
     } catch (err) {

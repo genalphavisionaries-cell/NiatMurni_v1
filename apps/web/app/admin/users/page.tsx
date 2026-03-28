@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { adminApi, type ManagedAdminUser } from "@/lib/admin-api";
 import { DataTable } from "@/components/dashboard";
 import type { ColumnDef } from "@tanstack/react-table";
+import { safeTrim } from "@/lib/safe-string-utils";
 import { Plus, Pencil, KeyRound, Power, PowerOff } from "lucide-react";
 
 type AdminRole = "super_admin" | "operations_admin" | "finance_admin" | "cms_admin" | "accountant";
@@ -75,8 +76,8 @@ export default function AdminUsersPage() {
   }, [statusFilter]);
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return users;
-    const q = search.trim().toLowerCase();
+    if (!safeTrim(search)) return users;
+    const q = safeTrim(search).toLowerCase();
     return users.filter((u) =>
       [u.name, u.email, u.role, u.status].some((v) => v.toLowerCase().includes(q))
     );

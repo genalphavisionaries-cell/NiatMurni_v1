@@ -6,6 +6,7 @@ import { adminApi } from "@/lib/admin-api";
 import type { CmsTrustData } from "@/lib/admin-api";
 import { cn } from "@/lib/utils";
 import { isValidHttpOrRelativeUrl } from "@/lib/cms-admin-validation";
+import { safeTrim } from "@/lib/safe-string-utils";
 import { CmsFieldGroup } from "@/components/admin/cms/CmsFieldGroup";
 import { SectionEnabledSwitch } from "@/components/admin/cms/SectionEnabledSwitch";
 import { CmsImageUploadField } from "@/components/admin/cms/CmsImageUploadField";
@@ -21,12 +22,12 @@ const emptyTrust: CmsTrustData = {
 function validateTrust(d: CmsTrustData): string[] {
   const e: string[] = [];
   for (const logo of d.logos) {
-    if (logo.image_url?.trim() && !isValidHttpOrRelativeUrl(logo.image_url)) {
+    if (safeTrim(logo.image_url) && !isValidHttpOrRelativeUrl(logo.image_url)) {
       e.push("Trust: a logo image URL is invalid.");
       break;
     }
   }
-  if (d.google_button_url?.trim() && !isValidHttpOrRelativeUrl(d.google_button_url)) {
+  if (safeTrim(d.google_button_url) && !isValidHttpOrRelativeUrl(d.google_button_url)) {
     e.push("Trust: Google button URL is invalid.");
   }
   return e;
