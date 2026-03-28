@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class CmsHomepageController extends Controller
 {
@@ -47,38 +48,46 @@ class CmsHomepageController extends Controller
             ['title' => 'Homepage', 'is_active' => true],
         );
 
-        DB::transaction(function () use ($page, $request) {
-            if ($request->has('hero')) {
-                $this->persistHero($page, $request->input('hero', []));
-            }
-            if ($request->has('why_choose_us')) {
-                $this->persistUsp($page, $request->input('why_choose_us', []));
-            } elseif ($request->has('usp')) {
-                $this->persistUsp($page, $request->input('usp', []));
-            }
-            if ($request->has('classes')) {
-                $this->persistClasses($page, $request->input('classes', []));
-            }
-            if ($request->has('testimonials')) {
-                $this->persistTrust($page, $request->input('testimonials', []));
-            } elseif ($request->has('trust')) {
-                $this->persistTrust($page, $request->input('trust', []));
-            }
-            if ($request->has('cta')) {
-                $this->persistPromo($page, $request->input('cta', []));
-            } elseif ($request->has('promo')) {
-                $this->persistPromo($page, $request->input('promo', []));
-            }
-            if ($request->has('header')) {
-                $this->persistHeader($page, $request->input('header', []));
-            }
-            if ($request->has('footer')) {
-                $this->persistFooter($page, $request->input('footer', []));
-            }
-            if ($request->has('floating_menu')) {
-                $this->persistFloating($page, $request->input('floating_menu', []));
-            }
-        });
+        try {
+            DB::transaction(function () use ($page, $request) {
+                if ($request->has('hero')) {
+                    $this->persistHero($page, $this->inputArray($request, 'hero'));
+                }
+                if ($request->has('why_choose_us')) {
+                    $this->persistUsp($page, $this->inputArray($request, 'why_choose_us'));
+                } elseif ($request->has('usp')) {
+                    $this->persistUsp($page, $this->inputArray($request, 'usp'));
+                }
+                if ($request->has('classes')) {
+                    $this->persistClasses($page, $this->inputArray($request, 'classes'));
+                }
+                if ($request->has('testimonials')) {
+                    $this->persistTrust($page, $this->inputArray($request, 'testimonials'));
+                } elseif ($request->has('trust')) {
+                    $this->persistTrust($page, $this->inputArray($request, 'trust'));
+                }
+                if ($request->has('cta')) {
+                    $this->persistPromo($page, $this->inputArray($request, 'cta'));
+                } elseif ($request->has('promo')) {
+                    $this->persistPromo($page, $this->inputArray($request, 'promo'));
+                }
+                if ($request->has('header')) {
+                    $this->persistHeader($page, $this->inputArray($request, 'header'));
+                }
+                if ($request->has('footer')) {
+                    $this->persistFooter($page, $this->inputArray($request, 'footer'));
+                }
+                if ($request->has('floating_menu')) {
+                    $this->persistFloating($page, $this->inputArray($request, 'floating_menu'));
+                }
+            });
+        } catch (Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'message' => 'Failed to save homepage CMS data.',
+            ], 422);
+        }
 
         app(CmsService::class)->forgetCache();
 
@@ -107,6 +116,21 @@ class CmsHomepageController extends Controller
     private function splitLines(?string $raw): array
     {
         return array_values(array_filter(array_map('trim', explode("\n", $raw ?? ''))));
+    }
+
+    /**
+     * Read a request key as array; malformed scalar/object payloads become [].
+     *
+     * @return array<string, mixed>
+     */
+    private function inputArray(Request $request, string $key): array
+    {
+        $value = $request->input($key, []);
+        if (! is_array($value)) {
+            return [];
+        }
+
+        return $value;
     }
 
     /**
