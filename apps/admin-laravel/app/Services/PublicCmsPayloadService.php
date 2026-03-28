@@ -45,14 +45,21 @@ class PublicCmsPayloadService
             'primary_cta_url' => (string) ($cta['url'] ?? ''),
         ];
 
+        // Enhanced theme with button colors and validation
         $theme = [
             'primary_color' => $primaryColor,
-            'secondary_color' => $secondaryColor,
+            'secondary_color' => $secondaryColor, 
             'accent_color' => $accentColor,
-            'background_color' => '',
-            'text_color' => '',
-            'header_background_color' => '',
-            'footer_background_color' => '',
+            'background_color' => $this->themeColorSetting('background_color', '#FFFFFF'),
+            'text_color' => $this->themeColorSetting('text_color', '#0F172A'),
+            'header_background_color' => $this->themeColorSetting('header_background_color', '#FFFFFF'),
+            'footer_background_color' => $this->themeColorSetting('footer_background_color', '#0F172A'),
+            // Button-specific colors
+            'primary_button_color' => $this->themeColorSetting('primary_button_color', $primaryColor),
+            'primary_button_text_color' => $this->themeColorSetting('primary_button_text_color', '#FFFFFF'),
+            'secondary_button_color' => $this->themeColorSetting('secondary_button_color', 'transparent'),
+            'secondary_button_text_color' => $this->themeColorSetting('secondary_button_text_color', $primaryColor),
+            'secondary_button_border_color' => $this->themeColorSetting('secondary_button_border_color', $primaryColor),
         ];
 
         $seo = [

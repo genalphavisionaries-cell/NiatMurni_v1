@@ -57,6 +57,8 @@ class CmsHomepageEditor extends Page implements HasForms
     }
 
     public ?array $data = [];
+    
+    public bool $isSaving = false;
 
     public function mount(): void
     {
@@ -465,77 +467,124 @@ class CmsHomepageEditor extends Page implements HasForms
 
     public function saveDraft(): void
     {
-        $data = $this->form->getState();
+        if ($this->isSaving) {
+            return; // Prevent double-saves
+        }
         
-        // Set all sections to draft mode before saving
-        $data = $this->setSectionsDraftMode($data);
+        $this->isSaving = true;
+        \Log::info('CMS SAVE DRAFT: Starting save process');
         
         try {
-            DB::transaction(function () use ($data) {
-                $this->persistHero($data['hero'] ?? []);
-                $this->persistUsp($data['why_choose_us'] ?? $data['usp'] ?? []);
-                $this->persistClasses($data['classes'] ?? []);
-                $this->persistTrust($data['testimonials'] ?? $data['trust'] ?? []);
-                $this->persistPromo($data['cta'] ?? $data['promo'] ?? []);
-            });
+            // Validate form first
+            $this->form->validate();
+            
+            $data = $this->form->getState();
+            \Log::info('CMS SAVE DRAFT: Form data retrieved', ['data_keys' => array_keys($data)]);
+            
+            if (empty($data)) {
+                throw new \Exception('No form data received. Please refresh and try again.');
+            }
+            
+            // Set all sections to draft mode before saving
+            $data = $this->setSectionsDraftMode($data);
+            \Log::info('CMS SAVE DRAFT: Set to draft mode');
+            
+            $this->saveAllSections($data);
+            
             app(CmsService::class)->forgetCache();
+            \Log::info('CMS SAVE DRAFT: Cache cleared');
 
             Notification::make()
-                ->title('Draft Saved')
+                ->title('✅ Draft Saved Successfully')
                 ->body('Your changes have been saved as a draft. Use "Publish Changes" to make them live.')
                 ->success()
+                ->duration(5000)
+                ->send();
+            
+            \Log::info('CMS SAVE DRAFT: Success notification sent');
+            
+            // Refresh form data to show updated status
+            $this->form->fill($this->loadFormData());
+                
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('CMS SAVE DRAFT: Validation failed', ['errors' => $e->errors()]);
+            
+            Notification::make()
+                ->title('Validation Failed')
+                ->body('Please fix the form errors before saving.')
+                ->danger()
                 ->send();
                 
         } catch (\Throwable $e) {
+            \Log::error('CMS SAVE DRAFT: Failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             Notification::make()
-                ->title('Save Failed')
-                ->body('Could not save your changes: ' . $e->getMessage())
+                ->title('❌ Save Failed')
+                ->body('Could not save your changes: ' . $e->getMessage() . ' Please try again or contact support.')
                 ->danger()
+                ->persistent()
                 ->send();
+        } finally {
+            $this->isSaving = false;
         }
     }
 
     public function publishChanges(): void
     {
-        $data = $this->form->getState();
-        
-        // Validate ALL critical sections for homepage consistency
-        $validationResult = $this->validateEntireHomepageForPublish($data);
-        
-        if (!$validationResult['can_publish']) {
-            Notification::make()
-                ->title('Homepage Cannot Be Published')
-                ->body($validationResult['message'])
-                ->danger()
-                ->persistent()
-                ->send();
-            return;
-        }
-
-        // Set all sections to published mode
-        $data = $this->setSectionsPublishMode($data);
+        \Log::info('CMS PUBLISH: Starting publish process');
         
         try {
-            DB::transaction(function () use ($data) {
-                $this->persistHero($data['hero'] ?? []);
-                $this->persistUsp($data['why_choose_us'] ?? $data['usp'] ?? []);
-                $this->persistClasses($data['classes'] ?? []);
-                $this->persistTrust($data['testimonials'] ?? $data['trust'] ?? []);
-                $this->persistPromo($data['cta'] ?? $data['promo'] ?? []);
-            });
+            $data = $this->form->getState();
+            \Log::info('CMS PUBLISH: Form data retrieved', ['data_keys' => array_keys($data)]);
+            
+            // Validate ALL critical sections for homepage consistency
+            $validationResult = $this->validateEntireHomepageForPublish($data);
+            \Log::info('CMS PUBLISH: Validation result', $validationResult);
+            
+            if (!$validationResult['can_publish']) {
+                \Log::warning('CMS PUBLISH: Validation failed', $validationResult);
+                
+                Notification::make()
+                    ->title('Homepage Cannot Be Published')
+                    ->body($validationResult['message'])
+                    ->danger()
+                    ->persistent()
+                    ->send();
+                return;
+            }
+
+            // Set all sections to published mode
+            $data = $this->setSectionsPublishMode($data);
+            \Log::info('CMS PUBLISH: Set to publish mode');
+            
+            $this->saveAllSections($data);
+            
             app(CmsService::class)->forgetCache();
+            \Log::info('CMS PUBLISH: Cache cleared');
 
             Notification::make()
                 ->title('Homepage Published Successfully')
                 ->body('All sections are now live! Your homepage is complete and published.')
                 ->success()
+                ->duration(5000)
                 ->send();
+            
+            \Log::info('CMS PUBLISH: Success notification sent');
                 
         } catch (\Throwable $e) {
+            \Log::error('CMS PUBLISH: Failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             Notification::make()
                 ->title('Publish Failed')
                 ->body('Could not publish your changes: ' . $e->getMessage())
                 ->danger()
+                ->persistent()
                 ->send();
         }
     }
@@ -560,6 +609,62 @@ class CmsHomepageEditor extends Page implements HasForms
             }
         }
         return $data;
+    }
+
+    /**
+     * Save all sections with comprehensive error handling.
+     */
+    private function saveAllSections(array $data): void
+    {
+        DB::transaction(function () use ($data) {
+            \Log::info('CMS SAVE: Starting transaction');
+            
+            $sectionsProcessed = [];
+            
+            try {
+                if (isset($data['hero'])) {
+                    \Log::info('CMS SAVE: Persisting hero', ['hero_data' => $data['hero']]);
+                    $this->persistHero($data['hero']);
+                    $sectionsProcessed[] = 'hero';
+                }
+                
+                if (isset($data['why_choose_us']) || isset($data['usp'])) {
+                    $uspData = $data['why_choose_us'] ?? $data['usp'] ?? [];
+                    \Log::info('CMS SAVE: Persisting USP', ['usp_data' => $uspData]);
+                    $this->persistUsp($uspData);
+                    $sectionsProcessed[] = 'why_choose_us';
+                }
+                
+                if (isset($data['classes'])) {
+                    \Log::info('CMS SAVE: Persisting classes', ['classes_data' => $data['classes']]);
+                    $this->persistClasses($data['classes']);
+                    $sectionsProcessed[] = 'classes';
+                }
+                
+                if (isset($data['testimonials']) || isset($data['trust'])) {
+                    $trustData = $data['testimonials'] ?? $data['trust'] ?? [];
+                    \Log::info('CMS SAVE: Persisting trust', ['trust_data' => $trustData]);
+                    $this->persistTrust($trustData);
+                    $sectionsProcessed[] = 'testimonials';
+                }
+                
+                if (isset($data['cta']) || isset($data['promo'])) {
+                    $ctaData = $data['cta'] ?? $data['promo'] ?? [];
+                    \Log::info('CMS SAVE: Persisting CTA', ['cta_data' => $ctaData]);
+                    $this->persistPromo($ctaData);
+                    $sectionsProcessed[] = 'cta';
+                }
+                
+                \Log::info('CMS SAVE: All sections persisted successfully', ['sections' => $sectionsProcessed]);
+                
+            } catch (\Throwable $e) {
+                \Log::error('CMS SAVE: Section save failed', [
+                    'sections_processed' => $sectionsProcessed,
+                    'error' => $e->getMessage(),
+                ]);
+                throw $e; // Re-throw to trigger transaction rollback
+            }
+        });
     }
 
     private function validateEntireHomepageForPublish(array $data): array
@@ -663,14 +768,20 @@ class CmsHomepageEditor extends Page implements HasForms
                 ->icon('heroicon-o-document-text')
                 ->action('saveDraft')
                 ->color('gray')
-                ->tooltip('Save your changes without publishing'),
+                ->tooltip('Save your changes without publishing')
+                ->requiresConfirmation(false)
+                ->keyBindings(['ctrl+s', 'cmd+s']),
                 
             Action::make('publish')
                 ->label('Publish Changes')
                 ->icon('heroicon-o-globe-alt')
                 ->action('publishChanges')
                 ->color('success')
-                ->tooltip('Validate and publish changes to the website'),
+                ->tooltip('Validate and publish changes to the website')
+                ->requiresConfirmation()
+                ->modalHeading('Publish Homepage Changes')
+                ->modalDescription('This will make your changes live on the website. All sections will be validated before publishing.')
+                ->modalSubmitActionLabel('Publish Now'),
         ];
     }
 

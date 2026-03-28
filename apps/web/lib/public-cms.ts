@@ -42,6 +42,12 @@ export type PublicCmsTheme = {
   text_color: string;
   header_background_color: string;
   footer_background_color: string;
+  // Button-specific colors
+  primary_button_color: string;
+  primary_button_text_color: string;
+  secondary_button_color: string;
+  secondary_button_text_color: string;
+  secondary_button_border_color: string;
 };
 
 export type PublicCmsSeo = {
@@ -132,13 +138,18 @@ export type PublicCmsPayload = {
 };
 
 const EMPTY_THEME: PublicCmsTheme = {
-  primary_color: "",
-  secondary_color: "",
-  accent_color: "",
-  background_color: "",
-  text_color: "",
-  header_background_color: "",
-  footer_background_color: "",
+  primary_color: "#2563EB",
+  secondary_color: "#64748B",
+  accent_color: "#F59E0B",
+  background_color: "#FFFFFF",
+  text_color: "#0F172A",
+  header_background_color: "#FFFFFF", 
+  footer_background_color: "#0F172A",
+  primary_button_color: "#2563EB",
+  primary_button_text_color: "#FFFFFF",
+  secondary_button_color: "transparent",
+  secondary_button_text_color: "#2563EB",
+  secondary_button_border_color: "#2563EB",
 };
 
 const defaultFooterContactSocial = (): {
@@ -258,6 +269,11 @@ function normalizeCmsPayload(data: PublicCmsPayload): PublicCmsPayload {
       text_color: theme.text_color ?? EMPTY_THEME.text_color,
       header_background_color: theme.header_background_color ?? EMPTY_THEME.header_background_color,
       footer_background_color: theme.footer_background_color ?? EMPTY_THEME.footer_background_color,
+      primary_button_color: (theme as any).primary_button_color ?? EMPTY_THEME.primary_button_color,
+      primary_button_text_color: (theme as any).primary_button_text_color ?? EMPTY_THEME.primary_button_text_color,
+      secondary_button_color: (theme as any).secondary_button_color ?? EMPTY_THEME.secondary_button_color,
+      secondary_button_text_color: (theme as any).secondary_button_text_color ?? EMPTY_THEME.secondary_button_text_color,
+      secondary_button_border_color: (theme as any).secondary_button_border_color ?? EMPTY_THEME.secondary_button_border_color,
     },
     footer: {
       description: data.footer?.description ?? "",
