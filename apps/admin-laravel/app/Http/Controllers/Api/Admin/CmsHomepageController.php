@@ -83,11 +83,15 @@ class CmsHomepageController extends Controller
                     $this->persistFloating($page, $this->inputArray($request, 'floating_menu'));
                 }
             });
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Return structured validation errors
+            return $this->formatValidationErrors($e);
         } catch (Throwable $e) {
             report($e);
 
             return response()->json([
                 'message' => 'Failed to save homepage CMS data.',
+                'error' => 'An unexpected error occurred. Please try again.',
             ], 422);
         }
 
@@ -133,6 +137,42 @@ class CmsHomepageController extends Controller
         }
 
         return $value;
+    }
+
+    /**
+     * Format validation errors into structured response for better admin UX.
+     */
+    private function formatValidationErrors(\Illuminate\Validation\ValidationException $e): JsonResponse
+    {
+        $errors = [];
+        $errorsBySection = [];
+
+        foreach ($e->errors() as $field => $messages) {
+            // Parse field to extract section and field name
+            $parts = explode('.', $field);
+            $section = $parts[0];
+            $fieldName = implode('.', array_slice($parts, 1)) ?: 'general';
+            
+            foreach ($messages as $message) {
+                $error = [
+                    'section' => $section,
+                    'field' => $fieldName,
+                    'message' => $message,
+                    'severity' => str_contains($message, 'required before publishing') ? 'error' : 'warning'
+                ];
+                
+                $errors[] = $error;
+                $errorsBySection[$section][] = $error;
+            }
+        }
+
+        return response()->json([
+            'message' => 'Validation failed. Please check the issues below before publishing.',
+            'validation_errors' => $errors,
+            'errors_by_section' => $errorsBySection,
+            'can_save_draft' => true,
+            'can_publish' => count(array_filter($errors, fn($e) => $e['severity'] === 'error')) === 0,
+        ], 422);
     }
 
     /**
@@ -245,17 +285,28 @@ class CmsHomepageController extends Controller
         $validator = app(CmsValidationService::class);
         
         $section = $this->section($page, 'why_choose_us');
-        $lines = $this->splitLines($usp['side_images_urls'] ?? '');
-        $alts = $this->zipAlts($lines, $usp['side_images_alts'] ?? '');
+        $existingContent = $section->content_json ?? [];
         
-        $contentJson = $validator->validateSectionContent([
-            'title' => $usp['title'] ?? '',
-            'description' => $usp['description'] ?? '',
-            'side_images_urls' => $lines,
-            'side_images_alts' => $alts,
-            'accent_color' => $usp['accent_color'] ?? '',
-        ]);
-        
+        // Only update fields that are explicitly provided (prevent data loss)
+        $updates = [];
+        if (array_key_exists('title', $usp)) {
+            $updates['title'] = $usp['title'] ?? '';
+        }
+        if (array_key_exists('description', $usp)) {
+            $updates['description'] = $usp['description'] ?? '';
+        }
+        if (array_key_exists('side_images_urls', $usp)) {
+            $lines = $this->splitLines($usp['side_images_urls'] ?? '');
+            $alts = $this->zipAlts($lines, $usp['side_images_alts'] ?? '');
+            $updates['side_images_urls'] = $lines;
+            $updates['side_images_alts'] = $alts;
+        }
+        if (array_key_exists('accent_color', $usp)) {
+            $updates['accent_color'] = $usp['accent_color'] ?? '';
+        }
+
+        // Merge with existing content to prevent data loss
+        $contentJson = $validator->validateSectionContent(array_merge($existingContent, $updates));
         $section->content_json = $contentJson;
         if (array_key_exists('enabled', $usp)) {
             $section->is_active = (bool) $usp['enabled'];

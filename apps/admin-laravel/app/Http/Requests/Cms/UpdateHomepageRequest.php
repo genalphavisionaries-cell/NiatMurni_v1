@@ -13,11 +13,13 @@ class UpdateHomepageRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
+        // Base rules - always applied regardless of publish status
+        $baseRules = [
             // Hero section
             'hero' => 'sometimes|array',
             'hero.title' => 'nullable|string|max:255',
             'hero.subtitle' => 'nullable|string|max:500',
+            'hero.enabled' => 'sometimes|boolean',
             'hero.buttons' => 'nullable|array|max:2',
             'hero.buttons.*.label' => 'nullable|string|max:100',
             'hero.buttons.*.url' => 'nullable|string|max:2048',
@@ -27,27 +29,30 @@ class UpdateHomepageRequest extends FormRequest
             'why_choose_us' => 'sometimes|array',
             'why_choose_us.title' => 'nullable|string|max:255',
             'why_choose_us.description' => 'nullable|string|max:1000',
+            'why_choose_us.enabled' => 'sometimes|boolean',
             'why_choose_us.points' => 'nullable|array|max:6',
-            'why_choose_us.points.*.title' => 'required_with:why_choose_us.points|string|max:200',
+            'why_choose_us.points.*.title' => 'nullable|string|max:200',
             'why_choose_us.points.*.description' => 'nullable|string|max:500',
             'why_choose_us.side_images_urls' => 'nullable|string|max:3000',
 
             // Testimonials section
             'testimonials' => 'sometimes|array',
+            'testimonials.enabled' => 'sometimes|boolean',
             'testimonials.google_rating_text' => 'nullable|string|max:500',
             'testimonials.google_button_label' => 'nullable|string|max:100',
             'testimonials.google_button_url' => 'nullable|string|max:2048',
             'testimonials.logos' => 'nullable|array|max:20',
-            'testimonials.logos.*.title' => 'required_with:testimonials.logos|string|max:100',
+            'testimonials.logos.*.title' => 'nullable|string|max:100',
             'testimonials.logos.*.image_url' => 'nullable|string|max:2048',
 
             // CTA/Promotions section
             'cta' => 'sometimes|array',
             'cta.title' => 'nullable|string|max:255',
             'cta.description' => 'nullable|string|max:1000',
+            'cta.enabled' => 'sometimes|boolean',
             'cta.banner_urls' => 'nullable|string|max:3000',
             'cta.cards' => 'nullable|array|max:10',
-            'cta.cards.*.title' => 'required_with:cta.cards|string|max:200',
+            'cta.cards.*.title' => 'nullable|string|max:200',
             'cta.cards.*.description' => 'nullable|string|max:500',
             'cta.cards.*.image_url' => 'nullable|string|max:2048',
             'cta.cards.*.url' => 'nullable|string|max:2048',
@@ -80,35 +85,48 @@ class UpdateHomepageRequest extends FormRequest
 
             // Legacy aliases
             'usp' => 'sometimes|array',
-            'trust' => 'sometimes|array',
+            'usp.enabled' => 'sometimes|boolean',
+            'trust' => 'sometimes|array', 
+            'trust.enabled' => 'sometimes|boolean',
             'promo' => 'sometimes|array',
+            'promo.enabled' => 'sometimes|boolean',
         ];
+
+        return $baseRules;
     }
 
     public function messages(): array
     {
         return [
-            // Max limits with helpful hints
-            'hero.buttons.max' => 'Hero section can have maximum 2 buttons. Consider using primary + secondary CTA.',
-            'why_choose_us.points.max' => 'Why Choose Us section can have maximum 6 points for optimal UX. Focus on key benefits.',
-            'testimonials.logos.max' => 'Testimonials section can have maximum 20 brand logos to maintain visual clarity.',
-            'cta.cards.max' => 'CTA section can have maximum 10 promotional cards. Consider grouping similar offers.',
-            'header.menu_items.max' => 'Header can have maximum 20 menu items. Consider using dropdown groups for better navigation.',
-            'footer.quick_links.max' => 'Footer can have maximum 20 quick links to avoid clutter.',
-            'footer.buttons.max' => 'Footer can have maximum 10 login buttons.',
-            'footer.legal_links.max' => 'Footer can have maximum 10 legal links.',
+            // Section limits with helpful guidance
+            'hero.buttons.max' => 'Hero section: Maximum 2 buttons recommended. Use primary action + secondary option for best conversion.',
+            'why_choose_us.points.max' => 'Why Choose Us: Maximum 6 benefit points for optimal user experience. Focus on your strongest selling points.',
+            'testimonials.logos.max' => 'Brand Logos: Maximum 20 logos to maintain visual clarity and loading performance.',
+            'cta.cards.max' => 'Promotional Cards: Maximum 10 cards recommended. Consider grouping similar offers or seasonal campaigns.',
+            'header.menu_items.max' => 'Header Navigation: Maximum 20 items. Consider dropdown menus or footer links for additional pages.',
+            'footer.quick_links.max' => 'Footer Links: Maximum 20 quick links to avoid overwhelming users.',
+            'footer.buttons.max' => 'Footer Buttons: Maximum 10 login/action buttons for clean layout.',
+            'footer.legal_links.max' => 'Legal Links: Maximum 10 legal pages (privacy, terms, etc.).',
             
-            // Field requirements
-            '*.title.required_with' => 'Title is required when section is provided.',
-            '*.points.*.title.required_with' => 'Point title is required.',
-            '*.cards.*.title.required_with' => 'Card title is required.',
-            '*.logos.*.title.required_with' => 'Brand name is required.',
-            '*.menu_items.*.label.required_with' => 'Menu item label is required.',
+            // Human-readable field requirements
+            'hero.title' => 'Hero Section: Main headline is required before publishing to attract visitors.',
+            'hero.subtitle' => 'Hero Section: Description helps explain your service to visitors.',
+            'why_choose_us.title' => 'Why Choose Us: Section title is required before publishing.',
+            'why_choose_us.points' => 'Why Choose Us: At least 1 benefit point is required to showcase your value.',
+            'cta.title' => 'Promotions: Section title is required before publishing.',
+            'cta.cards' => 'Promotions: At least 1 promotional offer is required to drive conversions.',
+            'testimonials.title' => 'Testimonials: Section title is required before publishing.',
             
-            // String length hints
-            '*.title.max' => 'Title should be concise (max :max characters) for better readability.',
-            '*.description.max' => 'Description should be focused (max :max characters) for better engagement.',
-            '*.label.max' => 'Label should be short (max :max characters) for UI clarity.',
+            // Content quality hints
+            '*.title.max' => 'Title: Keep it concise (:max characters max) for better readability and SEO.',
+            '*.description.max' => 'Description: Focus your message (:max characters max) for better user engagement.',
+            '*.label.max' => 'Label: Short and clear (:max characters max) works best for navigation.',
+            
+            // Content requirements
+            '*.points.*.title' => 'Benefit Point: Title is required to explain this advantage.',
+            '*.cards.*.title' => 'Promotional Card: Title is required to describe this offer.',
+            '*.logos.*.title' => 'Brand Logo: Company name is required for accessibility.',
+            '*.menu_items.*.label' => 'Menu Item: Label is required for navigation.',
         ];
     }
 
@@ -168,54 +186,81 @@ class UpdateHomepageRequest extends FormRequest
 
     private function validateCriticalSections($validator): void
     {
-        // If this is a partial update request, critical sections are only validated 
-        // if they're being explicitly set to disabled/empty
+        // Only enforce strict validation if sections are being published (enabled: true)
         
-        if ($this->has('hero') && $this->isEffectivelyDisabled('hero')) {
-            $validator->errors()->add('hero', 'Hero section is critical and cannot be disabled or emptied.');
+        if ($this->has('hero') && $this->isBeingPublished('hero')) {
+            $this->validateSectionForPublish('hero', $validator, [
+                'title' => 'Hero title is required before publishing',
+                'subtitle' => 'Hero subtitle or description is recommended for better engagement'
+            ]);
         }
 
-        if (($this->has('why_choose_us') || $this->has('usp')) && 
-            ($this->isEffectivelyDisabled('why_choose_us') || $this->isEffectivelyDisabled('usp'))) {
-            $validator->errors()->add('why_choose_us', 'Why Choose Us section is critical and cannot be disabled or emptied.');
+        if ($this->has('why_choose_us') || $this->has('usp')) {
+            $key = $this->has('why_choose_us') ? 'why_choose_us' : 'usp';
+            if ($this->isBeingPublished($key)) {
+                $this->validateSectionForPublish($key, $validator, [
+                    'title' => 'Why Choose Us title is required before publishing',
+                    'points' => 'At least 1 benefit point is required before publishing'
+                ]);
+            }
         }
 
-        if (($this->has('cta') || $this->has('promo')) && 
-            ($this->isEffectivelyDisabled('cta') || $this->isEffectivelyDisabled('promo'))) {
-            $validator->errors()->add('cta', 'CTA/Promotions section is critical and cannot be disabled or emptied.');
+        if ($this->has('cta') || $this->has('promo')) {
+            $key = $this->has('cta') ? 'cta' : 'promo';
+            if ($this->isBeingPublished($key)) {
+                $this->validateSectionForPublish($key, $validator, [
+                    'title' => 'Promotions title is required before publishing',
+                    'cards' => 'At least 1 promotional card is required before publishing'
+                ]);
+            }
         }
     }
 
-    private function isEffectivelyDisabled(string $sectionKey): bool
+    private function isBeingPublished(string $sectionKey): bool
     {
         $section = $this->input($sectionKey, []);
         
         if (!is_array($section)) {
-            return true; // Non-array means disabled
+            return false; // Can't publish non-array data
         }
 
-        // Check if section is explicitly disabled
-        if (isset($section['enabled']) && !$section['enabled']) {
-            return true;
-        }
+        // Section is being published if explicitly enabled
+        return isset($section['enabled']) && $section['enabled'] === true;
+    }
 
-        // Check if section has no meaningful content
-        $hasTitle = !empty(trim($section['title'] ?? ''));
-        $hasDescription = !empty(trim($section['description'] ?? ''));
+    private function validateSectionForPublish(string $sectionKey, $validator, array $requirements): void
+    {
+        $section = $this->input($sectionKey, []);
         
-        // For specific section types, check their critical content
+        if (!is_array($section)) {
+            return;
+        }
+
+        // Check title requirement
+        if (isset($requirements['title']) && empty(trim($section['title'] ?? ''))) {
+            $validator->errors()->add("$sectionKey.title", $requirements['title']);
+        }
+
+        // Check section-specific requirements
         if ($sectionKey === 'why_choose_us' || $sectionKey === 'usp') {
-            $hasPoints = is_array($section['points'] ?? null) && count($section['points']) > 0;
-            return !$hasTitle && !$hasDescription && !$hasPoints;
+            if (isset($requirements['points'])) {
+                $points = is_array($section['points'] ?? null) ? $section['points'] : [];
+                $validPoints = array_filter($points, fn($p) => !empty(trim($p['title'] ?? '')));
+                if (count($validPoints) === 0) {
+                    $validator->errors()->add("$sectionKey.points", $requirements['points']);
+                }
+            }
         }
 
         if ($sectionKey === 'cta' || $sectionKey === 'promo') {
-            $hasCards = is_array($section['cards'] ?? null) && count($section['cards']) > 0;
-            return !$hasTitle && !$hasDescription && !$hasCards;
+            if (isset($requirements['cards'])) {
+                $cards = is_array($section['cards'] ?? null) ? $section['cards'] : [];
+                $validCards = array_filter($cards, fn($c) => !empty(trim($c['title'] ?? '')));
+                if (count($validCards) === 0) {
+                    $validator->errors()->add("$sectionKey.cards", $requirements['cards']);
+                }
+            }
         }
-
-        // For hero, just check title
-        return !$hasTitle && !$hasDescription;
     }
 
     private function setNestedValue(array &$array, array $keys, $value): void

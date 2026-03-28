@@ -27,12 +27,12 @@ function validateHeroSection(section: PublicCmsHomepageSection | null | undefine
   const errors: ValidationError[] = [];
   
   if (!section) {
-    errors.push(createError("hero", "section", "CRITICAL: Hero section is required and cannot be deleted"));
+    errors.push(createError("hero", "section", "Hero section is missing - will use default content"));
     return errors;
   }
 
   if (!cmsString(section.title)) {
-    errors.push(createError("hero", "title", "Hero title is required", "warning"));
+    errors.push(createError("hero", "title", "Hero section needs a compelling headline to attract visitors", "warning"));
   }
 
   if (!cmsString(section.subtitle) && !cmsString(section.description)) {
@@ -53,12 +53,12 @@ function validateWhyChooseUsSection(sections: PublicCmsHomepageSection[]): Valid
   );
 
   if (!whySection) {
-    errors.push(createError("why_choose_us", "section", "CRITICAL: Why Choose Us section is required and cannot be deleted"));
+    errors.push(createError("why_choose_us", "section", "Why Choose Us section is missing - will use default benefits"));
     return errors;
   }
 
   if (!cmsString(whySection.title)) {
-    errors.push(createError("why_choose_us", "title", "Why choose us title is required", "warning"));
+    errors.push(createError("why_choose_us", "title", "Why Choose Us section needs a title to highlight your advantages", "warning"));
   }
 
   const itemsJson = whySection.extra_data?.items_json;
@@ -119,12 +119,12 @@ function validateCtaSection(sections: PublicCmsHomepageSection[]): ValidationErr
   );
 
   if (!ctaSection) {
-    errors.push(createError("cta", "section", "CRITICAL: CTA/Promotions section is required and cannot be deleted"));
+    errors.push(createError("cta", "section", "Promotions section is missing - will use default promotional content"));
     return errors;
   }
 
   if (!cmsString(ctaSection.title)) {
-    errors.push(createError("cta", "title", "CTA title is required", "warning"));
+    errors.push(createError("cta", "title", "Promotions section needs a title to drive customer action", "warning"));
   }
 
   const promosJson = ctaSection.extra_data?.promos_json;
@@ -264,6 +264,15 @@ export function validateCmsPayload(payload: PublicCmsPayload | null): Validation
       errors,
       payload: safePayload,
     };
+  }
+
+  // Check version compatibility
+  const payloadVersion = payload.version || "0.9"; // Default for legacy payloads
+  if (payloadVersion !== "1.0") {
+    if (process.env.NODE_ENV === "development") {
+      console.warn(`CMS VALIDATION: Payload version ${payloadVersion} may not be fully compatible. Expected: 1.0`);
+    }
+    errors.push(createError("payload", "version", `Payload version ${payloadVersion} is not current`, "warning"));
   }
 
   // Validate core structure
