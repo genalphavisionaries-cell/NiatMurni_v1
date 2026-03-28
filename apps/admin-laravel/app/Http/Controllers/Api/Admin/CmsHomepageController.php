@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Cms\UpdateHomepageRequest;
 use App\Models\CmsItem;
 use App\Models\CmsPage;
 use App\Models\CmsSection;
 use App\Services\CmsService;
+use App\Services\CmsValidationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -41,7 +43,7 @@ class CmsHomepageController extends Controller
         ]);
     }
 
-    public function update(Request $request): JsonResponse
+    public function update(UpdateHomepageRequest $request): JsonResponse
     {
         $page = CmsPage::query()->firstOrCreate(
             ['slug' => 'homepage'],
@@ -240,36 +242,41 @@ class CmsHomepageController extends Controller
 
     private function persistUsp(CmsPage $page, array $usp): void
     {
+        $validator = app(CmsValidationService::class);
+        
         $section = $this->section($page, 'why_choose_us');
         $lines = $this->splitLines($usp['side_images_urls'] ?? '');
         $alts = $this->zipAlts($lines, $usp['side_images_alts'] ?? '');
-        $section->content_json = [
+        
+        $contentJson = $validator->validateSectionContent([
             'title' => $usp['title'] ?? '',
             'description' => $usp['description'] ?? '',
             'side_images_urls' => $lines,
             'side_images_alts' => $alts,
             'accent_color' => $usp['accent_color'] ?? '',
-        ];
+        ]);
+        
+        $section->content_json = $contentJson;
         if (array_key_exists('enabled', $usp)) {
             $section->is_active = (bool) $usp['enabled'];
         }
         $section->save();
 
         $section->items()->where('type', 'usp')->delete();
-        foreach ($usp['points'] ?? [] as $i => $row) {
-            $extra = [
-                'background_color' => $row['background_color'] ?? '',
-                'icon_alt' => $row['icon_alt'] ?? '',
-            ];
+        $validatedPoints = $validator->validateUspItems($usp['points'] ?? []);
+        foreach ($validatedPoints as $i => $point) {
             CmsItem::query()->create([
                 'section_id' => $section->id,
                 'type' => 'usp',
-                'title' => $row['title'] ?? '',
-                'description' => $row['description'] ?? null,
-                'icon_url' => $row['icon'] ?? null,
+                'title' => $point['title'],
+                'description' => $point['description'] ?: null,
+                'icon_url' => null, // Not used in validation
                 'sort_order' => $i,
                 'is_active' => true,
-                'extra_json' => $extra,
+                'extra_json' => [
+                    'background_color' => $point['background_color'],
+                    'icon_alt' => $point['icon_alt'],
+                ],
             ]);
         }
     }
@@ -368,15 +375,17 @@ class CmsHomepageController extends Controller
         $section->save();
 
         $section->items()->where('type', 'logo')->delete();
-        foreach ($trust['logos'] ?? [] as $i => $row) {
+        $validator = app(CmsValidationService::class);
+        $validatedLogos = $validator->validateBrandLogos($trust['logos'] ?? []);
+        foreach ($validatedLogos as $i => $logo) {
             CmsItem::query()->create([
                 'section_id' => $section->id,
                 'type' => 'logo',
-                'title' => $row['title'] ?? '',
-                'image_url' => $row['image_url'] ?? null,
+                'title' => $logo['title'],
+                'image_url' => $logo['image_url'],
                 'sort_order' => $i,
                 'is_active' => true,
-                'extra_json' => ['image_alt' => $row['image_alt'] ?? ''],
+                'extra_json' => ['image_alt' => ''],
             ]);
         }
     }
@@ -425,37 +434,43 @@ class CmsHomepageController extends Controller
 
     private function persistPromo(CmsPage $page, array $promo): void
     {
+        $validator = app(CmsValidationService::class);
+        
         $section = $this->section($page, 'cta');
         $lines = $this->splitLines($promo['banner_urls'] ?? '');
         $urls = array_slice($lines, 0, 3);
         $alts = array_slice($this->zipAlts($urls, $promo['banner_alts'] ?? ''), 0, count($urls));
-        $section->content_json = [
+        
+        $contentJson = $validator->validateSectionContent([
             'title' => $promo['title'] ?? '',
             'description' => $promo['description'] ?? '',
             'banner_urls' => $urls,
             'banner_alts' => $alts,
             'accent_color' => $promo['accent_color'] ?? '',
-        ];
+        ]);
+        
+        $section->content_json = $contentJson;
         if (array_key_exists('enabled', $promo)) {
             $section->is_active = (bool) $promo['enabled'];
         }
         $section->save();
 
         $section->items()->where('type', 'promo_card')->delete();
-        foreach ($promo['cards'] ?? [] as $i => $row) {
+        $validatedCards = $validator->validatePromoCards($promo['cards'] ?? []);
+        foreach ($validatedCards as $i => $card) {
             CmsItem::query()->create([
                 'section_id' => $section->id,
                 'type' => 'promo_card',
-                'title' => $row['title'] ?? '',
-                'description' => $row['description'] ?? null,
-                'image_url' => $row['image_url'] ?? null,
-                'link_url' => $row['url'] ?? null,
+                'title' => $card['title'],
+                'description' => $card['description'] ?: null,
+                'image_url' => $card['image_url'],
+                'link_url' => $card['url'],
                 'sort_order' => $i,
                 'is_active' => true,
                 'extra_json' => [
-                    'button_label' => $row['button_label'] ?? '',
-                    'card_color' => $row['card_color'] ?? '',
-                    'image_alt' => $row['image_alt'] ?? '',
+                    'button_label' => $card['button_label'],
+                    'card_color' => $card['card_color'],
+                    'image_alt' => $card['image_alt'],
                 ],
             ]);
         }
@@ -512,17 +527,19 @@ class CmsHomepageController extends Controller
         $section->save();
 
         $section->items()->where('type', 'menu_item')->delete();
-        foreach ($header['menu_items'] ?? [] as $i => $row) {
+        $validator = app(CmsValidationService::class);
+        $validatedMenuItems = $validator->validateMenuItems($header['menu_items'] ?? []);
+        foreach ($validatedMenuItems as $i => $item) {
             CmsItem::query()->create([
                 'section_id' => $section->id,
                 'type' => 'menu_item',
-                'title' => $row['label'] ?? '',
-                'link_url' => $row['url'] ?? null,
+                'title' => $item['label'],
+                'link_url' => $item['url'],
                 'sort_order' => $i,
                 'is_active' => true,
                 'extra_json' => [
-                    'nav_type' => $row['type'] ?? 'page',
-                    'has_children' => (bool) ($row['has_children'] ?? false),
+                    'nav_type' => $item['type'],
+                    'has_children' => $item['has_children'],
                 ],
             ]);
         }
@@ -604,13 +621,16 @@ class CmsHomepageController extends Controller
         $section->save();
 
         $section->items()->whereIn('type', ['quick_link', 'footer_button', 'legal_link'])->delete();
-        foreach ($footer['quick_links'] ?? [] as $i => $row) {
+        $quickLinks = is_array($footer['quick_links'] ?? null) ? $footer['quick_links'] : [];
+        foreach ($quickLinks as $i => $row) {
             CmsItem::query()->create(['section_id' => $section->id, 'type' => 'quick_link', 'title' => $row['label'] ?? '', 'link_url' => $row['url'] ?? null, 'sort_order' => $i, 'is_active' => true]);
         }
-        foreach ($footer['buttons'] ?? [] as $i => $row) {
+        $buttons = is_array($footer['buttons'] ?? null) ? $footer['buttons'] : [];
+        foreach ($buttons as $i => $row) {
             CmsItem::query()->create(['section_id' => $section->id, 'type' => 'footer_button', 'title' => $row['label'] ?? '', 'link_url' => $row['url'] ?? null, 'sort_order' => $i, 'is_active' => true]);
         }
-        foreach ($footer['legal_links'] ?? [] as $i => $row) {
+        $legalLinks = is_array($footer['legal_links'] ?? null) ? $footer['legal_links'] : [];
+        foreach ($legalLinks as $i => $row) {
             CmsItem::query()->create(['section_id' => $section->id, 'type' => 'legal_link', 'title' => $row['label'] ?? '', 'link_url' => $row['url'] ?? null, 'sort_order' => $i, 'is_active' => true]);
         }
     }
@@ -651,7 +671,8 @@ class CmsHomepageController extends Controller
         $section->save();
 
         $section->items()->where('type', 'quick_link')->delete();
-        foreach ($floating['items'] ?? [] as $i => $row) {
+        $items = is_array($floating['items'] ?? null) ? $floating['items'] : [];
+        foreach ($items as $i => $row) {
             CmsItem::query()->create([
                 'section_id' => $section->id,
                 'type' => 'quick_link',
