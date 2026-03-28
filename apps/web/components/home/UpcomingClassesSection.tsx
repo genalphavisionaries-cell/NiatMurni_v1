@@ -185,13 +185,10 @@ export default function UpcomingClassesSection({
     return apiClasses.map(toHeroItem).slice(0, MAX_CLASSES);
   }, [apiClasses]);
   const isRecentCompletedFallback = displayList.length > 0 && displayList.every((x) => x.recentPast);
-  const classesTitle = safeTrim(section?.title ?? "") || "Kelas Terkini";
-  const defaultClassesDescription = isRecentCompletedFallback
-    ? "Tiada sesi akan datang buat masa ini. Paparan ini menunjukkan 6 sesi terkini yang telah selesai."
-    : "Daftar untuk sesi seterusnya. Online dan bersemuka tersedia.";
-  const classesDescription = safeTrim(section?.description ?? "") || defaultClassesDescription;
-  const classesCtaLabel = safeTrim(section?.button_primary_label ?? "") || "Pilih Kelas Lain";
-  const classesCtaUrl = normalizeHref(section?.button_primary_url, "/#classes");
+  const classesTitle = safeTrim(section?.title ?? "");
+  const classesDescription = safeTrim(section?.description ?? "");
+  const classesCtaLabel = safeTrim(section?.button_primary_label ?? "");
+  const classesCtaUrl = normalizeHref(section?.button_primary_url, "#");
 
   const firstRecommendedId = displayList[0]?.id;
 
@@ -232,12 +229,16 @@ export default function UpcomingClassesSection({
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-[#0F172A] sm:text-4xl">
-            {classesTitle}
-          </h2>
-          <p className="mx-auto mt-3 max-w-2xl text-[#64748B]">
-            {classesDescription}
-          </p>
+          {classesTitle ? (
+            <h2 className="text-3xl font-bold tracking-tight text-[#0F172A] sm:text-4xl">
+              {classesTitle}
+            </h2>
+          ) : null}
+          {classesDescription ? (
+            <p className="mx-auto mt-3 max-w-2xl text-[#64748B]">
+              {classesDescription}
+            </p>
+          ) : null}
         </div>
 
         <div className="mt-10">
@@ -342,7 +343,8 @@ export default function UpcomingClassesSection({
                 </div>
               ) : null}
 
-              {/* Secondary CTA */}
+              {/* Secondary CTA — CMS label + URL only */}
+              {classesCtaLabel ? (
               <div className="mt-10 flex flex-col items-center justify-center gap-3 md:flex-row">
                 <Link
                   href={classesCtaUrl}
@@ -360,6 +362,7 @@ export default function UpcomingClassesSection({
                     : "* Daftar akan dibawa ke halaman booking."}
                 </div>
               </div>
+              ) : null}
 
             </>
           )}

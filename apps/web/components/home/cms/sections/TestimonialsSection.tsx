@@ -20,16 +20,24 @@ type Testimonial = {
 type BrandItem = {
   company_name: string;
   logo?: string | null;
+  image_alt?: string | null;
 };
 
-const GOOGLE_REVIEW_URL = "https://www.google.com/search?q=Niat+Murni+Academy+reviews";
 const REVIEW_TRUNCATE_LENGTH = 120;
 
-function Stars({ rating, size = "md" }: { rating: number; size?: "md" | "lg" }) {
+function Stars({
+  rating,
+  size = "md",
+  starColor,
+}: {
+  rating: number;
+  size?: "md" | "lg";
+  starColor: string;
+}) {
   const r = Math.min(5, Math.max(0, Math.round(rating)));
-  const cls = size === "lg" ? "text-xl text-[#EAB308]" : "text-sm text-[#EAB308]";
+  const cls = size === "lg" ? "text-xl" : "text-sm";
   return (
-    <span className={cls} aria-hidden>
+    <span className={cls} style={{ color: starColor }} aria-hidden>
       {"★".repeat(r)}{"☆".repeat(5 - r)}
     </span>
   );
@@ -68,7 +76,8 @@ function normalizeBrands(raw: unknown): BrandItem[] {
       const company_name = safeStringTrim(o.company_name ?? o.title ?? o.name);
       if (!company_name) continue;
       const logo = safeStringTrim(o.logo ?? o.image_url) || null;
-      out.push({ company_name, logo });
+      const image_alt = safeStringTrim(o.image_alt) || null;
+      out.push({ company_name, logo, image_alt });
     }
   }
   return out;
@@ -82,10 +91,10 @@ export default function TestimonialsSection({
   theme: PublicCmsTheme;
 }) {
   const colors = getSectionColor(section, theme);
-  const title = cmsString(section.title) ?? "Kepercayaan & Ulasan Peserta";
+  const title = cmsString(section.title) ?? "";
   const subtitle = cmsString(section.subtitle) ?? cmsString(section.description) ?? "";
-  const googleReviewLabel = cmsString(section.button_primary_label) ?? "Write a Review";
-  const googleReviewUrl = safeHref(section.button_primary_url) ?? GOOGLE_REVIEW_URL;
+  const googleReviewLabel = cmsString(section.button_primary_label);
+  const googleReviewUrl = safeHref(section.button_primary_url);
   const testimonialRef = useRef<HTMLDivElement>(null);
 
   const items =
@@ -97,25 +106,13 @@ export default function TestimonialsSection({
     extraString(section.extra_data, "review_summary_json")
   );
   const summaryRating =
-    typeof summaryJson?.rating === "number" && summaryJson.rating > 0
-      ? summaryJson.rating
-      : 4.8;
+    typeof summaryJson?.rating === "number" && summaryJson.rating > 0 ? summaryJson.rating : null;
   const summaryCount =
-    typeof summaryJson?.count === "number" && summaryJson.count > 0
-      ? summaryJson.count
-      : 2500;
+    typeof summaryJson?.count === "number" && summaryJson.count > 0 ? summaryJson.count : null;
+  const hasSummary = summaryRating !== null || summaryCount !== null;
 
   const brandsParsed = parseJsonSafe<unknown[]>(extraString(section.extra_data, "brands_json")) ?? [];
-  const brands = normalizeBrands(brandsParsed);
-  const brandItems = brands.length
-    ? brands
-    : [
-        { company_name: "Google Reviews", logo: null },
-        { company_name: "KKM", logo: null },
-        { company_name: "Dipercayai", logo: null },
-        { company_name: "Kualiti", logo: null },
-        { company_name: "Respons Pantas", logo: null },
-      ];
+  const brandItems = normalizeBrands(brandsParsed);
 
   const scrollTestimonials = () => {
     if (testimonialRef.current) {
@@ -123,7 +120,17 @@ export default function TestimonialsSection({
     }
   };
 
-  if (!cmsString(title) && !subtitle && !visible.length && !brandItems.length) return null;
+  const showReviewCta = Boolean(googleReviewLabel && googleReviewUrl);
+  if (
+    !cmsString(title) &&
+    !subtitle &&
+    !visible.length &&
+    !brandItems.length &&
+    !hasSummary &&
+    !showReviewCta
+  ) {
+    return null;
+  }
 
   return (
     <section
@@ -136,13 +143,15 @@ export default function TestimonialsSection({
           ["--section-accent" as string]: colors.accent,
         } as CSSProperties
       }
-      aria-labelledby="social-proof-heading"
+      aria-labelledby={title ? "social-proof-heading" : undefined}
     >
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <header className="text-center">
-          <div id="social-proof-heading" className="text-2xl font-bold text-[#0F172A] sm:text-3xl" role="heading" aria-level={2}>
-            <SafeCmsHtml html={title} className="max-w-none [&_p]:m-0" />
-          </div>
+          {title ? (
+            <div id="social-proof-heading" className="text-2xl font-bold text-[#0F172A] sm:text-3xl" role="heading" aria-level={2}>
+              <SafeCmsHtml html={title} className="max-w-none [&_p]:m-0" />
+            </div>
+          ) : null}
           {subtitle ? (
             <div className="mx-auto mt-3 max-w-2xl text-[#64748B] [&_a]:text-[color:var(--section-accent)] [&_a]:underline">
               <SafeCmsHtml html={subtitle} className="max-w-none prose-p:my-2" />
@@ -163,7 +172,7 @@ export default function TestimonialsSection({
                 {item.logo ? (
                   <img
                     src={item.logo}
-                    alt={item.company_name}
+                    alt={cmsPlainTextForAttribute(item.image_alt) || item.company_name}
                     className="max-h-12 w-auto max-w-[90%] object-contain opacity-80 transition-opacity hover:opacity-100"
                     loading="lazy"
                   />
@@ -177,32 +186,44 @@ export default function TestimonialsSection({
           </div>
         </div>
 
-        <div className="mt-10 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#E5E7EB] bg-[#FAFAFA] px-6 py-5">
-          <div className="flex flex-wrap items-center gap-6">
-            <div className="flex items-center gap-3">
-              <GoogleGMark className="h-8 w-8" />
-              <span className="text-base font-semibold text-[#0F172A]">Google Rating</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-2xl font-bold text-[#0F172A]">{summaryRating.toFixed(1)}</span>
-              <Stars rating={summaryRating} size="lg" />
-              <span className="text-sm text-[#64748B]">{summaryCount.toLocaleString("en-US")} reviews</span>
-            </div>
+        {hasSummary || showReviewCta ? (
+          <div className="mt-10 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#E5E7EB] bg-[#FAFAFA] px-6 py-5">
+            {hasSummary ? (
+              <div className="flex flex-wrap items-center gap-6">
+                <div className="flex items-center gap-3">
+                  <GoogleGMark className="h-8 w-8" />
+                  <span className="text-base font-semibold text-[#0F172A]">Google Rating</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  {summaryRating !== null ? (
+                    <span className="text-2xl font-bold text-[#0F172A]">{summaryRating.toFixed(1)}</span>
+                  ) : null}
+                  {summaryRating !== null ? (
+                    <Stars rating={summaryRating} size="lg" starColor={colors.accent} />
+                  ) : null}
+                  {summaryCount !== null ? (
+                    <span className="text-sm text-[#64748B]">{summaryCount.toLocaleString("en-US")} reviews</span>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
+            {showReviewCta ? (
+              <a
+                href={googleReviewUrl!}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors hover:brightness-95 focus:outline focus:outline-2 focus:outline-offset-2"
+                style={{
+                  backgroundColor: colors.buttonBg,
+                  color: colors.buttonText,
+                  outlineColor: colors.accent,
+                }}
+              >
+                {googleReviewLabel}
+              </a>
+            ) : null}
           </div>
-          <a
-            href={googleReviewUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="shrink-0 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors hover:brightness-95 focus:outline focus:outline-2 focus:outline-offset-2"
-            style={{
-              backgroundColor: colors.buttonBg,
-              color: colors.buttonText,
-              outlineColor: colors.accent,
-            }}
-          >
-            {googleReviewLabel}
-          </a>
-        </div>
+        ) : null}
 
         {visible.length ? (
           <div className="relative mt-8">
@@ -215,7 +236,8 @@ export default function TestimonialsSection({
                 <TestimonialCard
                   key={`${cmsPlainTextForAttribute(t.name) || t.name}-${idx}`}
                   testimonial={t}
-                  fallbackRating={summaryRating}
+                  fallbackRating={summaryRating ?? 0}
+                  summaryPresent={summaryRating !== null}
                   accentColor={colors.accent}
                 />
               ))}
@@ -242,10 +264,12 @@ export default function TestimonialsSection({
 function TestimonialCard({
   testimonial: t,
   fallbackRating,
+  summaryPresent,
   accentColor,
 }: {
   testimonial: Testimonial;
   fallbackRating: number;
+  summaryPresent: boolean;
   accentColor: string;
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -254,7 +278,12 @@ function TestimonialCard({
   const displayText = expanded || !needsTruncate
     ? fullReview
     : fullReview.slice(0, REVIEW_TRUNCATE_LENGTH) + "…";
-  const rating = typeof t.rating === "number" ? t.rating : fallbackRating;
+  const rating =
+    typeof t.rating === "number"
+      ? t.rating
+      : summaryPresent && fallbackRating > 0
+        ? fallbackRating
+        : 0;
   const name = cmsPlainTextForAttribute(t.name) || t.name;
 
   return (
@@ -269,7 +298,7 @@ function TestimonialCard({
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-[#0F172A]">{name}</p>
           <div className="mt-1 flex items-center gap-2">
-            <Stars rating={rating} />
+            {rating > 0 ? <Stars rating={rating} starColor={accentColor} /> : null}
             {t.date ? <span className="text-xs text-[#64748B]">{t.date}</span> : null}
           </div>
         </div>

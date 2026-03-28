@@ -641,9 +641,9 @@ class CmsHomepageEditor extends Page implements HasForms
                     $sectionsProcessed[] = 'hero';
                 }
                 
-                if (isset($data['why_choose_us']) || isset($data['usp'])) {
-                    $uspData = $data['why_choose_us'] ?? $data['usp'] ?? [];
-                    \Log::info('CMS SAVE: Persisting USP', ['usp_data' => $uspData]);
+                if (isset($data['why_choose_us'])) {
+                    $uspData = $data['why_choose_us'] ?? [];
+                    \Log::info('CMS SAVE: Persisting why_choose_us', ['why_choose_us' => $uspData]);
                     $this->persistUsp($uspData);
                     $sectionsProcessed[] = 'why_choose_us';
                 }
@@ -654,16 +654,16 @@ class CmsHomepageEditor extends Page implements HasForms
                     $sectionsProcessed[] = 'classes';
                 }
                 
-                if (isset($data['testimonials']) || isset($data['trust'])) {
-                    $trustData = $data['testimonials'] ?? $data['trust'] ?? [];
-                    \Log::info('CMS SAVE: Persisting trust', ['trust_data' => $trustData]);
+                if (isset($data['testimonials'])) {
+                    $trustData = $data['testimonials'] ?? [];
+                    \Log::info('CMS SAVE: Persisting testimonials', ['testimonials' => $trustData]);
                     $this->persistTrust($trustData);
                     $sectionsProcessed[] = 'testimonials';
                 }
                 
-                if (isset($data['cta']) || isset($data['promo'])) {
-                    $ctaData = $data['cta'] ?? $data['promo'] ?? [];
-                    \Log::info('CMS SAVE: Persisting CTA', ['cta_data' => $ctaData]);
+                if (isset($data['cta'])) {
+                    $ctaData = $data['cta'] ?? [];
+                    \Log::info('CMS SAVE: Persisting cta', ['cta' => $ctaData]);
                     $this->persistPromo($ctaData);
                     $sectionsProcessed[] = 'cta';
                 }

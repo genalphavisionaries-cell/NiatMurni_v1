@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, type ReactNode } from "react";
 import Link from "next/link";
-import type { NavLink } from "@/lib/homepage-settings";
+import type { NavLink } from "@/lib/site-nav";
 import type { PublicCmsNavItem } from "@/lib/public-cms";
 
 type HeroHeaderProps = {
@@ -10,7 +10,7 @@ type HeroHeaderProps = {
   logoUrl?: string | null;
   /** CMS structured nav (preferred when non-empty) */
   navTree?: PublicCmsNavItem[] | null;
-  /** Legacy flat nav from homepage-settings */
+  /** Flat nav when CMS header tree is empty */
   fallbackNav?: NavLink[];
   primaryCta?: { label: string; url: string };
 };

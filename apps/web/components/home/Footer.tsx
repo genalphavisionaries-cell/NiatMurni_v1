@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import type { HomepageSettings, NavLink } from "@/lib/homepage-settings";
+import type { HomepageSettings } from "@/lib/homepage-settings";
+import type { NavLink } from "@/lib/site-nav";
 import type { PublicCmsContactBlock, PublicCmsFooterBlock, PublicCmsSocialBlock } from "@/lib/public-cms";
 import { cmsString } from "@/lib/public-cms";
 

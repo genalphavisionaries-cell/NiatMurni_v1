@@ -146,6 +146,7 @@ class CmsValidationService
             $title = is_string($logo['title'] ?? null) ? trim($logo['title']) : '';
             $imageRaw = $logo['image_url'] ?? null;
             $imageStr = is_string($imageRaw) ? trim($imageRaw) : '';
+            $imageAlt = is_string($logo['image_alt'] ?? null) ? trim((string) $logo['image_alt']) : '';
             if ($title === '' && $imageStr === '') {
                 continue;
             }
@@ -153,6 +154,7 @@ class CmsValidationService
             $validated[] = [
                 'title' => $title,
                 'image_url' => $this->validateUrl($imageStr !== '' ? $imageStr : null),
+                'image_alt' => $imageAlt,
             ];
 
             // Limit to 20 logos maximum

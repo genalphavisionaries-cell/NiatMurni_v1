@@ -1,22 +1,20 @@
-import type { NavLink, HomepageSettings } from "@/lib/homepage-settings";
+import type { NavLink } from "@/lib/site-nav";
 import type { PublicCmsNavItem, PublicCmsPayload } from "@/lib/public-cms";
 import { cmsString } from "@/lib/public-cms";
 import { generateCmsThemeVars } from "@/lib/cms-theme-vars";
 
-export type MergedHomePageContext = {
-  settings: HomepageSettings;
+export type { NavLink } from "@/lib/site-nav";
+
+/** Public chrome derived only from `GET /api/public/cms` (no legacy merge). */
+export type PublicSiteCmsContext = {
   cms: PublicCmsPayload | null;
-  /** Display site name */
   siteName: string;
   logoUrl: string | null;
-  /** Header nav: CMS tree if any active header items, else null (use settings.headerNav) */
   headerNavTree: PublicCmsNavItem[] | null;
-  /** When CMS header empty, use this flat list from settings */
+  /** Empty when CMS header has items; no legacy flat nav. */
   fallbackHeaderNav: NavLink[];
   primaryCta: { label: string; url: string };
-  /** CSS variables for theme (only keys with values) */
   themeVars: Record<string, string>;
-  /** Footer columns from CMS footer nav, or null to keep settings-driven columns only */
   cmsFooterColumns: { heading: string; links: NavLink[] }[] | null;
 };
 
@@ -63,14 +61,9 @@ export function cmsFlatNavToLinks(items: PublicCmsNavItem[] | undefined): NavLin
   return items.map((n) => navItemToLink(n)).filter((l): l is NavLink => l !== null);
 }
 
-export function mergePublicCmsForHome(
-  settings: HomepageSettings,
-  cms: PublicCmsPayload | null
-): MergedHomePageContext {
-  const siteName =
-    cmsString(cms?.site.site_name) ?? settings.siteName;
-  const logoUrl =
-    cmsString(cms?.site.logo_url) ?? settings.logoUrl;
+export function buildPublicSiteContext(cms: PublicCmsPayload | null): PublicSiteCmsContext {
+  const siteName = cmsString(cms?.site.site_name) ?? "";
+  const logoUrl = cmsString(cms?.site.logo_url);
 
   const headerRoots = cms?.navigation?.header?.filter(Boolean) ?? [];
   const hasCmsHeader = headerRoots.some(
@@ -93,12 +86,11 @@ export function mergePublicCmsForHome(
   const cmsFooterColumns = footerCols.length ? footerCols : null;
 
   return {
-    settings,
     cms,
     siteName,
     logoUrl,
     headerNavTree: hasCmsHeader ? headerRoots : null,
-    fallbackHeaderNav: settings.headerNav,
+    fallbackHeaderNav: [],
     primaryCta,
     themeVars,
     cmsFooterColumns,

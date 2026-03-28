@@ -101,7 +101,7 @@ class PublicCmsPayloadService
         if ($hero !== null) {
             $homepageSections[] = $hero;
         }
-        $why = $this->mapWhyChooseSection($this->pickHomepageSection($h, 'why_choose_us', 'usp'));
+        $why = $this->mapWhyChooseSection($this->pickCanonicalHomepageBlock($h, 'why_choose_us'));
         if ($why !== null) {
             $homepageSections[] = $why;
         }
@@ -109,14 +109,24 @@ class PublicCmsPayloadService
         if ($classesSection !== null) {
             $homepageSections[] = $classesSection;
         }
-        $testimonials = $this->mapTestimonialsSection($this->pickHomepageSection($h, 'testimonials', 'trust'));
+        $testimonials = $this->mapTestimonialsSection($this->pickCanonicalHomepageBlock($h, 'testimonials'));
         if ($testimonials !== null) {
             $homepageSections[] = $testimonials;
         }
-        $ctaSection = $this->mapCtaSection($this->pickHomepageSection($h, 'cta', 'promo'));
+        $ctaSection = $this->mapCtaSection($this->pickCanonicalHomepageBlock($h, 'cta'));
         if ($ctaSection !== null) {
             $homepageSections[] = $ctaSection;
         }
+
+        $allowedHomepageKeys = ['hero', 'why_choose_us', 'testimonials', 'cta', 'classes', 'contact'];
+        $homepageSections = array_values(array_filter(
+            $homepageSections,
+            static function (array $row) use ($allowedHomepageKeys): bool {
+                $k = isset($row['section_key']) ? (string) $row['section_key'] : '';
+
+                return in_array($k, $allowedHomepageKeys, true);
+            }
+        ));
 
         $floating = $this->mapFloatingMenu(is_array($h['floating_menu'] ?? null) ? $h['floating_menu'] : []);
 
@@ -303,12 +313,13 @@ class PublicCmsPayloadService
             'button_secondary_url' => ($b1['url'] ?? '') !== '' ? (string) $b1['url'] : null,
             'accent_color' => $colors['accent_color'],
             'button_color' => $colors['button_color'],
+            'button_text_color' => $colors['button_text_color'],
             'extra_data' => $extra,
         ];
     }
 
     /**
-     * Homepage section why_choose_us (legacy DB/cache key "usp" handled in {@see pickHomepageSection()}).
+     * Homepage section why_choose_us (canonical key only).
      *
      * @param  array<string, mixed>  $usp
      * @return array<string, mixed>|null
@@ -332,6 +343,7 @@ class PublicCmsPayloadService
                     'description' => (string) ($row['description'] ?? ''),
                     'icon' => (string) ($row['icon_url'] ?? ''),
                     'background_color' => (string) ($extra['background_color'] ?? ''),
+                    'icon_alt' => (string) ($extra['icon_alt'] ?? ''),
                 ];
             }
         }
@@ -370,6 +382,7 @@ class PublicCmsPayloadService
             'button_secondary_url' => null,
             'accent_color' => $colors['accent_color'],
             'button_color' => $colors['button_color'],
+            'button_text_color' => $colors['button_text_color'],
             'extra_data' => $extra !== [] ? $extra : null,
         ];
     }
@@ -394,25 +407,30 @@ class PublicCmsPayloadService
                 'name' => (string) ($row['name'] ?? ''),
                 'review' => (string) ($row['content'] ?? ''),
                 'rating' => (int) ($row['rating'] ?? 5),
-                'date' => '',
+                'date' => is_string($row['date'] ?? null) ? trim($row['date']) : '',
             ];
         }
 
         $logos = $trust['items']['logo'] ?? [];
         $brands = [];
         if (is_array($logos)) {
-        foreach ($logos as $row) {
-            if (! is_array($row)) {
-                continue;
-            }
-            $t = is_string($row['title'] ?? null) ? trim($row['title']) : '';
-            if ($t !== '') {
+            foreach ($logos as $row) {
+                if (! is_array($row)) {
+                    continue;
+                }
+                $t = is_string($row['title'] ?? null) ? trim($row['title']) : '';
+                $logoUrl = is_string($row['image_url'] ?? null) ? trim($row['image_url']) : '';
+                $extraRow = is_array($row['extra'] ?? null) ? $row['extra'] : [];
+                $logoAlt = is_string($extraRow['image_alt'] ?? null) ? trim((string) $extraRow['image_alt']) : '';
+                if ($t === '' && $logoUrl === '') {
+                    continue;
+                }
                 $brands[] = [
                     'company_name' => $t,
-                    'logo' => is_string($row['image_url'] ?? null) ? (trim($row['image_url']) ?: null) : null,
+                    'logo' => $logoUrl !== '' ? $logoUrl : null,
+                    'image_alt' => $logoAlt,
                 ];
             }
-        }
         }
 
         $content = is_array($trust['content'] ?? null) ? $trust['content'] : [];
@@ -434,11 +452,14 @@ class PublicCmsPayloadService
         if ($brands !== []) {
             $extra['brands_json'] = json_encode($brands);
         }
-        $extra['review_summary_json'] = json_encode(['rating' => 4.9, 'count' => 1300]);
+        $summary = $content['review_summary'] ?? null;
+        if (is_array($summary) && $summary !== []) {
+            $extra['review_summary_json'] = json_encode($summary);
+        }
 
         $colors = $this->sectionColorFields($content);
 
-        $displayTitle = ! $this->isEffectivelyEmpty($heading) ? $heading : 'Apa Kata Peserta Kami';
+        $displayTitle = ! $this->isEffectivelyEmpty($heading) ? $heading : null;
         $displaySubtitle = (! $this->isEffectivelyEmpty($sectionHeading) && ! $this->isEffectivelyEmpty($googleBlurb) && 
             (is_string($sectionHeading) ? trim($sectionHeading) : '') !== (is_string($googleBlurb) ? trim($googleBlurb) : ''))
             ? $googleBlurb
@@ -458,6 +479,7 @@ class PublicCmsPayloadService
             'button_secondary_url' => null,
             'accent_color' => $colors['accent_color'],
             'button_color' => $colors['button_color'],
+            'button_text_color' => $colors['button_text_color'],
             'extra_data' => $extra,
         ];
     }
@@ -501,12 +523,13 @@ class PublicCmsPayloadService
             'button_secondary_url' => null,
             'accent_color' => $colors['accent_color'],
             'button_color' => $colors['button_color'],
+            'button_text_color' => $colors['button_text_color'],
             'extra_data' => null,
         ];
     }
 
     /**
-     * Homepage section cta / promotions block ({@see PromotionsSection}). Legacy key "promo" in {@see pickHomepageSection()}.
+     * Homepage section cta / promotions block ({@see PromotionsSection}); canonical key "cta" only.
      *
      * @param  array<string, mixed>  $promo
      * @return array<string, mixed>|null
@@ -536,24 +559,28 @@ class PublicCmsPayloadService
                     'description' => (string) ($row['description'] ?? ''),
                     'button_label' => (string) ($extra['button_label'] ?? ''),
                     'button_url' => (string) ($row['link_url'] ?? ''),
+                    'card_color' => (string) ($extra['card_color'] ?? ''),
+                    'image_alt' => (string) ($extra['image_alt'] ?? ''),
                 ];
             }
         }
 
-        if ($this->isEffectivelyEmpty($sectionTitle) && $this->isEffectivelyEmpty($sectionDesc) && $promos === []) {
+        if ($this->isEffectivelyEmpty($sectionTitle) && $this->isEffectivelyEmpty($sectionDesc) && $promos === [] && $bannerUrls === []) {
             return null;
         }
 
-        $ribbon = 'Promosi Terhad';
+        $bannerStripText = '';
         if (! $this->isEffectivelyEmpty($sectionDesc)) {
-            $d = is_string($sectionDesc) ? trim($sectionDesc) : '';
-            $ribbon = mb_strlen($d) > 80 ? mb_substr($d, 0, 77).'...' : $d;
+            $dPlain = trim(html_entity_decode(strip_tags($sectionDesc), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+            $bannerStripText = mb_strlen($dPlain) > 80 ? mb_substr($dPlain, 0, 77).'...' : $dPlain;
         }
 
         $extra = [
             'promos_json' => json_encode($promos),
-            'banner_text' => $ribbon,
         ];
+        if ($bannerStripText !== '') {
+            $extra['banner_text'] = $bannerStripText;
+        }
         if ($bannerUrls !== []) {
             $extra['banner_images_json'] = json_encode($bannerUrls);
         }
@@ -565,7 +592,7 @@ class PublicCmsPayloadService
             'name' => 'Promotions',
             'sort_order' => 4,
             'title' => ! $this->isEffectivelyEmpty($sectionTitle) ? $sectionTitle : null,
-            'subtitle' => $ribbon,
+            'subtitle' => $bannerStripText !== '' ? $bannerStripText : null,
             'description' => ! $this->isEffectivelyEmpty($sectionDesc) ? $sectionDesc : null,
             'image_url' => $bannerUrls[0] ?? null,
             'button_primary_label' => null,
@@ -574,6 +601,7 @@ class PublicCmsPayloadService
             'button_secondary_url' => null,
             'accent_color' => $colors['accent_color'],
             'button_color' => $colors['button_color'],
+            'button_text_color' => $colors['button_text_color'],
             'extra_data' => $extra,
         ];
     }
@@ -609,20 +637,14 @@ class PublicCmsPayloadService
      * @param  array<string, mixed>  $homepage
      * @return array<string, mixed>
      */
-    private function pickHomepageSection(array $homepage, string $key, string $legacyKey): array
+    private function pickCanonicalHomepageBlock(array $homepage, string $key): array
     {
-        foreach ([$key, $legacyKey] as $k) {
-            if (! array_key_exists($k, $homepage) || ! is_array($homepage[$k])) {
-                continue;
-            }
-            $block = $homepage[$k];
-            // mapSection() returns [] when empty; [] must not win over a populated legacy slot
-            if ($block !== []) {
-                return $block;
-            }
+        if (! array_key_exists($key, $homepage) || ! is_array($homepage[$key])) {
+            return [];
         }
+        $block = $homepage[$key];
 
-        return [];
+        return $block !== [] ? $block : [];
     }
 
     /** Normalised hex (or empty) from platform branding settings. */
@@ -651,16 +673,18 @@ class PublicCmsPayloadService
      * Section-level colours from relational `content_json` (optional overrides for public site).
      *
      * @param  array<string, mixed>  $content
-     * @return array{accent_color: ?string, button_color: ?string}
+     * @return array{accent_color: ?string, button_color: ?string, button_text_color: ?string}
      */
     private function sectionColorFields(array $content): array
     {
         $accent = isset($content['accent_color']) ? trim((string) $content['accent_color']) : '';
         $button = isset($content['button_color']) ? trim((string) $content['button_color']) : '';
+        $buttonText = isset($content['button_text_color']) ? trim((string) $content['button_text_color']) : '';
 
         return [
             'accent_color' => $accent !== '' ? $accent : null,
             'button_color' => $button !== '' ? $button : null,
+            'button_text_color' => $buttonText !== '' ? $buttonText : null,
         ];
     }
 

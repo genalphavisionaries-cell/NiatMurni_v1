@@ -2,32 +2,15 @@ export const dynamic = "force-dynamic";
 
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
-import {
-  Footer,
-  HeroLayout,
-  PromoStrip,
-  PromoGrid,
-  UpcomingClassesSection,
-  WhyChooseSection,
-  SocialProofSection,
-  CmsHeader,
-  CmsFooter,
-  CmsHomepageRenderer,
-  CmsDebugPanel,
-} from "@/components/home";
-import {
-  defaultHomepageSettings,
-  getHomepageSettings,
-  type HomepageSettings,
-} from "@/lib/homepage-settings";
+import { CmsHeader, CmsFooter, CmsHomepageRenderer, CmsDebugPanel } from "@/components/home";
 import {
   fetchPublicCms,
   cmsString,
-  EMPTY_THEME,
   EMPTY_FLOATING_MENU,
+  emptyPublicCmsPayload,
   type PublicCmsPayload,
 } from "@/lib/public-cms";
-import { cmsFlatNavToLinks, mergePublicCmsForHome } from "@/lib/merge-public-cms";
+import { cmsFlatNavToLinks, buildPublicSiteContext } from "@/lib/merge-public-cms";
 import { getCmsThemeStyleObject } from "@/lib/cms-theme-vars";
 import PublicFloatingLayer from "@/components/public/PublicFloatingLayer";
 import { defaultPublicSettings, fetchPublicSettings } from "@/lib/public-settings";
@@ -43,16 +26,17 @@ export async function generateMetadata(): Promise<Metadata> {
   } catch (e) {
     console.error("CMS fetch failed:", e);
   }
+  const effective = cms ?? emptyPublicCmsPayload();
   const title =
-    cmsString(cms?.seo.homepage_seo_title) ??
-    cmsString(cms?.seo.default_seo_title) ??
+    cmsString(effective.seo.homepage_seo_title) ??
+    cmsString(effective.seo.default_seo_title) ??
     DEFAULT_TITLE;
   const description =
-    cmsString(cms?.seo.homepage_seo_description) ??
-    cmsString(cms?.seo.default_seo_description) ??
+    cmsString(effective.seo.homepage_seo_description) ??
+    cmsString(effective.seo.default_seo_description) ??
     DEFAULT_DESC;
-  const og = cmsString(cms?.seo.homepage_og_image_url);
-  const favicon = cmsString(cms?.site.favicon_url);
+  const og = cmsString(effective.seo.homepage_og_image_url);
+  const favicon = cmsString(effective.site.favicon_url);
 
   return {
     title,
@@ -67,59 +51,27 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
-  let settings: HomepageSettings = defaultHomepageSettings;
-  let cms: PublicCmsPayload | null = null;
-
-  const [settingsSettled, cmsSettled, pubSettled] = await Promise.allSettled([
-    getHomepageSettings(),
-    fetchPublicCms(),
-    fetchPublicSettings(),
-  ]);
-
-  if (settingsSettled.status === "fulfilled") {
-    settings = settingsSettled.value;
-  } else {
-    console.error("Homepage settings fetch failed:", settingsSettled.reason);
+  let cmsFromApi: PublicCmsPayload | null = null;
+  try {
+    cmsFromApi = await fetchPublicCms();
+  } catch (e) {
+    console.error("CMS fetch failed:", e);
   }
 
-  if (cmsSettled.status === "fulfilled") {
-    cms = cmsSettled.value;
-  } else {
-    console.error("CMS fetch failed:", cmsSettled.reason);
-  }
-  if (cms === null) {
-    console.error("CMS FAILED TO LOAD");
-  }
+  const cms = cmsFromApi ?? emptyPublicCmsPayload();
+  const hadApiFailure = cmsFromApi === null;
 
+  const [pubSettled] = await Promise.allSettled([fetchPublicSettings()]);
   const pub = pubSettled.status === "fulfilled" ? pubSettled.value : null;
   const whatsapp = pub?.whatsapp ?? defaultPublicSettings().whatsapp;
-  const floatingMenu = cms?.floating_menu ?? EMPTY_FLOATING_MENU;
+  const floatingMenu = cms.floating_menu ?? EMPTY_FLOATING_MENU;
 
-  const ctx = mergePublicCmsForHome(settings, cms);
+  const ctx = buildPublicSiteContext(cms);
   const isCmsDebug =
     process.env.NODE_ENV === "development" && process.env.NEXT_PUBLIC_CMS_DEBUG === "true";
-  const showCmsFallbackBanner = isCmsDebug && cms === null;
+  const showCmsFallbackBanner = isCmsDebug && hadApiFailure;
 
-  const cmsKeys = new Set((cms?.homepage_sections ?? []).map((s) => (s.section_key ?? "").trim().toLowerCase()));
-  const useCmsRedesign =
-    !!cms &&
-    (cmsKeys.has("hero") ||
-      cmsKeys.has("why_choose_us") ||
-      cmsKeys.has("usp") ||
-      cmsKeys.has("features") ||
-      cmsKeys.has("testimonials") ||
-      cmsKeys.has("trust") ||
-      cmsKeys.has("cta") ||
-      cmsKeys.has("promo") ||
-      cmsKeys.has("classes"));
-
-  const legacyHeroBg = settings.hero.backgroundImageUrl ?? "/images/food-handling-hero.svg";
-  const legacyHeroSlides = [
-    legacyHeroBg,
-    settings.mainBanners?.[0]?.imageUrl ?? legacyHeroBg,
-    settings.mainBanners?.[1]?.imageUrl ?? legacyHeroBg,
-  ].filter((v, idx, arr) => !!v && arr.indexOf(v) === idx);
-
+  const displayName = ctx.siteName || cms.site.site_name || DEFAULT_TITLE;
   const cmsThemeVars = getCmsThemeStyleObject(cms);
   const mergedThemeVars = { ...ctx.themeVars, ...cmsThemeVars };
 
@@ -127,104 +79,32 @@ export default async function HomePage() {
     <div style={mergedThemeVars as CSSProperties}>
       {showCmsFallbackBanner ? (
         <div className="fixed left-1/2 top-3 z-[9998] -translate-x-1/2 rounded-md border border-amber-500/80 bg-amber-900/85 px-3 py-1.5 text-xs font-semibold text-amber-100 shadow-lg backdrop-blur-sm">
-          ⚠ CMS not loaded — using fallback
+          ⚠ CMS API unreachable — showing empty structure (not legacy homepage-settings)
         </div>
       ) : null}
-      {useCmsRedesign && cms ? (
-        <>
-          <CmsHeader
-            siteName={ctx.siteName}
-            logoUrl={ctx.logoUrl}
-            navTree={ctx.headerNavTree}
-            fallbackNav={ctx.fallbackHeaderNav}
-            primaryCta={ctx.primaryCta}
-          />
-          <main>
-            <CmsHomepageRenderer cms={cms} legacy={settings} />
-
-            {!cmsKeys.has("why_choose_us") && !cmsKeys.has("usp") && !cmsKeys.has("features") ? (
-              <WhyChooseSection data={settings.whyChoose} />
-            ) : null}
-            {!cmsKeys.has("testimonials") && !cmsKeys.has("trust") ? (
-              <SocialProofSection data={settings.socialProof} />
-            ) : null}
-          </main>
-          <CmsFooter
-            siteName={ctx.siteName}
-            logoUrl={ctx.logoUrl}
-            footerNavColumns={ctx.cmsFooterColumns}
-            footerBackgroundColor={cmsString(cms?.theme.footer_background_color)}
-            cmsFooter={cms.footer}
-            cmsContact={cms.contact}
-            cmsSocial={cms.social}
-            legalLinks={cmsFlatNavToLinks(cms.navigation.footer_legal)}
-            loginLinks={cmsFlatNavToLinks(cms.navigation.footer_login)}
-            paymentMethodIcons={settings.paymentMethodIcons}
-            legacyFooterSslBadgeUrl={settings.footerSslBadgeUrl}
-            legacyFooterDescription={settings.footerDescription}
-            legacyFooterBottom={settings.footerBottom}
-          />
-        </>
-      ) : (
-        <>
-          <main>
-            <HeroLayout
-              siteName={ctx.siteName}
-              logoUrl={ctx.logoUrl}
-              navTree={ctx.headerNavTree}
-              fallbackNav={ctx.fallbackHeaderNav}
-              primaryCta={ctx.primaryCta}
-              heroTitle={settings.hero.headline}
-              heroSubtitle={settings.hero.subheadline}
-              heroPrimaryLabel={settings.hero.ctaText}
-              heroPrimaryUrl={settings.hero.ctaHref}
-              heroSecondaryLabel={settings.mainBanners?.[0]?.ctaText ?? "Lihat Kelas"}
-              heroSecondaryUrl={settings.mainBanners?.[0]?.ctaHref ?? "#classes"}
-              heroBackgroundUrls={legacyHeroSlides}
-              heroOverlayOpacity={settings.hero.overlayOpacity}
-              theme={cms?.theme ?? EMPTY_THEME}
-            />
-            <WhyChooseSection data={settings.whyChoose} />
-            <UpcomingClassesSection
-              theme={cms?.theme ?? EMPTY_THEME}
-              section={
-                cms?.homepage_sections?.find(
-                  (s) => (s.section_key ?? "").trim().toLowerCase() === "classes"
-                ) ?? null
-              }
-            />
-            <SocialProofSection data={settings.socialProof} />
-            <PromoStrip />
-            <PromoGrid />
-          </main>
-          <Footer
-            settings={{
-              footerColumns: settings.footerColumns,
-              footerBottom: settings.footerBottom,
-              siteName: ctx.siteName,
-              paymentMethodIcons: settings.paymentMethodIcons,
-              footerLogoUrl: settings.footerLogoUrl,
-              footerDescription: settings.footerDescription,
-              footerSslBadgeUrl: settings.footerSslBadgeUrl,
-            }}
-            cmsFooterColumns={ctx.cmsFooterColumns}
-            footerBackgroundColor={cmsString(cms?.theme.footer_background_color)}
-            cmsGlobal={
-              cms
-                ? {
-                    footer: cms.footer,
-                    contact: cms.contact,
-                    social: cms.social,
-                    legalLinks: cmsFlatNavToLinks(cms.navigation.footer_legal),
-                    loginLinks: cmsFlatNavToLinks(cms.navigation.footer_login),
-                  }
-                : null
-            }
-          />
-        </>
-      )}
+      <CmsHeader
+        siteName={displayName}
+        logoUrl={ctx.logoUrl}
+        navTree={ctx.headerNavTree}
+        fallbackNav={ctx.fallbackHeaderNav}
+        primaryCta={ctx.primaryCta}
+      />
+      <main>
+        <CmsHomepageRenderer cms={cms} />
+      </main>
+      <CmsFooter
+        siteName={displayName}
+        logoUrl={ctx.logoUrl}
+        footerNavColumns={ctx.cmsFooterColumns}
+        footerBackgroundColor={cmsString(cms.theme.footer_background_color)}
+        cmsFooter={cms.footer}
+        cmsContact={cms.contact}
+        cmsSocial={cms.social}
+        legalLinks={cmsFlatNavToLinks(cms.navigation.footer_legal)}
+        loginLinks={cmsFlatNavToLinks(cms.navigation.footer_login)}
+      />
       <PublicFloatingLayer floatingMenu={floatingMenu} whatsapp={whatsapp} />
-      {cms ? <CmsDebugPanel cms={cms} /> : null}
+      <CmsDebugPanel cms={cms} />
     </div>
   );
 }

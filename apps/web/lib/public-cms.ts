@@ -97,6 +97,8 @@ export type PublicCmsHomepageSection = {
   accent_color?: string | null;
   /** Primary button background for this section; falls back to theme.primary_button_color */
   button_color?: string | null;
+  /** Primary button label color for this section; falls back to theme.primary_button_text_color */
+  button_text_color?: string | null;
   extra_data: Record<string, string> | null;
 };
 
@@ -310,6 +312,7 @@ function normalizeHomepageSectionColors(s: PublicCmsHomepageSection): PublicCmsH
     ...s,
     accent_color: pickSectionColorField(raw.accent_color),
     button_color: pickSectionColorField(raw.button_color),
+    button_text_color: pickSectionColorField(raw.button_text_color),
   };
 }
 
@@ -378,6 +381,11 @@ function normalizeCmsPayload(data: PublicCmsPayload): PublicCmsPayload {
   };
 }
 
+/** Safe empty payload when GET /api/public/cms fails — same shape as normalized API. */
+export function emptyPublicCmsPayload(): PublicCmsPayload {
+  return normalizeCmsPayload(emptyPayload());
+}
+
 export async function fetchPublicCms(): Promise<PublicCmsPayload | null> {
   const validation = await fetchPublicCmsWithValidation();
   return validation?.payload ?? null;
@@ -398,8 +406,11 @@ export async function fetchPublicCmsWithValidation(): Promise<ValidationResult |
     // Laravel may return the payload at the root, or wrapped in { data } (legacy).
     const data = raw?.site && raw?.navigation ? raw : raw?.data;
     if (!data?.site || !data?.navigation) return validateCmsPayload(null);
-    
+
     const normalized = normalizeCmsPayload(data);
+    if (process.env.NODE_ENV === "development") {
+      console.log("CMS PAYLOAD:", normalized);
+    }
     return validateCmsPayload(normalized);
   } catch {
     return validateCmsPayload(null);

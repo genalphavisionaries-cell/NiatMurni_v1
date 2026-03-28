@@ -8,8 +8,15 @@ import { extraString, parseJsonSafe, safeHref } from "../utils";
 import { safeTrim } from "@/lib/safe-string-utils";
 import { useMemo } from "react";
 import { SafeCmsHtml } from "../SafeCmsHtml";
+import { cmsPlainTextForAttribute } from "@/lib/sanitize-cms-html";
 
-type Item = { title: string; description?: string; icon?: string; background_color?: string };
+type Item = {
+  title: string;
+  description?: string;
+  icon?: string;
+  background_color?: string;
+  icon_alt?: string;
+};
 
 function iconSvg(path: React.ReactNode, accent: string) {
   return (
@@ -44,10 +51,25 @@ function benefitIcons(accent: string): Record<string, React.ReactNode> {
   };
 }
 
-function BenefitIcon({ name, icons }: { name?: string; icons: Record<string, React.ReactNode> }) {
+function BenefitIcon({
+  name,
+  icons,
+  alt,
+}: {
+  name?: string;
+  icons: Record<string, React.ReactNode>;
+  alt?: string | null;
+}) {
   const iconUrl = safeHref(name ?? null);
   if (iconUrl) {
-    return <img src={iconUrl} alt="" className="h-5 w-5 object-contain" loading="lazy" />;
+    return (
+      <img
+        src={iconUrl}
+        alt={cmsPlainTextForAttribute(alt) || ""}
+        className="h-5 w-5 object-contain"
+        loading="lazy"
+      />
+    );
   }
   return <>{icons[name ?? ""] ?? icons.award}</>;
 }
@@ -60,7 +82,7 @@ function UspCard({ item, icons }: { item: Item; icons: Record<string, React.Reac
         className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-[10px]"
         style={{ width: 44, height: 44, backgroundColor: cardBg }}
       >
-        <BenefitIcon name={item.icon} icons={icons} />
+        <BenefitIcon name={item.icon} icons={icons} alt={item.icon_alt} />
       </div>
       <div className="min-w-0 flex-1">
         <div className="font-semibold text-[#0F172A] [&_a]:text-[color:var(--section-accent)] [&_a]:underline">
@@ -85,7 +107,7 @@ export default function WhyChooseUsSection({
 }) {
   const colors = getSectionColor(section, theme);
   const benefitIconSet = useMemo(() => benefitIcons(colors.accent), [colors.accent]);
-  const title = cmsString(section.title) ?? "Kenapa Kami";
+  const title = cmsString(section.title);
   const desc1 = cmsString(section.subtitle);
   const desc2 = cmsString(section.description);
 
@@ -105,7 +127,7 @@ export default function WhyChooseUsSection({
     return urls.length ? urls : fallback ? [fallback] : [];
   }, [section.image_url, section.extra_data]);
 
-  if (!cmsString(title) && !visibleItems.length && !bannerImages.length) return null;
+  if (!title && !visibleItems.length && !bannerImages.length) return null;
 
   return (
     <section
@@ -119,22 +141,21 @@ export default function WhyChooseUsSection({
           ["--section-accent" as string]: colors.accent,
         } as CSSProperties
       }
-      aria-labelledby="why-choose-heading"
+      aria-labelledby={title ? "why-choose-heading" : undefined}
     >
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8">
         <header className="mb-10 text-center lg:mb-12">
-          <div id="why-choose-heading" className="text-2xl font-bold text-[#0F172A] sm:text-3xl" role="heading" aria-level={2}>
-            <SafeCmsHtml html={title} className="max-w-none [&_p]:m-0" />
-          </div>
+          {title ? (
+            <div id="why-choose-heading" className="text-2xl font-bold text-[#0F172A] sm:text-3xl" role="heading" aria-level={2}>
+              <SafeCmsHtml html={title} className="max-w-none [&_p]:m-0" />
+            </div>
+          ) : null}
           {(desc1 || desc2) ? (
             <div className="mx-auto mt-3 max-w-2xl text-[#64748B] sm:text-lg [&_a]:text-[color:var(--section-accent)] [&_a]:underline">
               {desc1 ? <SafeCmsHtml html={desc1} className="max-w-none prose-p:my-2" /> : null}
               {desc2 ? <SafeCmsHtml html={desc2} className="mt-2 max-w-none prose-p:my-2" /> : null}
             </div>
           ) : null}
-          <p className="mx-auto mt-1 text-sm text-[#94A3B8]">
-            Dipercayai oleh ribuan pengusaha makanan di Malaysia
-          </p>
         </header>
 
         <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-[48px]">

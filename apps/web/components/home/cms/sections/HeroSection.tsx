@@ -33,24 +33,16 @@ export default function HeroSection({
 }) {
   const colors = getSectionColor(section, theme);
   const baseTitle =
-    cmsString(section.title) ??
-    cmsString(site.site_tagline) ??
-    "Food Safety Training";
+    cmsString(section.title) ?? cmsString(site.site_tagline);
   const baseSubtitle =
-    cmsString(section.subtitle) ??
-    cmsString(section.description) ??
-    "KKM-recognised training for food handlers — online or in person.";
+    cmsString(section.subtitle) ?? cmsString(section.description);
 
   const basePrimaryLabel =
-    cmsString(section.button_primary_label) ??
-    cmsString(site.primary_cta_label) ??
-    "Register";
+    cmsString(section.button_primary_label) ?? cmsString(site.primary_cta_label);
   const basePrimaryUrl =
-    safeHref(section.button_primary_url) ??
-    safeHref(site.primary_cta_url) ??
-    "/#classes";
-  const baseSecondaryLabel = cmsString(section.button_secondary_label) ?? "View classes";
-  const baseSecondaryUrl = safeHref(section.button_secondary_url) ?? "/#classes";
+    safeHref(section.button_primary_url) ?? safeHref(site.primary_cta_url);
+  const baseSecondaryLabel = cmsString(section.button_secondary_label);
+  const baseSecondaryUrl = safeHref(section.button_secondary_url);
 
   const overlayOpacity = Number(extraString(section.extra_data, "overlay_opacity") ?? "0.25");
   const badges = parseJsonSafe<HeroBadge[]>(
@@ -72,12 +64,12 @@ export default function HeroSection({
       {
         desktop_image_url: desktopDefault,
         mobile_image_url: mobileDefault,
-        title: baseTitle,
-        subtitle: baseSubtitle,
-        button_primary_label: basePrimaryLabel,
-        button_primary_url: basePrimaryUrl,
-        button_secondary_label: baseSecondaryLabel,
-        button_secondary_url: baseSecondaryUrl,
+        title: baseTitle ?? undefined,
+        subtitle: baseSubtitle ?? undefined,
+        button_primary_label: basePrimaryLabel ?? undefined,
+        button_primary_url: basePrimaryUrl ?? undefined,
+        button_secondary_label: baseSecondaryLabel ?? undefined,
+        button_secondary_url: baseSecondaryUrl ?? undefined,
       },
     ];
   }, [
@@ -104,19 +96,22 @@ export default function HeroSection({
 
   const slide = slides[Math.min(active, slides.length - 1)];
 
-  const title = cmsString(slide.title) ?? baseTitle;
+  const title = cmsString(slide.title) ?? baseTitle ?? "";
   const subtitle =
-    cmsString(slide.subtitle) ?? cmsString(slide.description) ?? baseSubtitle;
+    cmsString(slide.subtitle) ??
+    cmsString(slide.description) ??
+    baseSubtitle ??
+    "";
 
   const primaryLabel =
-    cmsString(slide.button_primary_label) ?? basePrimaryLabel;
-  const primaryUrl =
-    safeHref(slide.button_primary_url ?? "") ?? basePrimaryUrl;
+    cmsString(slide.button_primary_label) ?? basePrimaryLabel ?? "";
+  const primaryUrl: string =
+    safeHref(slide.button_primary_url ?? "") ?? basePrimaryUrl ?? "#";
 
   const secondaryLabel =
-    cmsString(slide.button_secondary_label) ?? baseSecondaryLabel;
-  const secondaryUrl =
-    safeHref(slide.button_secondary_url ?? "") ?? baseSecondaryUrl;
+    cmsString(slide.button_secondary_label) ?? baseSecondaryLabel ?? "";
+  const secondaryUrl: string =
+    safeHref(slide.button_secondary_url ?? "") ?? baseSecondaryUrl ?? "#";
 
   const desktopImg = safeHref(slide.desktop_image_url ?? "") ?? desktopDefault;
   const mobileImg = safeHref(slide.mobile_image_url ?? "") ?? mobileDefault;
@@ -199,22 +194,26 @@ export default function HeroSection({
           </div>
 
           <div className="mt-10 flex flex-wrap items-center gap-4">
-            <Link
-              href={primaryUrl}
-              className="inline-flex rounded-xl px-7 py-4 text-sm font-semibold shadow-lg transition active:scale-[0.98]"
-              style={{
-                backgroundColor: colors.buttonBg,
-                color: colors.buttonText,
-              }}
-            >
-              <SafeCmsHtml as="span" html={primaryLabel} className="[&_p]:m-0 [&_p]:inline" />
-            </Link>
-            <Link
-              href={secondaryUrl}
-              className="inline-flex rounded-xl border border-white/25 bg-white/5 px-7 py-4 text-sm font-semibold text-white transition hover:bg-white/10"
-            >
-              <SafeCmsHtml as="span" html={secondaryLabel} className="[&_p]:m-0 [&_p]:inline" />
-            </Link>
+            {primaryLabel ? (
+              <Link
+                href={primaryUrl}
+                className="inline-flex rounded-xl px-7 py-4 text-sm font-semibold shadow-lg transition active:scale-[0.98]"
+                style={{
+                  backgroundColor: colors.buttonBg,
+                  color: colors.buttonText,
+                }}
+              >
+                <SafeCmsHtml as="span" html={primaryLabel} className="[&_p]:m-0 [&_p]:inline" />
+              </Link>
+            ) : null}
+            {secondaryLabel ? (
+              <Link
+                href={secondaryUrl}
+                className="inline-flex rounded-xl border border-white/25 bg-white/5 px-7 py-4 text-sm font-semibold text-white transition hover:bg-white/10"
+              >
+                <SafeCmsHtml as="span" html={secondaryLabel} className="[&_p]:m-0 [&_p]:inline" />
+              </Link>
+            ) : null}
           </div>
         </div>
 
@@ -237,8 +236,13 @@ export default function HeroSection({
                   aria-label={`Go to slide ${idx + 1}`}
                   onClick={() => setActive(idx)}
                   className={`h-2.5 w-2.5 rounded-full transition ${
-                    idx === active ? "bg-[#EAB308]" : "bg-white/40 hover:bg-white/70"
+                    idx === active ? "" : "bg-white/40 hover:bg-white/70"
                   }`}
+                  style={
+                    idx === active
+                      ? { backgroundColor: colors.accent }
+                      : undefined
+                  }
                 />
               ))}
             </div>

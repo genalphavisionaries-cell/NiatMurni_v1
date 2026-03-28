@@ -1,15 +1,11 @@
 /**
- * Homepage settings shape — to be loaded from Laravel when NEXT_PUBLIC_API_BASE_URL (or NEXT_PUBLIC_API_URL) is set.
- * All sections are optional; defaults used when missing.
+ * Legacy UI types for optional home components (Footer, WhyChooseSection, etc.).
+ * Public homepage chrome and content come from GET /api/public/cms only.
  */
 
-import { apiUrl, getApiBase } from "./config";
+import type { NavLink } from "./site-nav";
 
-export type NavLink = {
-  label: string;
-  href: string;
-  external?: boolean;
-};
+export type { NavLink } from "./site-nav";
 
 /** CMS: homepage_why_choose — benefit item editable in admin */
 export type WhyChooseBenefit = {
@@ -122,6 +118,7 @@ const defaultFooterColumns = [
   },
 ];
 
+/** Defaults for legacy Footer/HeroLayout demos only — not loaded from API. */
 export const defaultHomepageSettings: HomepageSettings = {
   siteName: "Niat Murni Academy",
   logoUrl: null,
@@ -210,38 +207,3 @@ export const defaultHomepageSettings: HomepageSettings = {
     ],
   },
 };
-
-function deepMerge<T extends object>(defaults: T, overrides: Partial<T> | null | undefined): T {
-  if (overrides == null || typeof overrides !== "object") return defaults;
-  const out = { ...defaults };
-  for (const key of Object.keys(overrides) as (keyof T)[]) {
-    const d = (defaults as Record<string, unknown>)[key as string];
-    const o = (overrides as Record<string, unknown>)[key as string];
-    if (o != null && typeof o === "object" && !Array.isArray(o) && typeof d === "object" && d != null && !Array.isArray(d)) {
-      (out as Record<string, unknown>)[key as string] = deepMerge(d as object, o as object);
-    } else if (o !== undefined) {
-      (out as Record<string, unknown>)[key as string] = o;
-    }
-  }
-  return out;
-}
-
-/**
- * Fetch homepage settings from Laravel when NEXT_PUBLIC_API_BASE_URL (or NEXT_PUBLIC_API_URL) is set.
- * Falls back to defaultHomepageSettings on failure or when env is not set.
- */
-export async function getHomepageSettings(): Promise<HomepageSettings> {
-  if (!getApiBase()) return defaultHomepageSettings;
-  const url = apiUrl("/api/homepage-settings");
-  if (!url) return defaultHomepageSettings;
-  try {
-    const res = await fetch(url, {
-      cache: "no-store",
-    });
-    if (!res.ok) return defaultHomepageSettings;
-    const data = (await res.json()) as Partial<HomepageSettings>;
-    return deepMerge(defaultHomepageSettings, data);
-  } catch {
-    return defaultHomepageSettings;
-  }
-}

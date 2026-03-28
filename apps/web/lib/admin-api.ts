@@ -560,7 +560,7 @@ export const adminApi = {
     return request("/api/admin/cms/homepage");
   },
   updateCmsHomepage(payload: Partial<CmsHomepageData>): Promise<{ message: string }> {
-    return request("/api/admin/cms/homepage", { method: "PUT", body: JSON.stringify(payload) });
+    return request("/api/admin/cms/homepage", { method: "POST", body: JSON.stringify(payload) });
   },
   uploadCmsMedia(file: File): Promise<{ data: { url: string } }> {
     const body = new FormData();
@@ -578,14 +578,6 @@ export const adminApi = {
   },
   deleteCmsTestimonial(id: number): Promise<{ message: string }> {
     return request(`/api/admin/cms/testimonials/${id}`, { method: "DELETE" });
-  },
-
-  // Legacy CMS (old HomepageSetting singleton — kept for backward compat)
-  updateHomepageSettings(payload: Record<string, unknown>): Promise<{ message: string; id: number }> {
-    return request<{ message: string; id: number }>("/api/admin/homepage-settings", {
-      method: "PUT",
-      body: JSON.stringify(payload),
-    });
   },
 
   // Programs

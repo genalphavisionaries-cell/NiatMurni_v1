@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import HeroHeader from "./HeroHeader";
 import HeroSlider from "./HeroSlider";
-import type { NavLink } from "@/lib/homepage-settings";
+import type { NavLink } from "@/lib/site-nav";
 import type { PublicCmsNavItem } from "@/lib/public-cms";
 import type { PublicCmsHomepageSection, PublicCmsSite, PublicCmsTheme } from "@/lib/public-cms";
 import { EMPTY_THEME } from "@/lib/public-cms";

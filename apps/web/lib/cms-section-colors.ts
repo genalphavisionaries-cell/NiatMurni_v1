@@ -10,7 +10,7 @@ function trimColor(v: string | null | undefined): string | null {
  * Section-level colors override global theme (empty section values fall back to theme).
  */
 export function getSectionColor(
-  section: Pick<PublicCmsHomepageSection, "accent_color" | "button_color">,
+  section: Pick<PublicCmsHomepageSection, "accent_color" | "button_color" | "button_text_color">,
   theme: PublicCmsTheme
 ): { accent: string; buttonBg: string; buttonText: string } {
   const primary = trimColor(theme.primary_color) ?? "#2563EB";
@@ -19,6 +19,6 @@ export function getSectionColor(
   return {
     accent: trimColor(section.accent_color) ?? primary,
     buttonBg: trimColor(section.button_color) ?? btnTheme,
-    buttonText: btnText,
+    buttonText: trimColor(section.button_text_color) ?? btnText,
   };
 }

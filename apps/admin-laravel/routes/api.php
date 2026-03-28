@@ -13,8 +13,6 @@ use App\Http\Controllers\Public\CertificateDownloadController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/homepage-settings', App\Http\Controllers\Api\HomepageSettingsController::class)->name('api.homepage-settings');
-
 Route::get('/settings/{group}', [App\Http\Controllers\Api\SettingsGroupController::class, 'show'])
     ->middleware('throttle:60,1')
     ->name('api.settings.group');
@@ -154,7 +152,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureAdminAccess::class
 
     // CMS (Next.js admin — homepage sections + testimonials)
     Route::get('/cms/homepage', [App\Http\Controllers\Api\Admin\CmsHomepageController::class, 'show'])->name('cms.homepage.show');
-    Route::put('/cms/homepage', [App\Http\Controllers\Api\Admin\CmsHomepageController::class, 'update'])->name('cms.homepage.update');
+    Route::post('/cms/homepage', [App\Http\Controllers\Api\Admin\CmsHomepageController::class, 'update'])->name('cms.homepage.update');
+    Route::put('/cms/homepage', [App\Http\Controllers\Api\Admin\CmsHomepageController::class, 'update'])->name('cms.homepage.update.legacy');
     Route::post('/cms/media', [App\Http\Controllers\Api\Admin\CmsMediaController::class, 'store'])->name('cms.media.store');
     Route::get('/cms/testimonials', [App\Http\Controllers\Api\Admin\CmsTestimonialController::class, 'index'])->name('cms.testimonials.index');
     Route::post('/cms/testimonials', [App\Http\Controllers\Api\Admin\CmsTestimonialController::class, 'store'])->name('cms.testimonials.store');

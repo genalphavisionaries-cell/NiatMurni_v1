@@ -249,8 +249,8 @@ export function CmsHomepageClient() {
       .getCmsHomepage()
       .then((res) => {
         const d = res.data;
-        const w = d.why_choose_us ?? d.usp;
-        const c = d.cta ?? d.promo;
+        const w = d.why_choose_us;
+        const c = d.cta;
         setHero({ ...emptyHero, ...d.hero });
         setWhyChooseUs({
           ...emptyUsp,

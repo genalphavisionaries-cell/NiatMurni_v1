@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState, type ReactNode } from "react";
-import type { NavLink } from "@/lib/homepage-settings";
+import type { NavLink } from "@/lib/site-nav";
 import type { PublicCmsNavItem } from "@/lib/public-cms";
 import { cmsString } from "@/lib/public-cms";
 import { safeHref } from "./utils";

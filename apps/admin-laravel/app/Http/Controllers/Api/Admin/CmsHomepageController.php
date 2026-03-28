@@ -11,8 +11,8 @@ use App\Services\CmsService;
 use App\Services\CmsValidationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class CmsHomepageController extends Controller
@@ -32,10 +32,10 @@ class CmsHomepageController extends Controller
         return response()->json([
             'data' => [
                 'hero' => $this->readHero($sections->get('hero')),
-                'why_choose_us' => $this->readUsp($this->sectionFromCollection($sections, 'why_choose_us', 'usp')),
+                'why_choose_us' => $this->readUsp($sections->get('why_choose_us')),
                 'classes' => $this->readClasses($sections->get('classes')),
-                'testimonials' => $this->readTrust($this->sectionFromCollection($sections, 'testimonials', 'trust')),
-                'cta' => $this->readPromo($this->sectionFromCollection($sections, 'cta', 'promo')),
+                'testimonials' => $this->readTrust($sections->get('testimonials')),
+                'cta' => $this->readPromo($sections->get('cta')),
                 'header' => $this->readHeader($sections->get('header')),
                 'footer' => $this->readFooter($sections->get('footer')),
                 'floating_menu' => $this->readFloating($sections->get('floating_menu')),
@@ -57,21 +57,15 @@ class CmsHomepageController extends Controller
                 }
                 if ($request->has('why_choose_us')) {
                     $this->persistUsp($page, $this->inputArray($request, 'why_choose_us'));
-                } elseif ($request->has('usp')) {
-                    $this->persistUsp($page, $this->inputArray($request, 'usp'));
                 }
                 if ($request->has('classes')) {
                     $this->persistClasses($page, $this->inputArray($request, 'classes'));
                 }
                 if ($request->has('testimonials')) {
                     $this->persistTrust($page, $this->inputArray($request, 'testimonials'));
-                } elseif ($request->has('trust')) {
-                    $this->persistTrust($page, $this->inputArray($request, 'trust'));
                 }
                 if ($request->has('cta')) {
                     $this->persistPromo($page, $this->inputArray($request, 'cta'));
-                } elseif ($request->has('promo')) {
-                    $this->persistPromo($page, $this->inputArray($request, 'promo'));
                 }
                 if ($request->has('header')) {
                     $this->persistHeader($page, $this->inputArray($request, 'header'));
@@ -97,6 +91,19 @@ class CmsHomepageController extends Controller
 
         app(CmsService::class)->forgetCache();
 
+        Log::info('CMS homepage saved', [
+            'sections' => array_keys(array_filter([
+                'hero' => $request->has('hero'),
+                'why_choose_us' => $request->has('why_choose_us'),
+                'classes' => $request->has('classes'),
+                'testimonials' => $request->has('testimonials'),
+                'cta' => $request->has('cta'),
+                'header' => $request->has('header'),
+                'footer' => $request->has('footer'),
+                'floating_menu' => $request->has('floating_menu'),
+            ])),
+        ]);
+
         return response()->json(['message' => 'Homepage saved.']);
     }
 
@@ -108,12 +115,6 @@ class CmsHomepageController extends Controller
             ['section_key' => $key],
             ['title' => ucfirst(str_replace('_', ' ', $key)), 'content_json' => [], 'is_active' => true, 'sort_order' => 0],
         );
-    }
-
-    /** Prefer canonical key; fall back to legacy row before migrations. */
-    private function sectionFromCollection(Collection $sections, string $key, string $legacyKey): ?CmsSection
-    {
-        return $sections->get($key) ?? $sections->get($legacyKey);
     }
 
     /**
@@ -217,6 +218,7 @@ class CmsHomepageController extends Controller
                 'background_alts' => '',
                 'accent_color' => '',
                 'button_color' => '',
+                'button_text_color' => '',
                 'enabled' => true,
             ];
         }
@@ -233,6 +235,7 @@ class CmsHomepageController extends Controller
             'background_alts' => implode("\n", is_array($alts) ? $alts : []),
             'accent_color' => $c['accent_color'] ?? '',
             'button_color' => $c['button_color'] ?? '',
+            'button_text_color' => $c['button_text_color'] ?? '',
             'enabled' => (bool) $s->is_active,
         ];
     }
@@ -252,6 +255,7 @@ class CmsHomepageController extends Controller
             'background_alts' => $alts,
             'accent_color' => $hero['accent_color'] ?? '',
             'button_color' => $hero['button_color'] ?? '',
+            'button_text_color' => $hero['button_text_color'] ?? '',
         ];
         if (array_key_exists('enabled', $hero)) {
             $section->is_active = (bool) $hero['enabled'];
@@ -272,6 +276,7 @@ class CmsHomepageController extends Controller
                 'side_images_alts' => '',
                 'accent_color' => '',
                 'button_color' => '',
+                'button_text_color' => '',
                 'enabled' => true,
             ];
         }
@@ -299,6 +304,7 @@ class CmsHomepageController extends Controller
             'side_images_alts' => implode("\n", is_array($sideAlts) ? $sideAlts : []),
             'accent_color' => $c['accent_color'] ?? '',
             'button_color' => $c['button_color'] ?? '',
+            'button_text_color' => $c['button_text_color'] ?? '',
             'enabled' => (bool) $s->is_active,
         ];
     }
@@ -329,6 +335,9 @@ class CmsHomepageController extends Controller
         }
         if (array_key_exists('button_color', $usp)) {
             $updates['button_color'] = $usp['button_color'] ?? '';
+        }
+        if (array_key_exists('button_text_color', $usp)) {
+            $updates['button_text_color'] = $usp['button_text_color'] ?? '';
         }
 
         // Merge with existing content to prevent data loss
@@ -371,6 +380,7 @@ class CmsHomepageController extends Controller
                 'max_items' => 20,
                 'accent_color' => '',
                 'button_color' => '',
+                'button_text_color' => '',
                 'enabled' => true,
             ];
         }
@@ -384,6 +394,7 @@ class CmsHomepageController extends Controller
             'max_items' => (int) ($c['max_items'] ?? 20),
             'accent_color' => $c['accent_color'] ?? '',
             'button_color' => $c['button_color'] ?? '',
+            'button_text_color' => $c['button_text_color'] ?? '',
             'enabled' => (bool) $s->is_active,
         ];
     }
@@ -399,6 +410,7 @@ class CmsHomepageController extends Controller
             'max_items' => (int) ($data['max_items'] ?? 20),
             'accent_color' => $data['accent_color'] ?? '',
             'button_color' => $data['button_color'] ?? '',
+            'button_text_color' => $data['button_text_color'] ?? '',
         ];
         if (array_key_exists('enabled', $data)) {
             $section->is_active = (bool) $data['enabled'];
@@ -418,6 +430,7 @@ class CmsHomepageController extends Controller
                 'google_button_url' => '',
                 'accent_color' => '',
                 'button_color' => '',
+                'button_text_color' => '',
                 'enabled' => true,
             ];
         }
@@ -440,6 +453,7 @@ class CmsHomepageController extends Controller
             'google_button_url' => $rating['button_url'] ?? '',
             'accent_color' => $c['accent_color'] ?? '',
             'button_color' => $c['button_color'] ?? '',
+            'button_text_color' => $c['button_text_color'] ?? '',
             'enabled' => (bool) $s->is_active,
         ];
     }
@@ -455,6 +469,7 @@ class CmsHomepageController extends Controller
             ],
             'accent_color' => $trust['accent_color'] ?? '',
             'button_color' => $trust['button_color'] ?? '',
+            'button_text_color' => $trust['button_text_color'] ?? '',
         ];
         if (array_key_exists('enabled', $trust)) {
             $section->is_active = (bool) $trust['enabled'];
@@ -472,7 +487,7 @@ class CmsHomepageController extends Controller
                 'image_url' => $logo['image_url'],
                 'sort_order' => $i,
                 'is_active' => true,
-                'extra_json' => ['image_alt' => ''],
+                'extra_json' => ['image_alt' => $logo['image_alt'] ?? ''],
             ]);
         }
     }
@@ -517,6 +532,7 @@ class CmsHomepageController extends Controller
             'banner_alts' => implode("\n", is_array($bannerAlts) ? $bannerAlts : []),
             'accent_color' => $c['accent_color'] ?? '',
             'button_color' => $c['button_color'] ?? '',
+            'button_text_color' => $c['button_text_color'] ?? '',
             'cards' => $cards,
             'enabled' => (bool) $s->is_active,
         ];
@@ -538,6 +554,7 @@ class CmsHomepageController extends Controller
             'banner_alts' => $alts,
             'accent_color' => $promo['accent_color'] ?? '',
             'button_color' => $promo['button_color'] ?? '',
+            'button_text_color' => $promo['button_text_color'] ?? '',
         ]);
         
         $section->content_json = $contentJson;

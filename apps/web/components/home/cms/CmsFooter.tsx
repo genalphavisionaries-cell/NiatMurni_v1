@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { HomepageSettings, NavLink } from "@/lib/homepage-settings";
+import type { NavLink } from "@/lib/site-nav";
 import type { PublicCmsContactBlock, PublicCmsFooterBlock, PublicCmsSocialBlock } from "@/lib/public-cms";
 import { cmsString } from "@/lib/public-cms";
 import { SafeCmsHtml } from "./SafeCmsHtml";
@@ -18,14 +18,8 @@ type CmsFooterProps = {
   legalLinks: NavLink[];
   /** CMS footer_login or empty → defaults */
   loginLinks: NavLink[];
-  /** Legacy payment icon URLs (CMS has no per-method URLs yet) */
-  paymentMethodIcons?: HomepageSettings["paymentMethodIcons"];
-  /** When CMS ssl_badge_url empty */
-  legacyFooterSslBadgeUrl?: string | null;
-  /** Only used when CMS footer description is empty */
-  legacyFooterDescription?: string | null;
-  /** Only used when CMS footer bottom_text is empty */
-  legacyFooterBottom?: string | null;
+  /** Optional per-method icon URLs keyed by payment id (visa, mastercard, …) */
+  paymentMethodIcons?: Record<string, string | undefined>;
 };
 
 const DEFAULT_LEGAL = [
@@ -76,9 +70,6 @@ export default function CmsFooter({
   legalLinks: legalFromCms,
   loginLinks: loginFromCms,
   paymentMethodIcons,
-  legacyFooterSslBadgeUrl,
-  legacyFooterDescription,
-  legacyFooterBottom,
 }: CmsFooterProps) {
   const year = new Date().getFullYear();
   const bg = (footerBackgroundColor ?? "").trim() || "var(--cms-footer-bg, #0f172a)";
@@ -88,15 +79,10 @@ export default function CmsFooter({
   void cmsContact;
   void cmsSocial;
 
-  const desc =
-    cmsString(cmsFooter.description) ??
-    cmsString(legacyFooterDescription) ??
-    DEFAULT_INTRO;
+  const desc = cmsString(cmsFooter.description) ?? DEFAULT_INTRO;
 
   const bottomLine =
-    cmsString(cmsFooter.bottom_text) ??
-    cmsString(legacyFooterBottom) ??
-    `© ${year} ${siteName}. All rights reserved.`;
+    cmsString(cmsFooter.bottom_text) ?? `© ${year} ${siteName}. All rights reserved.`;
 
   const legal: NavLink[] = legalFromCms.length
     ? legalFromCms
@@ -106,8 +92,7 @@ export default function CmsFooter({
     : DEFAULT_LOGIN.map((l) => ({ label: l.label, href: l.href, external: false }));
   const showPayment = cmsFooter.show_payment_card !== false;
   const paymentHeadline = cmsString(cmsFooter.payment_headline) ?? DEFAULT_PAYMENT_HEADLINE;
-  const sslBadgeUrl =
-    cmsString(cmsFooter.ssl_badge_url) ?? cmsString(legacyFooterSslBadgeUrl) ?? null;
+  const sslBadgeUrl = cmsString(cmsFooter.ssl_badge_url);
   const sslCaption = cmsString(cmsFooter.ssl_caption) ?? DEFAULT_SSL_CAPTION;
 
   return (

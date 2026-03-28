@@ -1,6 +1,5 @@
 /**
- * Strict validation for CMS payload to ensure data integrity
- * and provide safe empty fallbacks (NOT fake content).
+ * CMS payload validation: warnings for missing/weak sections; no injection of placeholder sections.
  */
 
 import type { PublicCmsPayload, PublicCmsHomepageSection } from "./public-cms";
@@ -27,7 +26,7 @@ function validateHeroSection(section: PublicCmsHomepageSection | null | undefine
   const errors: ValidationError[] = [];
   
   if (!section) {
-    errors.push(createError("hero", "section", "Hero section is missing - will use default content"));
+    errors.push(createError("hero", "section", "Hero section is missing from homepage_sections", "warning"));
     return errors;
   }
 
@@ -46,14 +45,16 @@ function validateHeroSection(section: PublicCmsHomepageSection | null | undefine
   return errors;
 }
 
+function sectionKeyNorm(k: string | null | undefined): string {
+  return (k ?? "").trim().toLowerCase();
+}
+
 function validateWhyChooseUsSection(sections: PublicCmsHomepageSection[]): ValidationError[] {
   const errors: ValidationError[] = [];
-  const whySection = sections.find(s => 
-    s.section_key === "why_choose_us" || s.section_key === "usp" || s.section_key === "features"
-  );
+  const whySection = sections.find((s) => sectionKeyNorm(s.section_key) === "why_choose_us");
 
   if (!whySection) {
-    errors.push(createError("why_choose_us", "section", "Why Choose Us section is missing - will use default benefits"));
+    errors.push(createError("why_choose_us", "section", "Why Choose Us section is missing from homepage_sections", "warning"));
     return errors;
   }
 
@@ -80,12 +81,10 @@ function validateWhyChooseUsSection(sections: PublicCmsHomepageSection[]): Valid
 
 function validateTestimonialsSection(sections: PublicCmsHomepageSection[]): ValidationError[] {
   const errors: ValidationError[] = [];
-  const testimonialSection = sections.find(s => 
-    s.section_key === "testimonials" || s.section_key === "trust"
-  );
+  const testimonialSection = sections.find((s) => sectionKeyNorm(s.section_key) === "testimonials");
 
   if (!testimonialSection) {
-    errors.push(createError("testimonials", "section", "Testimonials section is missing"));
+    errors.push(createError("testimonials", "section", "Testimonials section is missing from homepage_sections", "warning"));
     return errors;
   }
 
@@ -114,12 +113,10 @@ function validateTestimonialsSection(sections: PublicCmsHomepageSection[]): Vali
 
 function validateCtaSection(sections: PublicCmsHomepageSection[]): ValidationError[] {
   const errors: ValidationError[] = [];
-  const ctaSection = sections.find(s => 
-    s.section_key === "cta" || s.section_key === "promo"
-  );
+  const ctaSection = sections.find((s) => sectionKeyNorm(s.section_key) === "cta");
 
   if (!ctaSection) {
-    errors.push(createError("cta", "section", "Promotions section is missing - will use default promotional content"));
+    errors.push(createError("cta", "section", "CTA / promotions section is missing from homepage_sections", "warning"));
     return errors;
   }
 
@@ -312,64 +309,42 @@ export function validateCmsPayload(payload: PublicCmsPayload | null): Validation
     errors.push(createError("navigation", "section", "Navigation data is missing"));
   }
 
-  // Validate homepage sections
+  // Validate homepage sections (canonical keys only; no legacy usp/trust/promo aliases)
   const sections = payload.homepage_sections || [];
-  
-  errors.push(...validateHeroSection(payload.hero));
+  const heroFromSections =
+    sections.filter((s) => sectionKeyNorm(s.section_key) === "hero").sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))[0] ??
+    null;
+  errors.push(...validateHeroSection(heroFromSections));
   errors.push(...validateWhyChooseUsSection(sections));
   errors.push(...validateTestimonialsSection(sections));
   errors.push(...validateCtaSection(sections));
   errors.push(...validateFooterSection(payload));
 
-  // Create safe payload with empty sections for missing critical data
-  let safePayload = { ...payload };
-  
-  const criticalErrors = errors.filter(e => e.severity === "error");
-  if (criticalErrors.length > 0) {
-    // Add safe empty sections for missing critical sections
-    const missingSections: PublicCmsHomepageSection[] = [];
-    
-    if (criticalErrors.some(e => e.section === "hero")) {
-      missingSections.push(createSafeEmptySection("hero", 0));
-      safePayload.hero = missingSections[0];
-    }
-    
-    if (criticalErrors.some(e => e.section === "why_choose_us")) {
-      missingSections.push(createSafeEmptySection("why_choose_us", 1));
-    }
-    
-    if (criticalErrors.some(e => e.section === "testimonials")) {
-      missingSections.push(createSafeEmptySection("testimonials", 3));
-    }
-    
-    if (criticalErrors.some(e => e.section === "cta")) {
-      missingSections.push(createSafeEmptySection("cta", 4));
-    }
-    
-    safePayload.homepage_sections = [...sections, ...missingSections];
-  }
+  const safePayload = { ...payload };
 
   // Log validation results in development
   if (process.env.NODE_ENV === "development") {
-    const errorCount = errors.filter(e => e.severity === "error").length;
-    const warningCount = errors.filter(e => e.severity === "warning").length;
-    
+    const errorCount = errors.filter((e) => e.severity === "error").length;
+    const warningCount = errors.filter((e) => e.severity === "warning").length;
+
     if (errorCount > 0) {
       console.error(`CMS VALIDATION: ${errorCount} errors, ${warningCount} warnings`);
-      errors.forEach(error => {
+      errors.forEach((error) => {
         if (error.severity === "error") {
           console.error(`  ERROR [${error.section}.${error.field}]: ${error.message}`);
         }
       });
     } else if (warningCount > 0) {
       console.warn(`CMS VALIDATION: ${warningCount} warnings`);
-      errors.forEach(error => {
+      errors.forEach((error) => {
         if (error.severity === "warning") {
           console.warn(`  WARN [${error.section}.${error.field}]: ${error.message}`);
         }
       });
     }
   }
+
+  const criticalErrors = errors.filter((e) => e.severity === "error");
 
   return {
     isValid: criticalErrors.length === 0,

@@ -69,18 +69,13 @@ class CmsService
             if ($key === 'testimonials') {
                 continue;
             }
-            $section = match ($key) {
-                'why_choose_us' => $sections->get('why_choose_us') ?? $sections->get('usp'),
-                'cta' => $sections->get('cta') ?? $sections->get('promo'),
-                default => $sections->get($key),
-            };
+            $section = $sections->get($key);
             $out[$key] = $this->mapSection($section, $key);
         }
 
-        $testimonialsSection = $sections->get('testimonials') ?? $sections->get('trust');
-        $expectedKey = $testimonialsSection !== null ? (string) $testimonialsSection->section_key : 'testimonials';
+        $testimonialsSection = $sections->get('testimonials');
         $out['testimonials'] = $this->mergeTrustTestimonials(
-            $this->mapSection($testimonialsSection, $expectedKey)
+            $this->mapSection($testimonialsSection, 'testimonials')
         );
 
         return $out;
@@ -112,14 +107,7 @@ class CmsService
             return [];
         }
 
-        $allowedKeys = match ($canonicalKey) {
-            'why_choose_us' => ['why_choose_us', 'usp'],
-            'cta' => ['cta', 'promo'],
-            'testimonials' => ['testimonials', 'trust'],
-            default => [$canonicalKey],
-        };
-
-        if (! in_array((string) $section->section_key, $allowedKeys, true)) {
+        if ((string) $section->section_key !== $canonicalKey) {
             return [];
         }
 
