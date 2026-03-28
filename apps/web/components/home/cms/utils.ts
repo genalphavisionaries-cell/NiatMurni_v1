@@ -1,4 +1,4 @@
-﻿import { cmsString } from "@/lib/public-cms";
+import { cmsString } from "@/lib/public-cms";
 
 export function safeHref(url: string | null | undefined): string | null {
   const u = cmsString(url);
@@ -10,7 +10,7 @@ export function safeHref(url: string | null | undefined): string | null {
 
 export function parseJsonSafe<T>(raw: unknown): T | null {
   if (typeof raw !== "string") return null;
-  const s = raw.trim();
+  const s = (raw ?? "").trim();
   if (!s) return null;
   try {
     return JSON.parse(s) as T;

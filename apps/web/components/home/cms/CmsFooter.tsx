@@ -81,7 +81,7 @@ export default function CmsFooter({
   legacyFooterBottom,
 }: CmsFooterProps) {
   const year = new Date().getFullYear();
-  const bg = footerBackgroundColor?.trim() || "var(--cms-footer-bg, #0f172a)";
+  const bg = (footerBackgroundColor ?? "").trim() || "var(--cms-footer-bg, #0f172a)";
 
   // Contact + social are still available for legacy/custom layouts; homepage footer UI
   // intentionally focuses on conversion and legal/payment blocks for now.

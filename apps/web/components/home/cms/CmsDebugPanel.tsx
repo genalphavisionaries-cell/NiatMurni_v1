@@ -31,7 +31,7 @@ function formatRelativeTime(date: Date): string | null {
 }
 
 function getLastUpdatedInfo(lastUpdated: string | null | undefined): { display: string; relative: string | null } {
-  if (!lastUpdated || !lastUpdated.trim()) {
+  if (!lastUpdated || !(lastUpdated ?? "").trim()) {
     return { display: "(unknown)", relative: null };
   }
 
@@ -60,7 +60,7 @@ function sectionFieldState(s: PublicCmsHomepageSection): { missing: string[]; al
   const needsItems = ["why_choose_us", "usp", "features"].includes(key);
   if (needsItems) {
     const raw = s.extra_data?.items_json;
-    checks.push({ field: "items_json", hasValue: typeof raw === "string" && !!raw.trim() });
+    checks.push({ field: "items_json", hasValue: typeof raw === "string" && !!(raw ?? "").trim() });
   }
 
   const missing = checks.filter((x) => !x.hasValue).map((x) => x.field);

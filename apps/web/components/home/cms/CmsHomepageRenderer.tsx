@@ -73,8 +73,8 @@ const supported = new Set<string>([
   "contact",
 ]);
 
-function normalizeKey(k: string): string {
-  return k.trim().toLowerCase();
+function normalizeKey(k: string | null | undefined): string {
+  return (k ?? "").trim().toLowerCase();
 }
 
 function byOrder(a: PublicCmsHomepageSection, b: PublicCmsHomepageSection): number {

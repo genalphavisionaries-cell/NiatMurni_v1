@@ -53,7 +53,8 @@ async function parseJsonResponse(res: Response): Promise<unknown> {
   if (process.env.NODE_ENV === "development") {
     console.log("API raw response:", text.length > 800 ? `${text.slice(0, 800)}…` : text);
   }
-  const looksLikeJson = text.trim().startsWith("{") || text.trim().startsWith("[");
+  const trimmed = (text ?? "").trim();
+  const looksLikeJson = trimmed.startsWith("{") || trimmed.startsWith("[");
   if (!looksLikeJson) {
     throw new Error("Invalid API response");
   }

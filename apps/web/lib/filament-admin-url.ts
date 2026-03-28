@@ -10,9 +10,11 @@
 import { getApiBase } from "./config";
 
 export function getFilamentBaseUrl(): string {
-  const explicit = process.env.NEXT_PUBLIC_FILAMENT_BASE_URL?.trim();
-  if (explicit) {
-    return explicit.replace(/\/$/, "");
+  const explicit = process.env.NEXT_PUBLIC_FILAMENT_BASE_URL;
+  if (!explicit) return "";
+  const trimmed = explicit.trim();
+  if (trimmed) {
+    return trimmed.replace(/\/$/, "");
   }
 
   return getApiBase();

@@ -12,8 +12,8 @@ export function hasRichText(html: string): boolean {
 }
 
 /** Empty string is valid (optional field). */
-export function isValidHttpOrRelativeUrl(s: string): boolean {
-  const t = s.trim();
+export function isValidHttpOrRelativeUrl(s: string | null | undefined): boolean {
+  const t = (s ?? "").trim();
   if (!t) return true;
   if (t.startsWith("/") || t.startsWith("./")) return true;
   try {
@@ -24,8 +24,8 @@ export function isValidHttpOrRelativeUrl(s: string): boolean {
   }
 }
 
-export function isValidHttpOrRelativeUrlRequired(s: string): boolean {
-  const t = s.trim();
+export function isValidHttpOrRelativeUrlRequired(s: string | null | undefined): boolean {
+  const t = (s ?? "").trim();
   if (!t) return false;
   return isValidHttpOrRelativeUrl(t);
 }

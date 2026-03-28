@@ -261,8 +261,8 @@ function normalizeNavItem(raw: Partial<PublicCmsNavItem> & Record<string, unknow
   };
 }
 
-function normalizeHomepageSectionKey(k: string): string {
-  return k.trim().toLowerCase();
+function normalizeHomepageSectionKey(k: string | null | undefined): string {
+  return (k ?? "").trim().toLowerCase();
 }
 
 function pickFirstHeroSection(sections: PublicCmsHomepageSection[]): PublicCmsHomepageSection | null {
@@ -304,7 +304,7 @@ function normalizeCmsPayload(data: PublicCmsPayload): PublicCmsPayload {
   const theme = data.theme ?? EMPTY_THEME;
   const sections = data.homepage_sections ?? [];
   const hero = data.hero ?? pickFirstHeroSection(sections);
-  const lastUpdated = typeof data.last_updated === "string" && data.last_updated.trim()
+  const lastUpdated = typeof data.last_updated === "string" && data.last_updated && data.last_updated.trim()
     ? data.last_updated
     : null;
 

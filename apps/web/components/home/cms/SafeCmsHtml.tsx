@@ -16,6 +16,6 @@ type SafeCmsHtmlProps = {
  */
 export function SafeCmsHtml({ html, className, as: Tag = "div" }: SafeCmsHtmlProps) {
   const safeHtml = sanitizeHtml(html);
-  if (!safeHtml.trim()) return null;
+  if (!(safeHtml ?? "").trim()) return null;
   return <Tag className={cn("cms-html", className)} dangerouslySetInnerHTML={{ __html: safeHtml }} />;
 }
