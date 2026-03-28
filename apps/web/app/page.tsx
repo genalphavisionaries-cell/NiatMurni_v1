@@ -20,6 +20,7 @@ import {
 } from "@/lib/homepage-settings";
 import { fetchPublicCms, cmsString, type PublicCmsPayload } from "@/lib/public-cms";
 import { cmsFlatNavToLinks, mergePublicCmsForHome } from "@/lib/merge-public-cms";
+import { getCmsThemeStyleObject } from "@/lib/cms-theme-vars";
 import PublicFloatingLayer from "@/components/public/PublicFloatingLayer";
 
 const DEFAULT_TITLE = "Niat Murni Academy";
@@ -112,8 +113,11 @@ export default async function HomePage() {
     settings.mainBanners?.[1]?.imageUrl ?? legacyHeroBg,
   ].filter((v, idx, arr) => !!v && arr.indexOf(v) === idx);
 
+  const cmsThemeVars = getCmsThemeStyleObject(cms);
+  const mergedThemeVars = { ...ctx.themeVars, ...cmsThemeVars };
+
   return (
-    <div style={ctx.themeVars as CSSProperties}>
+    <div style={mergedThemeVars as CSSProperties}>
       {showCmsFallbackBanner ? (
         <div className="fixed left-1/2 top-3 z-[9998] -translate-x-1/2 rounded-md border border-amber-500/80 bg-amber-900/85 px-3 py-1.5 text-xs font-semibold text-amber-100 shadow-lg backdrop-blur-sm">
           ⚠ CMS not loaded — using fallback

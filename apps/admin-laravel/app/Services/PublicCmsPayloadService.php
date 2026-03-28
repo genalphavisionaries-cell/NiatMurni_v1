@@ -92,6 +92,8 @@ class PublicCmsPayloadService
         ];
 
         $navigation = $this->buildNavigation($header, $footer);
+        $headerColors = $this->extractHeaderColors($header);
+        $footerColors = $this->extractFooterColors($footer);
 
         $homepageSections = [];
         $hero = $this->mapHeroSection(is_array($h['hero'] ?? null) ? $h['hero'] : []);
@@ -122,6 +124,8 @@ class PublicCmsPayloadService
             'contact' => $contact,
             'social' => $social,
             'navigation' => $navigation,
+            'header_colors' => $headerColors,
+            'footer_colors' => $footerColors,
             'homepage_sections' => $homepageSections,
             'last_updated' => date('c'),
             'floating_menu' => $floating,
@@ -568,5 +572,68 @@ class PublicCmsPayloadService
         $t = preg_replace('/\s+/u', ' ', $t) ?? $t;
 
         return $t === '';
+    }
+
+    /**
+     * Extract header colors for frontend CSS variables.
+     */
+    private function extractHeaderColors(array $header): array
+    {
+        $content = is_array($header['content'] ?? null) ? $header['content'] : [];
+        $colors = is_array($content['colors'] ?? null) ? $content['colors'] : [];
+        
+        return [
+            'background' => $this->validateHexColor($colors['background'] ?? '', '#FFFFFF'),
+            'border' => $this->validateHexColor($colors['border'] ?? '', '#E5E7EB'),
+            'menu_background' => $this->validateHexColor($colors['menu_background'] ?? '', 'transparent'),
+            'menu_text' => $this->validateHexColor($colors['menu_text'] ?? '', '#0F172A'),
+            'menu_hover_background' => $this->validateHexColor($colors['menu_hover_background'] ?? '', '#F8FAFC'),
+            'menu_hover_text' => $this->validateHexColor($colors['menu_hover_text'] ?? '', '#2563EB'),
+            'sticky_background' => $this->validateHexColor($colors['sticky_background'] ?? '', '#FFFFFF'),
+            'sticky_text' => $this->validateHexColor($colors['sticky_text'] ?? '', '#0F172A'),
+            'sticky_hover_background' => $this->validateHexColor($colors['sticky_hover_background'] ?? '', '#F8FAFC'),
+            'sticky_hover_text' => $this->validateHexColor($colors['sticky_hover_text'] ?? '', '#2563EB'),
+        ];
+    }
+
+    /**
+     * Extract footer colors for frontend CSS variables.
+     */
+    private function extractFooterColors(array $footer): array
+    {
+        $content = is_array($footer['content'] ?? null) ? $footer['content'] : [];
+        $colors = is_array($content['colors'] ?? null) ? $content['colors'] : [];
+        
+        return [
+            'background' => $this->validateHexColor($colors['background'] ?? '', '#0F172A'),
+            'text' => $this->validateHexColor($colors['text'] ?? '', '#E5E7EB'),
+            'link_text' => $this->validateHexColor($colors['link_text'] ?? '', '#CBD5E1'),
+            'link_hover' => $this->validateHexColor($colors['link_hover'] ?? '', '#FFFFFF'),
+            'heading' => $this->validateHexColor($colors['heading'] ?? '', '#FFFFFF'),
+            'button_background' => $this->validateHexColor($colors['button_background'] ?? '', 'transparent'),
+            'button_text' => $this->validateHexColor($colors['button_text'] ?? '', '#FFFFFF'),
+            'button_border' => $this->validateHexColor($colors['button_border'] ?? '', '#334155'),
+            'button_hover' => $this->validateHexColor($colors['button_hover'] ?? '', 'rgba(255,255,255,0.1)'),
+        ];
+    }
+
+    /**
+     * Validate hex color or return default.
+     */
+    private function validateHexColor(string $color, string $default): string
+    {
+        $color = trim($color);
+        
+        // Allow transparent and rgba values
+        if ($color === 'transparent' || str_starts_with($color, 'rgba(')) {
+            return $color;
+        }
+        
+        // Validate hex color format
+        if (preg_match('/^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/', $color)) {
+            return strlen($color) === 4 ? $this->expandHex3($color) : $color;
+        }
+        
+        return $default;
     }
 }
