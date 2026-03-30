@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { PublicSiteShell } from "@/components/public";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Privacy Policy | Niat Murni Academy",
   description: "Privacy policy for Niat Murni Academy.",

@@ -1,13 +1,11 @@
 import { PublicSiteShell } from "@/components/public";
 import RegisterClient from "./RegisterClient";
 
+export const dynamic = "force-dynamic";
+
 type Props = {
   params: Promise<{ id: string }>;
 };
-
-export function generateStaticParams() {
-  return [{ id: "1" }];
-}
 
 export default async function RegisterPage({ params }: Props) {
   const { id } = await params;

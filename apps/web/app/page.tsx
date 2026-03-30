@@ -20,12 +20,7 @@ const DEFAULT_DESC =
   "KKM Food Handling & Training — professional food safety courses for food handlers in Malaysia.";
 
 export async function generateMetadata(): Promise<Metadata> {
-  let cms: PublicCmsPayload | null = null;
-  try {
-    cms = await fetchPublicCms();
-  } catch (e) {
-    console.error("CMS fetch failed:", e);
-  }
+  const cms = await fetchPublicCms();
   const effective = cms ?? emptyPublicCmsPayload();
   const title =
     cmsString(effective.seo.homepage_seo_title) ??
@@ -51,15 +46,12 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
-  let cmsFromApi: PublicCmsPayload | null = null;
-  try {
-    cmsFromApi = await fetchPublicCms();
-  } catch (e) {
-    console.error("CMS fetch failed:", e);
-  }
-
+  const cmsFromApi = await fetchPublicCms();
   const cms = cmsFromApi ?? emptyPublicCmsPayload();
   const hadApiFailure = cmsFromApi === null;
+
+  // Temporary: verify CMS in Node SSR output (remove when pipeline is stable).
+  console.log("SSR CMS DATA:", cms);
 
   const [pubSettled] = await Promise.allSettled([fetchPublicSettings()]);
   const pub = pubSettled.status === "fulfilled" ? pubSettled.value : null;

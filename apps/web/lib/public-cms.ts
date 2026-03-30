@@ -3,6 +3,7 @@
  * Base URL: {@link getApiBase} (NEXT_PUBLIC_API_BASE_URL or NEXT_PUBLIC_API_URL).
  */
 
+import { cache } from "react";
 import { apiUrl, getApiBase } from "./config";
 import { validateCmsPayload, type ValidationResult } from "./cms-validation";
 
@@ -386,11 +387,6 @@ export function emptyPublicCmsPayload(): PublicCmsPayload {
   return normalizeCmsPayload(emptyPayload());
 }
 
-export async function fetchPublicCms(): Promise<PublicCmsPayload | null> {
-  const validation = await fetchPublicCmsWithValidation();
-  return validation?.payload ?? null;
-}
-
 export async function fetchPublicCmsWithValidation(): Promise<ValidationResult | null> {
   const url = apiUrl("/api/public/cms");
   if (!url) return validateCmsPayload(null);
@@ -401,20 +397,29 @@ export async function fetchPublicCmsWithValidation(): Promise<ValidationResult |
       headers: { Accept: "application/json" },
     });
     if (!res.ok) return validateCmsPayload(null);
-    
+
     const raw = (await res.json()) as PublicCmsPayload & { data?: PublicCmsPayload };
     // Laravel may return the payload at the root, or wrapped in { data } (legacy).
     const data = raw?.site && raw?.navigation ? raw : raw?.data;
     if (!data?.site || !data?.navigation) return validateCmsPayload(null);
 
     const normalized = normalizeCmsPayload(data);
-    if (process.env.NODE_ENV === "development") {
-      console.log("CMS PAYLOAD:", normalized);
-    }
     return validateCmsPayload(normalized);
   } catch {
     return validateCmsPayload(null);
   }
+}
+
+/**
+ * One Laravel call per incoming request: dedupes `generateMetadata` + page (and any other RSC using this in the same render).
+ */
+export const loadPublicCmsForSsr = cache(async (): Promise<PublicCmsPayload | null> => {
+  const result = await fetchPublicCmsWithValidation();
+  return result?.payload ?? null;
+});
+
+export async function fetchPublicCms(): Promise<PublicCmsPayload | null> {
+  return loadPublicCmsForSsr();
 }
 
 /** Non-empty trimmed string */

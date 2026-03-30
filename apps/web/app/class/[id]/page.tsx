@@ -1,13 +1,11 @@
 import { PublicSiteShell } from "@/components/public";
 import ClassDetailClient from "./ClassDetailClient";
 
+export const dynamic = "force-dynamic";
+
 type Props = {
   params: Promise<{ id: string }>;
 };
-
-export function generateStaticParams() {
-  return [{ id: "1" }];
-}
 
 export default async function ClassDetailPage({ params }: Props) {
   const { id } = await params;
