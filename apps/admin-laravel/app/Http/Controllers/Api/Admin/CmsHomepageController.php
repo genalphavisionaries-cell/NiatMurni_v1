@@ -19,38 +19,49 @@ class CmsHomepageController extends Controller
 {
     public function show(): JsonResponse
     {
-        $page = CmsPage::query()->firstOrCreate(
-            ['slug' => 'homepage'],
-            ['title' => 'Homepage', 'is_active' => true],
-        );
+        try {
+            $page = CmsPage::query()->firstOrCreate(
+                ['slug' => 'homepage'],
+                ['title' => 'Homepage', 'is_active' => true],
+            );
 
-        $sections = $page->sections()
-            ->with(['items' => fn ($q) => $q->orderBy('sort_order')])
-            ->get()
-            ->keyBy('section_key');
+            $sections = $page->sections()
+                ->with(['items' => fn ($q) => $q->orderBy('sort_order')])
+                ->get()
+                ->keyBy('section_key');
 
-        return response()->json([
-            'data' => [
-                'hero' => $this->readHero($sections->get('hero')),
-                'why_choose_us' => $this->readUsp($sections->get('why_choose_us')),
-                'classes' => $this->readClasses($sections->get('classes')),
-                'testimonials' => $this->readTrust($sections->get('testimonials')),
-                'cta' => $this->readPromo($sections->get('cta')),
-                'header' => $this->readHeader($sections->get('header')),
-                'footer' => $this->readFooter($sections->get('footer')),
-                'floating_menu' => $this->readFloating($sections->get('floating_menu')),
-            ],
-        ]);
+            return response()->json([
+                'data' => [
+                    'hero' => $this->readHero($sections->get('hero')),
+                    'why_choose_us' => $this->readUsp($sections->get('why_choose_us')),
+                    'classes' => $this->readClasses($sections->get('classes')),
+                    'testimonials' => $this->readTrust($sections->get('testimonials')),
+                    'cta' => $this->readPromo($sections->get('cta')),
+                    'header' => $this->readHeader($sections->get('header')),
+                    'footer' => $this->readFooter($sections->get('footer')),
+                    'floating_menu' => $this->readFloating($sections->get('floating_menu')),
+                ],
+            ]);
+        } catch (Throwable $e) {
+            report($e);
+            Log::error('CMS homepage load failed', ['error' => $e->getMessage()]);
+
+            return response()->json([
+                'message' => 'Failed to load homepage CMS data.',
+                'error' => 'An unexpected error occurred while loading CMS.',
+                'debug_error' => app()->environment('production') ? null : $e->getMessage(),
+            ], 500);
+        }
     }
 
     public function update(UpdateHomepageRequest $request): JsonResponse
     {
-        $page = CmsPage::query()->firstOrCreate(
-            ['slug' => 'homepage'],
-            ['title' => 'Homepage', 'is_active' => true],
-        );
-
         try {
+            $page = CmsPage::query()->firstOrCreate(
+                ['slug' => 'homepage'],
+                ['title' => 'Homepage', 'is_active' => true],
+            );
+
             DB::transaction(function () use ($page, $request) {
                 if ($request->has('hero')) {
                     $this->persistHero($page, $this->inputArray($request, 'hero'));
@@ -86,7 +97,8 @@ class CmsHomepageController extends Controller
             return response()->json([
                 'message' => 'Failed to save homepage CMS data.',
                 'error' => 'An unexpected error occurred. Please try again.',
-            ], 422);
+                'debug_error' => app()->environment('production') ? null : $e->getMessage(),
+            ], 500);
         }
 
         app(CmsService::class)->forgetCache();

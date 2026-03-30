@@ -144,4 +144,4 @@ return new class extends Migration
             report($e);
         }
     }
-}
+};
