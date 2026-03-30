@@ -3,7 +3,6 @@
  * Base URL: {@link getApiBase} (NEXT_PUBLIC_API_BASE_URL or NEXT_PUBLIC_API_URL).
  */
 
-import { cache } from "react";
 import { apiUrl, getApiBase } from "./config";
 import { validateCmsPayload, type ValidationResult } from "./cms-validation";
 
@@ -410,16 +409,9 @@ export async function fetchPublicCmsWithValidation(): Promise<ValidationResult |
   }
 }
 
-/**
- * One Laravel call per incoming request: dedupes `generateMetadata` + page (and any other RSC using this in the same render).
- */
-export const loadPublicCmsForSsr = cache(async (): Promise<PublicCmsPayload | null> => {
+export async function fetchPublicCms(): Promise<PublicCmsPayload | null> {
   const result = await fetchPublicCmsWithValidation();
   return result?.payload ?? null;
-});
-
-export async function fetchPublicCms(): Promise<PublicCmsPayload | null> {
-  return loadPublicCmsForSsr();
 }
 
 /** Non-empty trimmed string */

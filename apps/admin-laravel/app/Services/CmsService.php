@@ -6,7 +6,6 @@ use App\Models\CmsItem;
 use App\Models\CmsPage;
 use App\Models\CmsSection;
 use App\Models\CmsTestimonial;
-use Illuminate\Support\Facades\Cache;
 
 /**
  * Public homepage CMS: cms_pages → cms_sections → cms_items (+ cms_testimonials merged into testimonials section).
@@ -21,25 +20,19 @@ use Illuminate\Support\Facades\Cache;
  */
 class CmsService
 {
-    public const CACHE_KEY = 'cms_homepage';
-
-    public const CACHE_TTL_SECONDS = 30;
-
     /**
-     * Cached homepage payload for the public API.
+     * Homepage payload for the public API (fresh from DB).
      *
      * @return array<string, mixed>
      */
     public function getHomepage(): array
     {
-        return Cache::remember(self::CACHE_KEY, self::CACHE_TTL_SECONDS, function () {
-            return $this->mapToFrontend();
-        });
+        return $this->mapToFrontend();
     }
 
     public function forgetCache(): void
     {
-        Cache::forget(self::CACHE_KEY);
+        // No-op: homepage payload is read directly from DB.
     }
 
     /**
